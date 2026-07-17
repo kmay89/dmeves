@@ -90,10 +90,11 @@
   }
   #dust{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
 
-  .intro{
+  /* slim header — the room is the star, this just says whose room */
+  .topbar{
     position:relative;z-index:4;
-    padding:clamp(1.25rem,4vw,3rem) clamp(1.25rem,5vw,4rem) 0;
-    max-width:46rem;
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem 1.1rem;
+    padding:clamp(.9rem,2.5vw,1.5rem) clamp(1.25rem,5vw,4rem) 0;
   }
   .eyebrow{
     font-family:var(--hand);
@@ -101,26 +102,14 @@
     letter-spacing:.04em;
     color:var(--sun-deep);
   }
-  .intro h1{
-    margin-top:.7rem;
+  .topbar h1{
     font-family:var(--display);
-    font-size:clamp(2.1rem,5.2vw,3.5rem);
-    line-height:1.08;
+    font-size:1.05rem;
     font-weight:600;
-    letter-spacing:.005em;
-    text-wrap:balance;
+    color:var(--ink);
+    letter-spacing:.01em;
   }
-  .intro h1 em{font-style:normal;color:var(--c-ptable);
-    text-decoration:underline wavy color-mix(in srgb, var(--c-ptable) 45%, transparent);
-    text-decoration-thickness:3px;text-underline-offset:6px}
-  .intro .lede{
-    margin-top:1.1rem;
-    max-width:36rem;
-    color:var(--ink-dim);
-    font-size:clamp(1rem,1.5vw,1.13rem);
-    font-weight:600;
-    line-height:1.6;
-  }
+  .topbar h1 span{color:var(--ink-faint);font-weight:500}
 
   /* ---------- isometric classroom ---------- */
   .room-wrap{
@@ -458,31 +447,67 @@
   }
   .or-fact b{color:var(--ink)}
 
-  /* ---------- why this works (the memory trick, explained) ---------- */
-  .why{
-    position:relative;z-index:4;
-    display:flex;flex-wrap:wrap;gap:.8rem;
-    padding:1.4rem clamp(1.25rem,5vw,4rem) .4rem;
-    max-width:72rem;
+  /* ---------- the idea, told slowly (one-time intro overlay) ---------- */
+  .intro-ov[hidden]{display:none}
+  .intro-ov{
+    position:fixed;inset:0;z-index:80;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(84,64,28,.45);
+    backdrop-filter:blur(4px);
+    padding:1rem;overflow-y:auto;
+    opacity:1;transition:opacity .45s ease;
   }
-  .why-card{
-    flex:1 1 15rem;
-    background:rgba(255,253,247,.75);
-    border:2px solid rgba(200,160,80,.35);
-    border-radius:14px;
-    padding:.85rem 1rem .95rem;
+  .intro-ov.closing{opacity:0;pointer-events:none}
+  .i-card{
+    position:relative;
+    width:min(26rem,100%);
+    background:var(--card);
+    border:2px solid rgba(200,160,80,.45);
+    border-top:6px solid var(--c-wizard);
+    border-radius:20px;
+    box-shadow:0 24px 70px rgba(60,40,10,.4);
+    padding:2.4rem 1.8rem 1.4rem;
+    text-align:center;
   }
-  .why-card h3{
+  .i-skip{
+    position:absolute;top:.8rem;right:1rem;
+    font-family:var(--hand);font-size:1rem;
+    color:var(--ink-faint);background:none;border:0;cursor:pointer;
+  }
+  .i-skip:hover,.i-skip:focus-visible{color:var(--sun-deep)}
+  .i-emoji{font-size:3rem;line-height:1}
+  .i-title{
     font-family:var(--display);font-weight:600;
-    font-size:.95rem;color:var(--ink);
-    display:flex;align-items:center;gap:.5em;
+    font-size:1.35rem;line-height:1.2;margin-top:.7rem;
+    text-wrap:balance;
   }
-  .why-card h3 span{font-size:1.15rem}
-  .why-card p{
-    margin-top:.35rem;color:var(--ink-dim);font-weight:600;
-    font-size:.86rem;line-height:1.55;
+  .i-text{
+    margin:.7rem auto 0;max-width:32ch;
+    color:var(--ink-dim);font-weight:600;
+    font-size:.98rem;line-height:1.62;
+    min-height:9.8em;
   }
-  .why-card p b{color:var(--ink)}
+  .i-text b{color:var(--ink)}
+  .i-dots{display:flex;gap:.5rem;justify-content:center;margin-top:1rem}
+  .i-dots span{
+    width:9px;height:9px;border-radius:50%;
+    background:rgba(138,83,214,.18);
+    transition:background .3s ease;
+  }
+  .i-dots span.on{background:var(--c-wizard)}
+  .i-nav{display:flex;justify-content:space-between;gap:.6rem;margin-top:1.1rem}
+  .i-nav button{
+    font-family:var(--display);font-size:.88rem;font-weight:500;
+    border-radius:999px;padding:.6em 1.4em;cursor:pointer;
+  }
+  .i-back{color:var(--ink-dim);background:#fff;border:2px solid rgba(147,147,138,.35)}
+  .i-back:disabled{opacity:.3;cursor:default}
+  .i-next{
+    color:#fff;background:var(--c-wizard);border:0;
+    box-shadow:0 3px 0 color-mix(in srgb, var(--c-wizard) 60%, #000);
+  }
+  .i-next:hover{filter:brightness(1.08)}
+  @media (prefers-reduced-motion:reduce){ .intro-ov{transition:opacity .2s ease} }
 
   /* ---------- the door gate (playful, not a bank vault) ---------- */
   .gate{
@@ -595,40 +620,27 @@
   </div>
 </div>
 
+<div class="intro-ov" id="introOv" role="dialog" aria-modal="true" aria-label="Why this class is a room" hidden>
+  <div class="i-card">
+    <button class="i-skip" id="iSkip">Skip the tour →</button>
+    <div class="i-emoji" id="iEmoji" aria-hidden="true">🚪</div>
+    <h2 class="i-title" id="iTitle"></h2>
+    <p class="i-text" id="iText"></p>
+    <div class="i-dots" id="iDots" aria-hidden="true"></div>
+    <div class="i-nav">
+      <button class="i-back" id="iBack">← Back</button>
+      <button class="i-next" id="iNext">Next →</button>
+    </div>
+  </div>
+</div>
+
 <main class="scene" id="scene">
   <canvas id="dust" aria-hidden="true"></canvas>
 
-  <header class="intro">
+  <header class="topbar">
     <p class="eyebrow" id="eyebrow">Physical Science</p>
-    <h1 id="introH">Welcome to <em>the classroom</em> — everything for this class is hiding in plain sight.</h1>
-    <p class="lede">This page is our class, drawn as the room you actually sit in.
-    It works the way your memory does: the homework lives on the chalkboard, safety
-    lives by the shower, labs live on the bench — so when you need something at
-    11&nbsp;pm, you don’t scroll a list of links, you just picture the room.
-    Everything here opens the real, up-to-date documents in Google Classroom.</p>
+    <h1>The Classroom <span>— everything for this class, hiding in plain sight</span></h1>
   </header>
-
-  <section class="why" aria-label="Why this room works">
-    <div class="why-card">
-      <h3><span aria-hidden="true">🧠</span> Your brain keeps maps, not lists</h3>
-      <p>Humans are astonishingly good at remembering <b>where things are</b> — and
-      pretty bad at remembering what link #7 was called. Memory champions exploit
-      this with the <b>“memory palace”</b> (the method of loci): put each fact in a
-      place, then walk the place in your mind. This room is ours.</p>
-    </div>
-    <div class="why-card">
-      <h3><span aria-hidden="true">📌</span> Every document gets an address</h3>
-      <p>“It’s on the chalkboard” beats “it’s somewhere in the feed.” When a thing
-      has a <b>physical spot</b> — homework on the board, the safety contract by the
-      eyewash — finding it stops being a search and becomes a habit.</p>
-    </div>
-    <div class="why-card">
-      <h3><span aria-hidden="true">🗂️</span> The room remembers, Classroom keeps</h3>
-      <p>This page is the <b>map</b>; Google Classroom stays the <b>library</b> — the
-      single, structured, always-current source of truth. Pairing the two means the
-      fun part helps you recall, and the organized part never lets you down.</p>
-    </div>
-  </section>
 
   <div class="room-wrap">
     <svg id="iso" viewBox="-470 -300 1105 830" role="group"
@@ -655,6 +667,7 @@
     <span>Hover to look</span><span class="sep">/</span>
     <span>Click to pick up</span><span class="sep">/</span>
     <span class="pan-hint">Drag the room to pan</span><span class="sep pan-hint">/</span>
+    <button id="whyBtn" class="chip">Why a room?</button>
     <button id="bellBtn" class="chip">Ring the bell</button>
     <button id="sndBtn" class="chip" aria-pressed="true">Sound: on</button>
   </div>
@@ -2074,6 +2087,82 @@
     " — an unofficial class companion, not a school district website. Built with chalk dust, no frameworks, no trackers.";
 
   /* ================================================================
+     THE IDEA, TOLD SLOWLY — a one-time tour that builds the memory-
+     palace pitch step by step, then gets out of the room's way.
+     ================================================================ */
+  var INTRO_KEY = "dmeves-intro-v1";
+  var INTRO_STEPS = [
+    { e:"🚪", t:"You found the room.",
+      x:"This is our class — the same room you sit in every day, drawn small enough to fit in your pocket. Before you start poking around, here’s the one idea that makes this page worth having. It takes thirty seconds." },
+    { e:"🔗", t:"First, an honest question.",
+      x:"Where did that link go? Every class posts links — and nobody remembers links. So you end up scrolling a feed at 11 pm, hunting for the lab template your teacher definitely posted… somewhere." },
+    { e:"🧠", t:"Your brain has a superpower.",
+      x:"You can’t recite link #7. But you could walk to your seat with your eyes closed. Brains are built to remember <b>places</b>. Memory champions use this trick — the <b>memory palace</b> — to memorize whole decks of cards: give each thing a place, then walk the place in your mind." },
+    { e:"📌", t:"So everything here has an address.",
+      x:"Homework? <b>On the chalkboard.</b> Lab reports? <b>On the bench.</b> The safety contract? <b>By the shower</b>, where it belongs. When you need something, don’t search — picture the room, click the thing." },
+    { e:"🗂️", t:"And the room never lies.",
+      x:"Every object opens the <b>real, current document</b> in Google Classroom. This room is the map you’ll remember; Classroom is the library that’s always right. That’s the whole trick — now go pick something up.", btn:"Step inside →" }
+  ];
+  var introOv = document.getElementById("introOv");
+  var iStep = 0;
+  var iEmoji = document.getElementById("iEmoji"), iTitle = document.getElementById("iTitle"),
+      iText = document.getElementById("iText"), iDots = document.getElementById("iDots"),
+      iBack = document.getElementById("iBack"), iNext = document.getElementById("iNext");
+  INTRO_STEPS.forEach(function(){ iDots.appendChild(document.createElement("span")); });
+  function introSeen(){
+    try { return localStorage.getItem(INTRO_KEY) === "yes"; } catch(e){ return false; }
+  }
+  function iRender(){
+    var st = INTRO_STEPS[iStep];
+    iEmoji.textContent = st.e;
+    iTitle.textContent = st.t;
+    iText.innerHTML = st.x;
+    for (var i = 0; i < INTRO_STEPS.length; i++) iDots.children[i].className = i <= iStep ? "on" : "";
+    iBack.disabled = iStep === 0;
+    iNext.textContent = st.btn || "Next →";
+  }
+  function openIntro(){
+    iStep = 0;
+    iRender();
+    introOv.hidden = false;
+    introOv.classList.add("closing");
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ introOv.classList.remove("closing"); }); });
+    setBackgroundInert(true);
+    document.body.style.overflow = "hidden";
+    iNext.focus();
+  }
+  function closeIntro(){
+    try { localStorage.setItem(INTRO_KEY, "yes"); } catch(e){}
+    introOv.classList.add("closing");
+    setTimeout(function(){ introOv.hidden = true; }, REDUCED ? 200 : 480);
+    setBackgroundInert(false);
+    document.body.style.overflow = "";
+  }
+  iNext.addEventListener("click", function(){
+    ac(true); SOUNDS.hover();
+    if (iStep >= INTRO_STEPS.length - 1){ SOUNDS.wizard(); closeIntro(); }
+    else { iStep++; iRender(); }
+  });
+  iBack.addEventListener("click", function(){
+    if (iStep > 0){ SOUNDS.hover(); iStep--; iRender(); }
+  });
+  document.getElementById("iSkip").addEventListener("click", function(){ SOUNDS.hover(); closeIntro(); });
+  document.addEventListener("keydown", function(e){
+    if (introOv.hidden) return;
+    if (e.key === "Escape"){ closeIntro(); return; }
+    if (e.key === "Tab"){
+      var f = introOv.querySelectorAll("button:not(:disabled)");
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+      else if (!introOv.contains(document.activeElement)){ first.focus(); e.preventDefault(); }
+    }
+  });
+  document.getElementById("whyBtn").addEventListener("click", function(){
+    ac(true); SOUNDS.hover(); openIntro();
+  });
+
+  /* ================================================================
      THE DOOR GATE — a playful class code, remembered per browser.
      Deterrent-grade by design: the code never appears in this file.
      ================================================================ */
@@ -2086,7 +2175,7 @@
   }
   function sha256Hex(s){
     if (!(window.crypto && window.crypto.subtle && window.TextEncoder)) return Promise.resolve(null);
-    return window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function(buf){
+    return window.crypto.subtle.digest("SHA-256", new window.TextEncoder().encode(s)).then(function(buf){
       return Array.prototype.map.call(new Uint8Array(buf), function(b){
         return ("0" + b.toString(16)).slice(-2);
       }).join("");
@@ -2116,6 +2205,7 @@
   };
   if (!GATE.enabled){
     gateEl.classList.add("open","instant");
+    if (!introSeen()) openIntro();
   } else {
     var gTyped = "", gLockedOut = false;
     var gDots = document.getElementById("gDots");
@@ -2137,6 +2227,9 @@
         try { localStorage.setItem("dmeves-gate", GATE.sha256); } catch(e){}
         SOUNDS.bell(); buzz("bell");
         setTimeout(function(){ gateEl.classList.add("instant"); }, REDUCED ? 250 : 750);
+        if (!introSeen()) setTimeout(openIntro, REDUCED ? 300 : 800);
+      } else if (!introSeen()){
+        openIntro();
       }
     }
     function gRender(){
