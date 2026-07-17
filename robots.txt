@@ -1,4 +1,3 @@
+# A classroom site for one class's students — nothing here needs indexing.
 User-agent: *
-Allow: /
-
-Sitemap: https://dmeves.com/sitemap.xml
+Disallow: /

@@ -3,18 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="An interactive isometric science classroom. Every poster, beaker, and chalk scribble in the room links back to the real class materials — syllabus, homework, labs, safety, and more.">
+<meta name="description" content="An interactive science classroom that works like a memory palace: every poster, beaker, and chalk scribble has a place, and every place links to the real class materials.">
 <meta name="theme-color" content="#fdf6e7">
+<meta name="robots" content="noindex">
 <link rel="canonical" href="https://dmeves.com/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AA%3C/text%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Physical Science">
 <meta property="og:title" content="Physical Science — The Classroom">
-<meta property="og:description" content="An interactive classroom where everything on the walls and benches links to the real class materials. Come in and pick something up.">
+<meta property="og:description" content="Our class, as a room you can explore. Every object links to the real thing — homework on the chalkboard, labs on the bench, safety by the shower. Ask your teacher for the door code.">
 <meta property="og:url" content="https://dmeves.com/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://dmeves.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A sunny isometric science classroom — chalkboard, periodic table, lab bench, and bunting — with the line: everything for this class is hiding in plain sight.">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Physical Science — The Classroom">
-<meta name="twitter:description" content="An interactive classroom where everything links to the real class materials.">
+<meta name="twitter:description" content="Our class, as a room you can explore. Every object links to the real class materials.">
+<meta name="twitter:image" content="https://dmeves.com/og-image.png">
 <title>Physical Science — The Classroom</title>
 <style>
   /* self-hosted fonts — no CDNs, no trackers, still cheerful */
@@ -105,7 +111,7 @@
     text-wrap:balance;
   }
   .intro h1 em{font-style:normal;color:var(--c-ptable);
-    text-decoration:underline wavy rgba(224,133,26,.45);
+    text-decoration:underline wavy color-mix(in srgb, var(--c-ptable) 45%, transparent);
     text-decoration-thickness:3px;text-underline-offset:6px}
   .intro .lede{
     margin-top:1.1rem;
@@ -172,7 +178,7 @@
   .legend button{
     font-family:var(--display);
     font-size:.8rem;letter-spacing:.02em;font-weight:500;
-    color:var(--a);
+    color:color-mix(in srgb, var(--a) 78%, #000);
     background:color-mix(in srgb, var(--a) 10%, #fff);
     border:2px solid color-mix(in srgb, var(--a) 45%, transparent);
     border-radius:999px;
@@ -452,6 +458,99 @@
   }
   .or-fact b{color:var(--ink)}
 
+  /* ---------- why this works (the memory trick, explained) ---------- */
+  .why{
+    position:relative;z-index:4;
+    display:flex;flex-wrap:wrap;gap:.8rem;
+    padding:1.4rem clamp(1.25rem,5vw,4rem) .4rem;
+    max-width:72rem;
+  }
+  .why-card{
+    flex:1 1 15rem;
+    background:rgba(255,253,247,.75);
+    border:2px solid rgba(200,160,80,.35);
+    border-radius:14px;
+    padding:.85rem 1rem .95rem;
+  }
+  .why-card h3{
+    font-family:var(--display);font-weight:600;
+    font-size:.95rem;color:var(--ink);
+    display:flex;align-items:center;gap:.5em;
+  }
+  .why-card h3 span{font-size:1.15rem}
+  .why-card p{
+    margin-top:.35rem;color:var(--ink-dim);font-weight:600;
+    font-size:.86rem;line-height:1.55;
+  }
+  .why-card p b{color:var(--ink)}
+
+  /* ---------- the door gate (playful, not a bank vault) ---------- */
+  .gate{
+    position:fixed;inset:0;z-index:90;
+    display:flex;align-items:center;justify-content:center;
+    background:
+      radial-gradient(120% 90% at 68% -14%, rgba(255,205,92,.5), transparent 55%),
+      radial-gradient(70% 55% at 12% 0%, rgba(150,214,232,.35), transparent 65%),
+      linear-gradient(#fdf2d8, var(--paper) 45%);
+    padding:1rem;
+    overflow-y:auto;
+    transition:transform .6s cubic-bezier(.6,-.02,.35,1), opacity .5s ease;
+  }
+  .gate.open{transform:translateY(-104%);opacity:.4;pointer-events:none}
+  .gate.instant{transition:none;display:none}
+  .g-card{
+    width:min(21rem,100%);
+    background:var(--card);
+    border:2px solid rgba(200,160,80,.45);
+    border-top:6px solid var(--c-door);
+    border-radius:20px;
+    box-shadow:0 24px 70px rgba(120,84,30,.3);
+    padding:1.4rem 1.5rem 1.2rem;
+    text-align:center;
+  }
+  .g-door{width:64px;margin:0 auto}
+  .g-kicker{font-family:var(--hand);font-size:1.15rem;color:var(--sun-deep);margin-top:.6rem}
+  .g-title{font-family:var(--display);font-weight:600;font-size:1.3rem;line-height:1.2;margin-top:.2rem}
+  .g-hint{margin-top:.45rem;color:var(--ink-dim);font-weight:600;font-size:.88rem;line-height:1.5;min-height:2.6em}
+  .g-hint.err{color:var(--c-safety)}
+  .g-dots{display:flex;gap:.6rem;justify-content:center;margin:.8rem 0 .9rem}
+  .g-dots span{
+    width:13px;height:13px;border-radius:50%;
+    border:2px solid rgba(61,128,196,.5);
+    background:transparent;transition:background .15s ease;
+  }
+  .g-dots span.fill{background:var(--c-door);border-color:var(--c-door)}
+  .g-card.shake{animation:gshake .4s ease}
+  @keyframes gshake{
+    0%,100%{transform:translateX(0)}
+    20%,60%{transform:translateX(-9px)}
+    40%,80%{transform:translateX(9px)}
+  }
+  .g-pad{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;
+    max-width:14rem;margin:0 auto;
+  }
+  .g-pad button{
+    font-family:var(--display);font-weight:600;font-size:1.15rem;
+    color:var(--ink);
+    background:#fff;
+    border:2px solid rgba(61,128,196,.4);
+    border-radius:14px;
+    padding:.5em 0;
+    cursor:pointer;
+    box-shadow:0 2.5px 0 rgba(61,128,196,.35);
+    transition:transform .1s ease, background .15s ease;
+  }
+  .g-pad button:hover{background:rgba(88,168,216,.14)}
+  .g-pad button:active{transform:translateY(2px);box-shadow:none}
+  .g-pad button:focus-visible{outline:3px solid var(--c-door);outline-offset:2px}
+  .g-note{margin-top:1rem;font-family:var(--hand);font-size:1rem;color:var(--ink-faint)}
+  @media (prefers-reduced-motion:reduce){
+    .gate{transition:opacity .2s ease}
+    .gate.open{transform:none;opacity:0}
+    .g-card.shake{animation:none}
+  }
+
   /* ---------- footer ---------- */
   footer{
     border-top:3px dashed rgba(200,160,80,.4);
@@ -477,17 +576,59 @@
 </head>
 <body>
 
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="The classroom door — enter the class code">
+  <div class="g-card" id="gCard">
+    <svg class="g-door" viewBox="0 0 64 96" aria-hidden="true">
+      <rect x="2" y="2" width="60" height="92" rx="4" fill="#8a5f30"/>
+      <rect x="7" y="7" width="50" height="84" rx="2" fill="#58a8d8" stroke="#3a7ba8" stroke-width="2"/>
+      <rect x="20" y="16" width="24" height="20" rx="2" fill="#bfe4f2" stroke="#2c6a94" stroke-width="2"/>
+      <rect x="13" y="48" width="38" height="5" rx="2.5" fill="#f2f6f8"/>
+      <circle cx="45" cy="64" r="4.5" fill="#f7a823" stroke="#a86f0e" stroke-width="1.5"/>
+      <rect x="12" y="76" width="40" height="12" rx="2" fill="#cfe6f2" opacity=".8"/>
+    </svg>
+    <p class="g-kicker" id="gKicker">Physical Science</p>
+    <h2 class="g-title">The door’s locked — what’s the code?</h2>
+    <p class="g-hint" id="gHint" aria-live="polite">Your teacher gave it out in class. (Hint: it’s a year worth remembering.)</p>
+    <div class="g-dots" id="gDots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <div class="g-pad" id="gPad" aria-label="Code keypad"></div>
+    <p class="g-note">a classroom key, not a bank vault 💛</p>
+  </div>
+</div>
+
 <main class="scene" id="scene">
   <canvas id="dust" aria-hidden="true"></canvas>
 
   <header class="intro">
     <p class="eyebrow" id="eyebrow">Physical Science</p>
     <h1 id="introH">Welcome to <em>the classroom</em> — everything for this class is hiding in plain sight.</h1>
-    <p class="lede">This room is the syllabus. The chalkboard knows this week's homework,
-    the lab bench knows how to write a report, the flask in the corner will help you
-    build a hypothesis, and the door knows what you missed. Everything links back to
-    the real assignments in Google Classroom. Wander around — nothing in here bites.</p>
+    <p class="lede">This page is our class, drawn as the room you actually sit in.
+    It works the way your memory does: the homework lives on the chalkboard, safety
+    lives by the shower, labs live on the bench — so when you need something at
+    11&nbsp;pm, you don’t scroll a list of links, you just picture the room.
+    Everything here opens the real, up-to-date documents in Google Classroom.</p>
   </header>
+
+  <section class="why" aria-label="Why this room works">
+    <div class="why-card">
+      <h3><span aria-hidden="true">🧠</span> Your brain keeps maps, not lists</h3>
+      <p>Humans are astonishingly good at remembering <b>where things are</b> — and
+      pretty bad at remembering what link #7 was called. Memory champions exploit
+      this with the <b>“memory palace”</b> (the method of loci): put each fact in a
+      place, then walk the place in your mind. This room is ours.</p>
+    </div>
+    <div class="why-card">
+      <h3><span aria-hidden="true">📌</span> Every document gets an address</h3>
+      <p>“It’s on the chalkboard” beats “it’s somewhere in the feed.” When a thing
+      has a <b>physical spot</b> — homework on the board, the safety contract by the
+      eyewash — finding it stops being a search and becomes a habit.</p>
+    </div>
+    <div class="why-card">
+      <h3><span aria-hidden="true">🗂️</span> The room remembers, Classroom keeps</h3>
+      <p>This page is the <b>map</b>; Google Classroom stays the <b>library</b> — the
+      single, structured, always-current source of truth. Pairing the two means the
+      fun part helps you recall, and the organized part never lets you down.</p>
+    </div>
+  </section>
 
   <div class="room-wrap">
     <svg id="iso" viewBox="-470 -300 1105 830" role="group"
@@ -573,6 +714,11 @@
 
 <footer>
   <div class="cols" id="footLinks"></div>
+  <div class="cols">
+    <a href="/privacy/">Privacy</a>
+    <a href="/terms/">Terms</a>
+    <a href="/accessibility/">Accessibility</a>
+  </div>
   <span id="footNote">© Physical Science — built with chalk dust, no frameworks, no trackers.</span>
 </footer>
 
@@ -605,6 +751,18 @@
       calendar:         "",             // class calendar
       textbook:         "",             // online textbook / readings
       stream:           ""              // the Classroom stream (what did I miss?)
+    },
+    /* The door code. Students type it once; their browser remembers.
+       This is a friendly gate for a class website, not encryption —
+       the code itself is never written in this file, only its hash.
+       To change the code: open the site, unlock it, and in the browser
+       console run  CLASSROOM.hash("yournewcode")  — it prints the two
+       hash values to paste here. Change `hint` to match your new code. */
+    gate: {
+      enabled: true,
+      hint: "Your teacher gave it out in class. (Hint: it’s a year worth remembering.)",
+      sha256: "9b3cdc876abb6ca8f0dea911b38cdf7e2400e545cc787e2012e37d9a7bf10978",
+      djb2: "3cd99353"
     },
     bellSchedule: [
       {p:"Period 1", s:"7:45",  e:"8:33"},
@@ -685,6 +843,68 @@
   function wrapObj(id,label,accent,inner,cls){
     return '<g class="iso-obj' + (cls ? " " + cls : "") + '" data-id="' + id + '" tabindex="0" role="button" aria-haspopup="dialog" aria-label="' + label + '" style="--a:' + accent + '">' +
       "<g>" + inner + "</g></g>";
+  }
+
+  /* ================================================================
+     PERIODIC TABLE — all 118 elements.
+     ELEMS[i] = "Symbol|Name|mass"; CATS[i] = one category letter.
+     ================================================================ */
+  var ELEMS = ("H|Hydrogen|1.008,He|Helium|4.003,Li|Lithium|6.94,Be|Beryllium|9.012,B|Boron|10.81,C|Carbon|12.011," +
+    "N|Nitrogen|14.007,O|Oxygen|15.999,F|Fluorine|18.998,Ne|Neon|20.180,Na|Sodium|22.990,Mg|Magnesium|24.305," +
+    "Al|Aluminum|26.982,Si|Silicon|28.085,P|Phosphorus|30.974,S|Sulfur|32.06,Cl|Chlorine|35.45,Ar|Argon|39.95," +
+    "K|Potassium|39.098,Ca|Calcium|40.078,Sc|Scandium|44.956,Ti|Titanium|47.867,V|Vanadium|50.942,Cr|Chromium|51.996," +
+    "Mn|Manganese|54.938,Fe|Iron|55.845,Co|Cobalt|58.933,Ni|Nickel|58.693,Cu|Copper|63.546,Zn|Zinc|65.38," +
+    "Ga|Gallium|69.723,Ge|Germanium|72.63,As|Arsenic|74.922,Se|Selenium|78.971,Br|Bromine|79.904,Kr|Krypton|83.798," +
+    "Rb|Rubidium|85.468,Sr|Strontium|87.62,Y|Yttrium|88.906,Zr|Zirconium|91.224,Nb|Niobium|92.906,Mo|Molybdenum|95.95," +
+    "Tc|Technetium|97,Ru|Ruthenium|101.07,Rh|Rhodium|102.906,Pd|Palladium|106.42,Ag|Silver|107.868,Cd|Cadmium|112.414," +
+    "In|Indium|114.818,Sn|Tin|118.71,Sb|Antimony|121.76,Te|Tellurium|127.6,I|Iodine|126.904,Xe|Xenon|131.293," +
+    "Cs|Cesium|132.905,Ba|Barium|137.327,La|Lanthanum|138.905,Ce|Cerium|140.116,Pr|Praseodymium|140.908,Nd|Neodymium|144.242," +
+    "Pm|Promethium|145,Sm|Samarium|150.36,Eu|Europium|151.964,Gd|Gadolinium|157.25,Tb|Terbium|158.925,Dy|Dysprosium|162.5," +
+    "Ho|Holmium|164.93,Er|Erbium|167.259,Tm|Thulium|168.934,Yb|Ytterbium|173.045,Lu|Lutetium|174.967,Hf|Hafnium|178.486," +
+    "Ta|Tantalum|180.948,W|Tungsten|183.84,Re|Rhenium|186.207,Os|Osmium|190.23,Ir|Iridium|192.217,Pt|Platinum|195.084," +
+    "Au|Gold|196.967,Hg|Mercury|200.592,Tl|Thallium|204.38,Pb|Lead|207.2,Bi|Bismuth|208.98,Po|Polonium|209," +
+    "At|Astatine|210,Rn|Radon|222,Fr|Francium|223,Ra|Radium|226,Ac|Actinium|227,Th|Thorium|232.038," +
+    "Pa|Protactinium|231.036,U|Uranium|238.029,Np|Neptunium|237,Pu|Plutonium|244,Am|Americium|243,Cm|Curium|247," +
+    "Bk|Berkelium|247,Cf|Californium|251,Es|Einsteinium|252,Fm|Fermium|257,Md|Mendelevium|258,No|Nobelium|259," +
+    "Lr|Lawrencium|266,Rf|Rutherfordium|267,Db|Dubnium|268,Sg|Seaborgium|269,Bh|Bohrium|270,Hs|Hassium|277," +
+    "Mt|Meitnerium|278,Ds|Darmstadtium|281,Rg|Roentgenium|282,Cn|Copernicium|285,Nh|Nihonium|286,Fl|Flerovium|289," +
+    "Mc|Moscovium|290,Lv|Livermorium|293,Ts|Tennessine|294,Og|Oganesson|294").split(",");
+  var CATS =
+    "ng" +            // H He
+    "abmnnnhg" +      // Li Be B C N O F Ne
+    "abpmnnhg" +      // Na Mg Al Si P S Cl Ar
+    "ab" + "tttttttttt" + "pmmnhg" +   // K..Kr
+    "ab" + "tttttttttt" + "ppmmhg" +   // Rb..Xe
+    "ab" + "lllllllllllllll" + "ttttttttt" + "pppphg" +  // Cs..Rn (La–Lu = l)
+    "ab" + "ccccccccccccccc" + "ttttttttt" + "pppphg";   // Fr..Og (Ac–Lr = c)
+  var CAT_INFO = {
+    a:{name:"Alkali metal", c:"#ff9776", blurb:"soft, shiny, and dramatic in water — stored under oil so they behave"},
+    b:{name:"Alkaline earth metal", c:"#ffc06e", blurb:"reactive metals that build bones, fireworks, and cement"},
+    t:{name:"Transition metal", c:"#ffe08a", blurb:"the workhorse metals — strong, colorful compounds, good wiring"},
+    p:{name:"Post-transition metal", c:"#a8d8b9", blurb:"softer metals with lower melting points — foil, solder, pipes"},
+    m:{name:"Metalloid", c:"#b5e07f", blurb:"half metal, half not — the reason computer chips exist"},
+    n:{name:"Nonmetal", c:"#7fd0f7", blurb:"the stuff of air and life — most of you is made of these"},
+    h:{name:"Halogen", c:"#7fe3d0", blurb:"aggressive nonmetals that grab an electron and won’t give it back"},
+    g:{name:"Noble gas", c:"#c9a6ff", blurb:"complete outer shells, zero interest in reacting with anyone"},
+    l:{name:"Lanthanide", c:"#f7a8c8", blurb:"rare-earth metals hiding in your headphones and screens"},
+    c:{name:"Actinide", c:"#e08fa8", blurb:"heavy and radioactive — handle with robots"}
+  };
+  // standard 18-column layout: [column 1-18, row]
+  function ptPos(n){
+    if (n === 1) return [1,1];
+    if (n === 2) return [18,1];
+    if (n <= 4)  return [n - 2, 2];
+    if (n <= 10) return [n + 8, 2];
+    if (n <= 12) return [n - 10, 3];
+    if (n <= 18) return [n, 3];
+    if (n <= 36) return [n - 18, 4];
+    if (n <= 54) return [n - 36, 5];
+    if (n <= 56) return [n - 54, 6];
+    if (n <= 71) return [n - 54, 9];   // lanthanides, pulled-out row
+    if (n <= 86) return [n - 68, 6];
+    if (n <= 88) return [n - 86, 7];
+    if (n <= 103) return [n - 86, 10]; // actinides
+    return [n - 100, 7];
   }
 
   /* ---------- build the room ---------- */
@@ -807,6 +1027,10 @@
       s += '<path d="M' + (Math.sin(a)*r1).toFixed(1) + " " + (-Math.cos(a)*r1).toFixed(1) +
         " L" + (Math.sin(a)*15).toFixed(1) + " " + (-Math.cos(a)*15).toFixed(1) +
         '" stroke="#3a4148" stroke-width="' + (i % 3 ? 1 : 1.8) + '"/>'; } return s; })() +
+    txt(0,-7.4,"12",4.2,"#3a4148",MONO + ' text-anchor="middle" font-weight="bold"') +
+    txt(10.2,1.6,"3",4.2,"#3a4148",MONO + ' text-anchor="middle" font-weight="bold"') +
+    txt(0,12.6,"6",4.2,"#3a4148",MONO + ' text-anchor="middle" font-weight="bold"') +
+    txt(-10.2,1.6,"9",4.2,"#3a4148",MONO + ' text-anchor="middle" font-weight="bold"') +
     '<g id="handH"><path d="M0 1.5 L0 -8" stroke="#22262a" stroke-width="2.6" stroke-linecap="round"/></g>' +
     '<g id="handM"><path d="M0 2 L0 -13" stroke="#22262a" stroke-width="1.7" stroke-linecap="round"/></g>' +
     '<circle cx="0" cy="0" r="1.6" fill="#c23b30"/>';
@@ -824,7 +1048,10 @@
       '<circle cx="34" cy="-1" r="2.6" fill="' + CAL_ACCENT + '"/>' +
       '<rect x="-1" y="3" width="70" height="14" rx="2" fill="' + CAL_ACCENT + '"/>' +
       txt(34,13,names[m] + " " + y,7,"#fff6ee",MONO + ' text-anchor="middle" letter-spacing="1" font-weight="bold"');
-    var cell = 10, ox = -1, oy = 22;
+    "SMTWTFS".split("").forEach(function(wd, wi){
+      s += txt(-1 + wi * 10 + 5, 21.5, wd, 4.4, "#8a8168", MONO + ' text-anchor="middle" font-weight="bold"');
+    });
+    var cell = 10, ox = -1, oy = 24;
     for (var d = 1; d <= days; d++){
       var idx = first + d - 1, col = idx % 7, row = Math.floor(idx / 7);
       var cx = ox + col * cell + cell/2, cyv = oy + row * cell + cell/2;
@@ -874,29 +1101,44 @@
   S.push(wrapObj("smart","The smart board — goals and dreams","var(--c-smart)",gRight(-30,205,212,smart)));
 
   /* ---------- wall B: periodic table poster ---------- */
-  var PT_POSTER_C = ["#ff9776","#ffc06e","#ffe08a","#a8d8b9","#b5e07f","#7fd0f7","#7fe3d0","#c9a6ff","#f7a8c8","#e08fa8"];
-  var poster = '<rect x="-6" y="-6" width="160" height="106" rx="2" fill="#efe9da" stroke="rgba(8,6,2,.5)" stroke-width="1.5"/>' +
+  var poster = '<rect x="-6" y="-6" width="160" height="106" rx="2" fill="#efe9da" stroke="rgba(112,72,28,.5)" stroke-width="1.5"/>' +
     txt(74,8,"THE PERIODIC TABLE OF THE ELEMENTS",6.4,"#3c3a33",MONO + ' text-anchor="middle" letter-spacing=".6" font-weight="bold"') +
     (function(){
-      // a stylized-but-correct silhouette of the table, tiny colored cells
-      var s = "", c = 8, o = 4, top = 14;
-      function cell(col,row,cat){
-        s += '<rect x="' + (o + col*c) + '" y="' + (top + row*c) + '" width="' + (c-1.2) + '" height="' + (c-1.2) +
-          '" rx="1" fill="' + PT_POSTER_C[cat] + '" opacity=".9"/>';
+      // the real thing in miniature: all 118 cells, true layout, true categories
+      var s = "", c = 7.6, ox = 5, oy = 12;
+      for (var n = 1; n <= 118; n++){
+        var pos = ptPos(n), col = pos[0] - 1, row = pos[1] - 1;
+        if (row >= 7) row += 0.45; // pulled-out lanthanide/actinide rows sit slightly apart
+        s += '<rect x="' + (ox + col * c).toFixed(1) + '" y="' + (oy + row * c).toFixed(1) +
+          '" width="' + (c - 1) + '" height="' + (c - 1) + '" rx=".8" fill="' +
+          CAT_INFO[CATS[n - 1]].c + '" stroke="rgba(112,72,28,.25)" stroke-width=".4"/>';
       }
-      cell(0,0,5); cell(17,0,7);
-      [0,1].forEach(function(col){ for (var r = 1; r < 7; r++) cell(col, r, r > 4 ? col : col); });
-      for (var r2 = 3; r2 < 7; r2++) for (var col2 = 2; col2 < 12; col2++) cell(col2, r2, r2 > 4 && col2 === 2 ? (r2 === 5 ? 8 : 9) : 2);
-      for (var r3 = 1; r3 < 7; r3++) for (var col3 = 12; col3 < 18; col3++){
-        var cat = col3 === 17 ? 7 : col3 === 16 && r3 < 4 ? 6 : r3 < 3 ? 5 : 3;
-        if (r3 === 1 && col3 < 12) continue;
-        cell(col3, r3, cat);
-      }
-      for (var col4 = 3; col4 < 17; col4++){ cell(col4, 7.6, 8); cell(col4, 8.6, 9); }
       return s;
     })() +
     txt(74,100,"118 ways to build everything",7.5,"#8a8168",CHALK + ' text-anchor="middle"');
   S.push(wrapObj("ptable","The periodic table — pick an element","var(--c-ptable)",gRight(-30,395,206,poster)));
+
+  /* ---------- wall B: the scientific method poster ---------- */
+  var SCI_STEPS = [["Observe","#1fa05e"],["Question","#2f7fd6"],["Hypothesize","#8a53d6"],
+                   ["Test","#e0851a"],["Analyze","#0fa396"],["Share","#d64f86"]];
+  var sciPoster = '<rect x="-4" y="-4" width="66" height="94" rx="2" fill="#fffdf6" stroke="rgba(112,72,28,.5)" stroke-width="1.5"/>' +
+    '<circle cx="29" cy="-1" r="2.2" fill="#e0492f"/>' +
+    txt(29,8,"the scientific",7.5,"#374253",CHALK + ' text-anchor="middle" font-weight="600"') +
+    txt(29,16,"method",7.5,"#374253",CHALK + ' text-anchor="middle" font-weight="600"') +
+    (function(){
+      var s = "";
+      SCI_STEPS.forEach(function(st, i){
+        var y = 26 + i * 10.4;
+        s += '<circle cx="8" cy="' + y + '" r="2.6" fill="' + st[1] + '"/>' +
+          txt(14, y + 2.6, st[0], 7, "#5f6b78", CHALK) +
+          (i < 5 ? '<path d="M8 ' + (y + 3.4) + ' L8 ' + (y + 7.4) + '" stroke="#c9c3b0" stroke-width="1.2"/>' : "");
+      });
+      // it loops! science never really finishes
+      s += '<path d="M52 26 q6 26 -6 55" fill="none" stroke="#c9c3b0" stroke-width="1.2" stroke-dasharray="2.5 2.5"/>' +
+        '<path d="M46 78 l-4 3 l5 1.5" fill="none" stroke="#c9c3b0" stroke-width="1.2"/>';
+      return s;
+    })();
+  S.push(wrapObj("lab","The scientific method — how every lab runs","var(--c-lab)",gRight(-30,40,196,sciPoster)));
 
   /* ---------- wall B: safety sign ---------- */
   var safeSign = '<rect x="0" y="0" width="26" height="32" rx="2" fill="#1e5c38" stroke="rgba(8,6,2,.5)" stroke-width="1.5"/>' +
@@ -994,8 +1236,10 @@
   bench += cyl(336,102,52,7,3,"#4a5058");
   bench += cyl(336,102,55,3.6,9,"#b8975a");
   var fl = P(336,102,64);
-  bench += '<g class="flame"><path d="M' + fl[0] + " " + fl[1] + ' q-4.5 -6 0 -13 q4.5 7 0 13 z" fill="#ffb347" opacity=".9"/>' +
-    '<path d="M' + fl[0] + " " + fl[1] + ' q-2.4 -4 0 -7.5 q2.4 3.5 0 7.5 z" fill="#7cb8ff"/></g>';
+  bench += '<g class="flame">' +
+    '<path d="M' + fl[0] + " " + fl[1] + ' q-5 -6.5 0 -14 q5 7.5 0 14 z" fill="rgba(124,184,255,.45)"/>' +
+    '<path d="M' + fl[0] + " " + fl[1] + ' q-3.2 -4.5 0 -10 q3.2 5.5 0 10 z" fill="#5c9df2"/>' +
+    '<path d="M' + fl[0] + " " + fl[1] + ' q-1.6 -2.5 0 -5 q1.6 2.5 0 5 z" fill="#bfe0ff"/></g>';
   // beaker with teal liquid
   var bkB = P(376,124,52), bkT = P(376,124,70);
   bench += '<path d="M' + (bkB[0]-10) + " " + (bkT[1]) + " L" + (bkB[0]-10) + " " + bkB[1] +
@@ -1122,6 +1366,17 @@
       '<path d="M' + (rp[0]-2) + " " + (rp[1]-8) + ' l-5 -4 l1 6" fill="#e8e2d2" stroke="none"/></g>';
   })());
 
+  /* ---------- a potted plant by the door (rooms need life) ---------- */
+  S.push(shadowW(568,228,22,22,5,.2));
+  var plantS = cyl(578,238,0,9,11,"#c96a3e");
+  var pp = P(578,238,11);
+  plantS += '<g fill="none" stroke-linecap="round">' +
+    '<path d="M' + pp[0] + " " + pp[1] + ' q-9 -12 -6 -26" stroke="#3f8e5c" stroke-width="3.4"/>' +
+    '<path d="M' + pp[0] + " " + pp[1] + ' q1 -16 8 -24" stroke="#57a86a" stroke-width="3.4"/>' +
+    '<path d="M' + pp[0] + " " + pp[1] + ' q-2 -12 2 -18 q4 -6 3 -12" stroke="#2f7a4c" stroke-width="3"/>' +
+    '<path d="M' + pp[0] + " " + pp[1] + ' q7 -8 12 -10" stroke="#3f8e5c" stroke-width="2.8"/></g>';
+  S.push('<g aria-hidden="true">' + plantS + "</g>");
+
   document.getElementById("iso").innerHTML = S.join("");
 
   /* ================================================================
@@ -1231,67 +1486,6 @@
     }
   };
 
-  /* ================================================================
-     PERIODIC TABLE — all 118 elements.
-     ELEMS[i] = "Symbol|Name|mass"; CATS[i] = one category letter.
-     ================================================================ */
-  var ELEMS = ("H|Hydrogen|1.008,He|Helium|4.003,Li|Lithium|6.94,Be|Beryllium|9.012,B|Boron|10.81,C|Carbon|12.011," +
-    "N|Nitrogen|14.007,O|Oxygen|15.999,F|Fluorine|18.998,Ne|Neon|20.180,Na|Sodium|22.990,Mg|Magnesium|24.305," +
-    "Al|Aluminum|26.982,Si|Silicon|28.085,P|Phosphorus|30.974,S|Sulfur|32.06,Cl|Chlorine|35.45,Ar|Argon|39.95," +
-    "K|Potassium|39.098,Ca|Calcium|40.078,Sc|Scandium|44.956,Ti|Titanium|47.867,V|Vanadium|50.942,Cr|Chromium|51.996," +
-    "Mn|Manganese|54.938,Fe|Iron|55.845,Co|Cobalt|58.933,Ni|Nickel|58.693,Cu|Copper|63.546,Zn|Zinc|65.38," +
-    "Ga|Gallium|69.723,Ge|Germanium|72.63,As|Arsenic|74.922,Se|Selenium|78.971,Br|Bromine|79.904,Kr|Krypton|83.798," +
-    "Rb|Rubidium|85.468,Sr|Strontium|87.62,Y|Yttrium|88.906,Zr|Zirconium|91.224,Nb|Niobium|92.906,Mo|Molybdenum|95.95," +
-    "Tc|Technetium|97,Ru|Ruthenium|101.07,Rh|Rhodium|102.906,Pd|Palladium|106.42,Ag|Silver|107.868,Cd|Cadmium|112.414," +
-    "In|Indium|114.818,Sn|Tin|118.71,Sb|Antimony|121.76,Te|Tellurium|127.6,I|Iodine|126.904,Xe|Xenon|131.293," +
-    "Cs|Cesium|132.905,Ba|Barium|137.327,La|Lanthanum|138.905,Ce|Cerium|140.116,Pr|Praseodymium|140.908,Nd|Neodymium|144.242," +
-    "Pm|Promethium|145,Sm|Samarium|150.36,Eu|Europium|151.964,Gd|Gadolinium|157.25,Tb|Terbium|158.925,Dy|Dysprosium|162.5," +
-    "Ho|Holmium|164.93,Er|Erbium|167.259,Tm|Thulium|168.934,Yb|Ytterbium|173.045,Lu|Lutetium|174.967,Hf|Hafnium|178.486," +
-    "Ta|Tantalum|180.948,W|Tungsten|183.84,Re|Rhenium|186.207,Os|Osmium|190.23,Ir|Iridium|192.217,Pt|Platinum|195.084," +
-    "Au|Gold|196.967,Hg|Mercury|200.592,Tl|Thallium|204.38,Pb|Lead|207.2,Bi|Bismuth|208.98,Po|Polonium|209," +
-    "At|Astatine|210,Rn|Radon|222,Fr|Francium|223,Ra|Radium|226,Ac|Actinium|227,Th|Thorium|232.038," +
-    "Pa|Protactinium|231.036,U|Uranium|238.029,Np|Neptunium|237,Pu|Plutonium|244,Am|Americium|243,Cm|Curium|247," +
-    "Bk|Berkelium|247,Cf|Californium|251,Es|Einsteinium|252,Fm|Fermium|257,Md|Mendelevium|258,No|Nobelium|259," +
-    "Lr|Lawrencium|266,Rf|Rutherfordium|267,Db|Dubnium|268,Sg|Seaborgium|269,Bh|Bohrium|270,Hs|Hassium|277," +
-    "Mt|Meitnerium|278,Ds|Darmstadtium|281,Rg|Roentgenium|282,Cn|Copernicium|285,Nh|Nihonium|286,Fl|Flerovium|289," +
-    "Mc|Moscovium|290,Lv|Livermorium|293,Ts|Tennessine|294,Og|Oganesson|294").split(",");
-  var CATS =
-    "ng" +            // H He
-    "abmnnnhg" +      // Li Be B C N O F Ne
-    "abpmnnhg" +      // Na Mg Al Si P S Cl Ar
-    "ab" + "tttttttttt" + "pmmnhg" +   // K..Kr
-    "ab" + "tttttttttt" + "ppmmhg" +   // Rb..Xe
-    "ab" + "lllllllllllllll" + "ttttttttt" + "pppphg" +  // Cs..Rn (La–Lu = l)
-    "ab" + "ccccccccccccccc" + "ttttttttt" + "pppphg";   // Fr..Og (Ac–Lr = c)
-  var CAT_INFO = {
-    a:{name:"Alkali metal", c:"#ff9776", blurb:"soft, shiny, and dramatic in water — stored under oil so they behave"},
-    b:{name:"Alkaline earth metal", c:"#ffc06e", blurb:"reactive metals that build bones, fireworks, and cement"},
-    t:{name:"Transition metal", c:"#ffe08a", blurb:"the workhorse metals — strong, colorful compounds, good wiring"},
-    p:{name:"Post-transition metal", c:"#a8d8b9", blurb:"softer metals with lower melting points — foil, solder, pipes"},
-    m:{name:"Metalloid", c:"#b5e07f", blurb:"half metal, half not — the reason computer chips exist"},
-    n:{name:"Nonmetal", c:"#7fd0f7", blurb:"the stuff of air and life — most of you is made of these"},
-    h:{name:"Halogen", c:"#7fe3d0", blurb:"aggressive nonmetals that grab an electron and won’t give it back"},
-    g:{name:"Noble gas", c:"#c9a6ff", blurb:"complete outer shells, zero interest in reacting with anyone"},
-    l:{name:"Lanthanide", c:"#f7a8c8", blurb:"rare-earth metals hiding in your headphones and screens"},
-    c:{name:"Actinide", c:"#e08fa8", blurb:"heavy and radioactive — handle with robots"}
-  };
-  // standard 18-column layout: [column 1-18, row]
-  function ptPos(n){
-    if (n === 1) return [1,1];
-    if (n === 2) return [18,1];
-    if (n <= 4)  return [n - 2, 2];
-    if (n <= 10) return [n + 8, 2];
-    if (n <= 12) return [n - 10, 3];
-    if (n <= 18) return [n, 3];
-    if (n <= 36) return [n - 18, 4];
-    if (n <= 54) return [n - 36, 5];
-    if (n <= 56) return [n - 54, 6];
-    if (n <= 71) return [n - 54, 9];   // lanthanides, pulled-out row
-    if (n <= 86) return [n - 68, 6];
-    if (n <= 88) return [n - 86, 7];
-    if (n <= 103) return [n - 86, 10]; // actinides
-    return [n - 100, 7];
-  }
 
   /* ================================================================
      PLANETS — for the orrery. r = orbit radius (px), s = planet size,
@@ -1877,7 +2071,132 @@
     });
   document.getElementById("footNote").textContent =
     "© " + new Date().getFullYear() + " " + CONFIG.teacher + " · " + CONFIG.course +
-    " — built with chalk dust, no frameworks, no trackers.";
+    " — an unofficial class companion, not a school district website. Built with chalk dust, no frameworks, no trackers.";
+
+  /* ================================================================
+     THE DOOR GATE — a playful class code, remembered per browser.
+     Deterrent-grade by design: the code never appears in this file.
+     ================================================================ */
+  var GATE = CONFIG.gate || {};
+  var gateEl = document.getElementById("gate");
+  function djb2(s){
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h.toString(16);
+  }
+  function sha256Hex(s){
+    if (!(window.crypto && crypto.subtle && window.TextEncoder)) return Promise.resolve(null);
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){
+        return ("0" + b.toString(16)).slice(-2);
+      }).join("");
+    }).catch(function(){ return null; });
+  }
+  function checkCode(code){
+    var salted = "dmeves|" + code;
+    return sha256Hex(salted).then(function(hex){
+      if (hex !== null) return hex === GATE.sha256;
+      return djb2(salted) === GATE.djb2; // ancient-browser fallback
+    });
+  }
+  // console helper so the teacher can mint hashes for a new code
+  window.CLASSROOM = {
+    hash: function(code){
+      var salted = "dmeves|" + code;
+      return sha256Hex(salted).then(function(hex){
+        var out = { sha256: hex, djb2: djb2(salted) };
+        console.log("Paste into CONFIG.gate →", JSON.stringify(out));
+        return out;
+      });
+    }
+  };
+  if (!GATE.enabled){
+    gateEl.classList.add("open","instant");
+  } else {
+    var gTyped = "", gLockedOut = false;
+    var gDots = document.getElementById("gDots");
+    var gHint = document.getElementById("gHint");
+    var gCard = document.getElementById("gCard");
+    var gPad  = document.getElementById("gPad");
+    document.getElementById("gKicker").textContent =
+      [CONFIG.room, CONFIG.course].filter(Boolean).join(" · ");
+    gHint.textContent = GATE.hint || "Ask your teacher for the code.";
+    document.body.style.overflow = "hidden";
+    setBackgroundInert(true);
+    function gateOpen(instant){
+      document.body.style.overflow = "";
+      setBackgroundInert(false);
+      gateEl.classList.add("open");
+      if (instant) gateEl.classList.add("instant");
+      gateEl.setAttribute("aria-hidden", "true");
+      if (!instant){
+        try { localStorage.setItem("dmeves-gate", GATE.sha256); } catch(e){}
+        SOUNDS.bell(); buzz("bell");
+        setTimeout(function(){ gateEl.classList.add("instant"); }, REDUCED ? 250 : 750);
+      }
+    }
+    function gRender(){
+      for (var i = 0; i < 4; i++) gDots.children[i].className = i < gTyped.length ? "fill" : "";
+    }
+    function gPress(d){
+      if (gLockedOut || gTyped.length >= 4) return;
+      ac(true); SOUNDS.hover();
+      gTyped += d;
+      gRender();
+      if (gTyped.length === 4){
+        gLockedOut = true;
+        checkCode(gTyped).then(function(ok){
+          if (ok){ gateOpen(false); }
+          else {
+            gHint.textContent = "Nope — that’s not it. Ask your teacher (or check the board).";
+            gHint.classList.add("err");
+            gCard.classList.add("shake");
+            setTimeout(function(){
+              gCard.classList.remove("shake");
+              gTyped = ""; gLockedOut = false; gRender();
+            }, 450);
+          }
+        });
+      }
+    }
+    ["1","2","3","4","5","6","7","8","9","⌫","0",""].forEach(function(k){
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = k;
+      if (k === "⌫"){
+        b.setAttribute("aria-label", "Delete last digit");
+        b.addEventListener("click", function(){ gTyped = gTyped.slice(0, -1); gRender(); });
+      } else if (k === ""){
+        b.disabled = true; b.style.opacity = "0"; b.style.cursor = "default";
+        b.setAttribute("aria-hidden", "true"); b.tabIndex = -1;
+      } else {
+        b.addEventListener("click", function(){ gPress(k); });
+      }
+      gPad.appendChild(b);
+    });
+    document.addEventListener("keydown", function(e){
+      if (gateEl.classList.contains("open")) return;
+      if (e.key >= "0" && e.key <= "9") gPress(e.key);
+      else if (e.key === "Backspace"){ gTyped = gTyped.slice(0, -1); gRender(); }
+    });
+    // remembered from a previous visit? magic link (?code=…) from the teacher?
+    var remembered = null;
+    try { remembered = localStorage.getItem("dmeves-gate"); } catch(e){}
+    var urlCode = new URLSearchParams(location.search).get("code");
+    if (remembered === GATE.sha256){
+      gateOpen(true);
+    } else if (urlCode){
+      checkCode(urlCode).then(function(ok){
+        if (ok){
+          try { localStorage.setItem("dmeves-gate", GATE.sha256); } catch(e){}
+          gateOpen(true);
+        }
+      });
+    }
+    if (!gateEl.classList.contains("open")){
+      var firstKey = gPad.querySelector("button");
+      if (firstKey) firstKey.focus();
+    }
+  }
 
   /* ---------------- start small screens panned to the room's center ---------------- */
   if (wrap.scrollWidth > wrap.clientWidth){
