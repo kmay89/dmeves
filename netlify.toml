@@ -2,7 +2,13 @@
 [build]
   publish = "."
 
-# Canonical host: send www to the apex domain
+# Canonical host: send www (http and https) to the apex domain in one hop
+[[redirects]]
+  from = "http://www.dmeves.com/*"
+  to = "https://dmeves.com/:splat"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "https://www.dmeves.com/*"
   to = "https://dmeves.com/:splat"
