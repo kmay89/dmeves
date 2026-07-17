@@ -1208,14 +1208,9 @@
   S.push(shadowW(284,200,28,28,6,.24));     // wizard stool
   S.push(shadowW(18,352,80,58,8,.26));      // safety corner
   S.push(shadowW(572,32,28,28,5,.22));      // recycling bin
-  var seatmap = null;
-  try { seatmap = JSON.parse(localStorage.getItem("dmeves-seatmap") || "null"); } catch(e){}
-  if (!(seatmap && seatmap.tables && seatmap.tables.length)) seatmap = null;
-  if (!seatmap){
-    [[150,240],[290,240],[430,240],[150,330],[290,330],[430,330]].forEach(function(dpos){
-      S.push(shadowW(dpos[0],dpos[1],56,40,6,.22));
-    });
-  }
+  [[150,240],[290,240],[430,240],[150,330],[290,330],[430,330]].forEach(function(dpos){
+    S.push(shadowW(dpos[0],dpos[1],56,40,6,.22));
+  });
 
   /* ---------- bookshelf (against wall A, far left) ---------- */
   var SPINES = ["#b8442f","#33517c","#e0a458","#3f7e52","#8a5bb8","#c46a8a","#4a8ea0","#b8862f","#6b4a2e","#5d7590"];
@@ -1481,55 +1476,16 @@
   var planeTop = gTop(444,338,40,'<g transform="rotate(22 14 8)">' +
     '<path d="M0 8 L28 0 L12 16 Z" fill="#e8e2d2" stroke="rgba(8,6,2,.35)"/>' +
     '<path d="M28 0 L12 10 L12 16" fill="#c9c3b0" stroke="rgba(8,6,2,.35)"/></g>');
-  /* If the teacher has built a seating chart (in /seating/), its layout is
-     projected onto the floor as a ghost map — same tables, same seats,
-     same angles — instead of the default furniture. */
-  if (seatmap){
-    var rows = 1 + Math.max.apply(null, seatmap.tables.map(function(t){ return t.row; }));
-    var rowH = Math.min(84, 168 / rows);
-    var gf = Math.min(1, rowH / 80);
-    var ghost = '<g fill="none" stroke-linejoin="round">';
-    seatmap.tables.forEach(function(t){
-      var topCount = Math.ceil(t.seats / 2);
-      var w = topCount * 30 + 10;
-      var cx = t.col === "left" ? 92 : 278;
-      var cy = t.row * rowH + rowH / 2 + 14;
-      var rot = seatmap.angled ? (t.col === "left" ? 12 : -12) : 0;
-      ghost += '<g transform="translate(' + cx + " " + cy + ') rotate(' + rot + ') scale(' + gf.toFixed(2) + ')">' +
-        '<rect x="' + (-w/2) + '" y="-13" width="' + w + '" height="26" rx="5" fill="rgba(122,130,140,.22)" stroke="rgba(95,107,120,.7)" stroke-width="1.6" stroke-dasharray="5 3"/>' +
-        '<text x="0" y="4" font-size="11" fill="rgba(95,107,120,.85)" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="600">' + t.id + "</text>";
-      for (var i = 1; i <= t.seats; i++){
-        var idx = i - 1, isTop = idx < topCount;
-        var slot = isTop ? idx : idx - topCount;
-        var rowCount = isTop ? topCount : t.seats - topCount;
-        var sx = -(rowCount * 30) / 2 + slot * 30 + 15;
-        var sy = isTop ? -29 : 16;
-        var name = (seatmap.seats || {})["t" + t.id + "s" + i];
-        var ini = "";
-        if (name){
-          var np = String(name).trim().split(/\s+/);
-          ini = (np[0] ? np[0][0] : "") + (np.length > 1 ? np[np.length - 1][0] : "");
-        }
-        ghost += '<rect x="' + (sx - 12) + '" y="' + sy + '" width="24" height="13" rx="3" fill="' +
-          (name ? "rgba(122,130,140,.34)" : "rgba(255,255,255,.3)") + '" stroke="rgba(95,107,120,.55)" stroke-width="1.1" stroke-dasharray="3 2.4"/>';
-        if (ini) ghost += '<text x="' + sx + '" y="' + (sy + 10) + '" font-size="8.5" fill="rgba(74,84,96,.9)" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="600">' + ini.toUpperCase() + "</text>";
-      }
-      ghost += "</g>";
-    });
-    ghost += '<text x="185" y="' + (rows * rowH + 34) + '" font-size="15" fill="rgba(95,107,120,.75)" text-anchor="middle" font-family="Caveat,cursive">today’s seating — from the teacher’s chart ✎</text></g>';
-    S.push(wrapObj("seatmap","Today’s seating map — projected from the seating chart","#7b8794",gTop(150,232,0,ghost)));
-  } else {
-    S.push('<g aria-hidden="true">' +
-      studentDesk(150,240,noteTop) + studentDesk(290,240) + studentDesk(430,240) +
-      studentDesk(150,330) + studentDesk(290,330) + studentDesk(430,330,planeTop) +
-    "</g>");
-    // backpack slouched against a desk leg
-    var bp = P(268,306,0);
-    S.push('<g aria-hidden="true" transform="translate(' + bp[0] + "," + bp[1] + ')">' +
-      '<path d="M-8 0 Q-11 -22 0 -26 Q11 -22 9 0 Z" fill="#8a5bb8" ' + OUT + "/>" +
-      '<path d="M-4 0 Q-5 -12 0 -14 Q6 -12 5 0 Z" fill="#a07ad0" ' + OUT + "/>" +
-      '<path d="M-6 -24 Q0 -30 6 -24" stroke="#5d3a8e" stroke-width="2.5" fill="none"/></g>');
-  }
+  S.push('<g aria-hidden="true">' +
+    studentDesk(150,240,noteTop) + studentDesk(290,240) + studentDesk(430,240) +
+    studentDesk(150,330) + studentDesk(290,330) + studentDesk(430,330,planeTop) +
+  "</g>");
+  // backpack slouched against a desk leg
+  var bp = P(268,306,0);
+  S.push('<g aria-hidden="true" transform="translate(' + bp[0] + "," + bp[1] + ')">' +
+    '<path d="M-8 0 Q-11 -22 0 -26 Q11 -22 9 0 Z" fill="#8a5bb8" ' + OUT + "/>" +
+    '<path d="M-4 0 Q-5 -12 0 -14 Q6 -12 5 0 Z" fill="#a07ad0" ' + OUT + "/>" +
+    '<path d="M-6 -24 Q0 -30 6 -24" stroke="#5d3a8e" stroke-width="2.5" fill="none"/></g>');
   // recycling bin by the door
   S.push(cyl(586,46,0,13,26,"#33689c"));
   S.push((function(){
@@ -1652,27 +1608,6 @@
       story: "The online textbook goes everywhere your phone goes, which is more than this shelf can say. Readings get assigned from it, but the shelf keeps the fun stuff too — the beat-up field guides and the one book about bridges that three students a year fall in love with. Borrow anything; just bring it back.",
       chips: ["Online textbook","Assigned readings","The bridge book"],
       links: [{label:"the textbook", href:LNK("textbook")}]
-    },
-    seatmap: {
-      kicker: "The floor · today’s seating",
-      title: "The seating chart, projected into the room",
-      story: function(){
-        var m = null;
-        try { m = JSON.parse(localStorage.getItem("dmeves-seatmap") || "null"); } catch(e){}
-        if (!m || !m.tables) return "Build a chart in the seating tool and its layout appears here as a ghost on the floor.";
-        var seatsTotal = m.tables.reduce(function(a, t){ return a + t.seats; }, 0);
-        var seated = Object.keys(m.seats || {}).length;
-        return "These gray outlines are the live layout from the seating chart — " + m.tables.length +
-          " tables, " + seatsTotal + " seats, " + seated +
-          " students placed, angled so every seat faces the front. Change the chart and the floor redraws itself. Find your initials; that’s your spot.";
-      },
-      chips: function(){
-        var m = null;
-        try { m = JSON.parse(localStorage.getItem("dmeves-seatmap") || "null"); } catch(e){}
-        if (!m || !m.tables) return [];
-        return m.tables.map(function(t){ return "Table " + t.id + " · " + t.seats + " seats"; });
-      },
-      links: [{label:"open the seating chart", href:"/seating/"}]
     },
     pass: {
       kicker: "The hall pass · by the door",

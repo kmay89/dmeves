@@ -226,6 +226,30 @@
   .capstat:last-child{border:none}
   .capstat b.bad{color:var(--red)} .capstat b.good{color:var(--green)}
 
+  .upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .camera-modal{
+    position:fixed;inset:0;background:rgba(30,26,16,.9);
+    display:flex;align-items:center;justify-content:center;z-index:200;
+    opacity:0;visibility:hidden;transition:all .25s ease;padding:1rem;
+  }
+  .camera-modal.active{opacity:1;visibility:visible}
+  .camera-box{background:#1c1a14;border-radius:16px;padding:16px;max-width:92vw;max-height:86vh}
+  .camera-box video,.camera-box canvas{max-width:100%;max-height:64vh;border-radius:10px;display:block}
+  .camera-controls{display:flex;gap:10px;justify-content:center;margin-top:12px}
+  .processing{
+    position:fixed;inset:0;background:rgba(84,64,28,.75);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:300;
+    opacity:0;visibility:hidden;transition:all .25s ease;
+  }
+  .processing.active{opacity:1;visibility:visible}
+  .spinner{
+    width:54px;height:54px;border:5px solid rgba(255,253,247,.3);
+    border-top-color:#fffdf7;border-radius:50%;animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .processing-text{color:#fffdf7;margin-top:16px;font-family:var(--display);font-weight:500}
+  @media (prefers-reduced-motion:reduce){ .spinner{animation-duration:2.5s} }
+
   @media (max-width:900px){
     .app{grid-template-columns:1fr}
     .sidebar{position:relative;max-height:none;border-right:none;border-bottom:2px solid rgba(200,160,80,.3)}
@@ -259,33 +283,38 @@
         </div>
       </div>
       <div class="layout-row">
-        <label>Seats per table</label>
-        <div class="seg" id="segSeats">
-          <button type="button" data-v="2">2</button>
-          <button type="button" data-v="4" class="on">4</button>
-          <button type="button" data-v="6">6</button>
+        <label for="seatCount">Seats per table</label>
+        <div class="stepper">
+          <button type="button" onclick="bumpSeats(-1)" aria-label="Fewer seats per table">−</button>
+          <span class="val" id="seatCount">4</span>
+          <button type="button" onclick="bumpSeats(1)" aria-label="More seats per table">+</button>
         </div>
       </div>
       <div class="layout-row">
         <label class="toggle"><input type="checkbox" id="angledChk" checked>
           Angle tables toward the front</label>
       </div>
-      <p class="tip-note">Click a table’s <b>number circle</b> in the chart to change just that
-      table’s seats (2 → 4 → 6). Total seats: <b id="totalSeats">28</b>.
-      The classroom page mirrors this layout as a ghost map.</p>
+      <p class="tip-note">Any whole number works — <b>odd counts welcome</b> (3 kids at a
+      4-top just leaves a spot empty). Click a table’s <b>number circle</b> in the chart
+      to bump just that table (1–8, then wraps). Total seats: <b id="totalSeats">28</b>.</p>
     </div>
 
     <div class="section">
       <h3 class="section-title">Class Roster</h3>
-      <input type="file" id="fileUpload" accept=".csv,text/csv" style="display:none" onchange="handleFileUpload(event)">
-      <button class="filebtn" onclick="document.getElementById('fileUpload').click()">
-        <b>📁 Upload CSV</b><small>First Name, Last Name — or one name per line</small>
-      </button>
+      <input type="file" id="fileUpload" accept=".csv,.xls,.xlsx,image/*" style="display:none" onchange="handleFileUpload(event)">
+      <div class="upload-grid">
+        <button class="filebtn" onclick="document.getElementById('fileUpload').click()">
+          <b>📁 Upload file</b><small>CSV · Excel · photo of a list</small>
+        </button>
+        <button class="filebtn" onclick="openCameraCapture()">
+          <b>📷 Camera</b><small>snap a printed roster</small>
+        </button>
+      </div>
       <div class="divider"><span>or type names</span></div>
       <textarea id="studentInput" placeholder="One student per line:&#10;&#10;Emma Johnson&#10;Liam Smith&#10;Olivia Williams&#10;…"></textarea>
       <div class="btn-group">
         <button class="btn btn-primary" onclick="loadStudentsWithValidation()">✓ Load</button>
-        <button class="btn btn-secondary" onclick="shuffleSeats(); saveAll();">🔀 Shuffle</button>
+        <button class="btn btn-secondary" onclick="shuffleSeats()">🔀 Shuffle</button>
       </div>
       <div class="btn-group">
         <button class="btn btn-secondary" onclick="loadDemoData()">👥 Demo</button>
@@ -317,7 +346,9 @@
         <span><b id="statTables">7</b> tables</span>
       </div>
       <div class="actions">
-        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print / save as PDF</button>
+        <button class="btn btn-secondary" onclick="downloadSeatingChart('png')">🖼️ PNG</button>
+        <button class="btn btn-secondary" onclick="downloadSeatingChart('pdf')">📄 PDF + roster</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
       </div>
     </div>
 
@@ -334,6 +365,22 @@
     </div>
     <p class="privacy-line">names live only in this browser — nothing is ever uploaded anywhere ✏️</p>
   </main>
+</div>
+
+<div class="camera-modal" id="cameraModal">
+  <div class="camera-box">
+    <video id="cameraVideo" autoplay playsinline></video>
+    <canvas id="cameraCanvas" style="display:none"></canvas>
+    <div class="camera-controls">
+      <button class="btn btn-secondary" onclick="closeCameraCapture()">Cancel</button>
+      <button class="btn btn-primary" onclick="capturePhoto()">📷 Capture</button>
+    </div>
+  </div>
+</div>
+
+<div class="processing" id="processingOverlay">
+  <div class="spinner"></div>
+  <div class="processing-text" id="processingText">Working…</div>
 </div>
 
 <div class="overlay" id="conflictModal">
@@ -378,8 +425,7 @@
 "use strict";
 /* Seat Smart — self-contained, no libraries, no network.
    Everything lives in this browser's localStorage and nowhere else. */
-var LS_KEY = "dmeves-seating";     // full tool state
-var MAP_KEY = "dmeves-seatmap";    // compact layout+assignments, read by the classroom page
+var LS_KEY = "dmeves-seating";     // full tool state, this browser only
 
 var students = [], seats = {}, categories = {}, conflicts = [];
 var frontPriority = new Set();
@@ -422,11 +468,6 @@ function saveAll(){
       students: students, seats: seats, categories: categories,
       conflicts: conflicts, front: Array.from(frontPriority), layout: layout
     }));
-    localStorage.setItem(MAP_KEY, JSON.stringify({
-      v: 1, angled: layout.angled,
-      tables: getTables().map(function(t){ return { id: t.id, seats: t.seats, col: t.col, row: t.row }; }),
-      seats: seats
-    }));
   } catch(e){}
 }
 function loadAll(){
@@ -450,21 +491,18 @@ window.bumpTables = function(d){
   layout.count = Math.max(1, Math.min(12, layout.count + d));
   layoutChanged();
 };
-document.querySelectorAll("#segSeats button").forEach(function(b){
-  b.addEventListener("click", function(){
-    layout.seatsDefault = +b.dataset.v;
-    layout.overrides = {}; // a new default clears per-table tweaks
-    document.querySelectorAll("#segSeats button").forEach(function(x){ x.classList.toggle("on", x === b); });
-    layoutChanged();
-  });
-});
+window.bumpSeats = function(d){
+  layout.seatsDefault = Math.max(1, Math.min(8, layout.seatsDefault + d));
+  layout.overrides = {}; // a new default clears per-table tweaks
+  layoutChanged();
+};
 document.getElementById("angledChk").addEventListener("change", function(){
   layout.angled = this.checked;
   layoutChanged();
 });
 window.cycleTableSeats = function(id){
   var cur = layout.overrides[id] || layout.seatsDefault;
-  var next = cur === 2 ? 4 : cur === 4 ? 6 : 2;
+  var next = cur >= 8 ? 1 : cur + 1;
   if (next === layout.seatsDefault) delete layout.overrides[id];
   else layout.overrides[id] = next;
   layoutChanged();
@@ -482,9 +520,7 @@ function syncLayoutControls(){
   document.getElementById("statSeats").textContent = totalSeats();
   document.getElementById("statTables").textContent = layout.count;
   document.getElementById("angledChk").checked = !!layout.angled;
-  document.querySelectorAll("#segSeats button").forEach(function(x){
-    x.classList.toggle("on", +x.dataset.v === layout.seatsDefault);
-  });
+  document.getElementById("seatCount").textContent = layout.seatsDefault;
 }
 
 /* ---------- table rendering (any table count, 2/4/6 seats) ---------- */
@@ -519,19 +555,179 @@ function renderTables(){
   });
 }
 
-/* ---------- roster input ---------- */
+/* ---------- lazy libraries: fetched ONLY when a feature that needs
+   them is used, so the page itself makes zero third-party requests.
+   All processing (OCR included) runs locally in this browser. ---------- */
+var LIBS = {
+  xlsx: "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
+  tesseract: "https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js",
+  html2canvas: "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
+  jspdf: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+};
+var libPromises = {};
+function loadLib(name){
+  if (libPromises[name]) return libPromises[name];
+  libPromises[name] = new Promise(function(resolve, reject){
+    var s = document.createElement("script");
+    s.src = LIBS[name];
+    s.onload = resolve;
+    s.onerror = function(){
+      delete libPromises[name];
+      reject(new Error("couldn’t fetch the " + name + " library — check the connection and try again"));
+    };
+    document.head.appendChild(s);
+  });
+  return libPromises[name];
+}
+function showProcessing(text){
+  document.getElementById("processingText").textContent = text;
+  document.getElementById("processingOverlay").classList.add("active");
+}
+function hideProcessing(){
+  document.getElementById("processingOverlay").classList.remove("active");
+}
+
+/* ---------- roster input: CSV, Excel, or a photo of a printed list ---------- */
 window.handleFileUpload = function(event){
   var file = event.target.files[0];
+  event.target.value = "";
   if (!file) return;
-  file.text().then(function(text){
-    var names = parseCSVData(text);
-    if (!names.length){ showStatus("err", "No names found in that file."); return; }
+  var fn = (file.name || "").toLowerCase();
+  var job;
+  if (fn.slice(-4) === ".csv" || file.type === "text/csv"){
+    job = file.text().then(function(text){ return parseCSVData(text); });
+  } else if (fn.slice(-4) === ".xls" || fn.slice(-5) === ".xlsx"){
+    job = processExcel(file);
+  } else if ((file.type || "").indexOf("image/") === 0){
+    job = processImage(file);
+  } else {
+    showStatus("err", "That file type isn’t supported — use CSV, Excel, or an image.");
+    return;
+  }
+  job.then(function(names){
+    hideProcessing();
+    if (!names || !names.length){ showStatus("err", "No names found in that file."); return; }
     document.getElementById("studentInput").value = names.join("\n");
     loadStudentsWithValidation();
   }).catch(function(err){
+    hideProcessing();
     showStatus("err", "Couldn’t read that file: " + err.message);
   });
-  event.target.value = "";
+};
+function processExcel(file){
+  showProcessing("Fetching the spreadsheet reader…");
+  return loadLib("xlsx").then(function(){
+    showProcessing("Reading the spreadsheet…");
+    return file.arrayBuffer();
+  }).then(function(buf){
+    var wb = XLSX.read(buf, { type: "array" });
+    var sheet = wb.Sheets[wb.SheetNames[0]];
+    var data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    return parseSpreadsheetData(data);
+  });
+}
+function parseSpreadsheetData(data){
+  var names = [], firstCol = -1, lastCol = -1, startRow = 0;
+  if (data.length){
+    var head = data[0].map(function(c){ return String(c || "").toLowerCase().trim(); });
+    head.forEach(function(cell, i){
+      if ((cell.indexOf("first") !== -1 && cell.indexOf("name") !== -1) || cell === "first" || cell === "firstname") firstCol = i;
+      else if ((cell.indexOf("last") !== -1 && cell.indexOf("name") !== -1) || cell === "last" || cell === "lastname") lastCol = i;
+    });
+    if (firstCol !== -1 || lastCol !== -1) startRow = 1;
+  }
+  if (firstCol === -1) firstCol = 0;
+  if (lastCol === -1) lastCol = 1;
+  for (var r = startRow; r < data.length; r++){
+    var row = data[r];
+    if (!row || !row.length) continue;
+    var a = String(row[firstCol] || "").trim(), b = String(row[lastCol] || "").trim();
+    if (a && b) names.push(a + " " + b);
+    else if (a && a.indexOf(" ") !== -1) names.push(a);
+  }
+  return names;
+}
+function processImage(fileOrBlob){
+  showProcessing("Fetching the text reader…");
+  return loadLib("tesseract").then(function(){
+    showProcessing("Reading the photo… 0%");
+    return Tesseract.recognize(fileOrBlob, "eng", {
+      logger: function(m){
+        if (m.status === "recognizing text"){
+          showProcessing("Reading the photo… " + Math.round(m.progress * 100) + "%");
+        }
+      }
+    });
+  }).then(function(result){
+    return extractNamesFromText(result.data.text);
+  });
+}
+function extractNamesFromText(text){
+  var names = [];
+  text.split(/\r?\n/).forEach(function(line){
+    var cleaned = line.trim()
+      .replace(/^\d+[\.\)\-\s]+/, "")
+      .replace(/^[\u2022\-\*\u25E6\u25CB]\s*/, "")
+      .replace(/[^\w\s\'\-\.]/g, "")
+      .trim();
+    if (!cleaned) return;
+    var words = cleaned.split(/\s+/).filter(Boolean);
+    if (words.length < 1 || words.length > 4) return;
+    var looksLikeName = words.every(function(w){
+      return /^[A-Za-z][a-zA-Z\'\-\.]*$/.test(w);
+    });
+    if (!looksLikeName) return;
+    var proper = words.map(function(w){
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }).join(" ");
+    if (proper.length >= 3 && proper.length <= 50) names.push(proper);
+  });
+  return Array.from(new Set(names));
+}
+
+/* ---------- camera capture ---------- */
+var cameraStream = null;
+window.openCameraCapture = function(){
+  var modal = document.getElementById("cameraModal");
+  var video = document.getElementById("cameraVideo");
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    showStatus("err", "No camera available here — try the file upload instead.");
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream){
+    cameraStream = stream;
+    video.srcObject = stream;
+    modal.classList.add("active");
+  }).catch(function(){
+    showStatus("err", "Couldn’t open the camera — check permissions, or upload a photo instead.");
+  });
+};
+window.closeCameraCapture = function(){
+  if (cameraStream){
+    cameraStream.getTracks().forEach(function(t){ t.stop(); });
+    cameraStream = null;
+  }
+  document.getElementById("cameraVideo").srcObject = null;
+  document.getElementById("cameraModal").classList.remove("active");
+};
+window.capturePhoto = function(){
+  var video = document.getElementById("cameraVideo");
+  var canvas = document.getElementById("cameraCanvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+  closeCameraCapture();
+  canvas.toBlob(function(blob){
+    processImage(blob).then(function(names){
+      hideProcessing();
+      if (!names.length){ showStatus("err", "No names detected — try a clearer, closer photo."); return; }
+      document.getElementById("studentInput").value = names.join("\n");
+      loadStudentsWithValidation();
+    }).catch(function(err){
+      hideProcessing();
+      showStatus("err", "Photo reading failed: " + err.message);
+    });
+  }, "image/jpeg", 0.95);
 };
 function parseCSVLine(line){
   var result = [], current = "", inQ = false;
@@ -890,6 +1086,153 @@ function updateUI(){
   });
 }
 
+/* ---------- PNG / PDF export (libraries fetched on first use) ---------- */
+function getDateString(){
+  var n = new Date();
+  return n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0") + "-" + String(n.getDate()).padStart(2, "0");
+}
+var CAT_HEX = { A: "#2f7fd6", B: "#e0851a", C: "#0fa396", D: "#d64f86" };
+function createPrintableChart(){
+  var wrap = document.createElement("div");
+  wrap.style.cssText = "width:860px;background:#fff;padding:36px;font-family:Nunito,Arial,sans-serif;position:absolute;left:-9999px;top:0";
+  var seated = Object.keys(seats).length;
+  var html = '<div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #e0d5bc">' +
+    '<div style="font-family:Fredoka,Arial,sans-serif;font-size:26px;font-weight:600;color:#374253">Classroom Seating Chart</div>' +
+    '<div style="font-size:13px;color:#5f6b78;margin-top:4px">' + students.length + " students · " + seated + " seated · " +
+    new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + "</div></div>" +
+    '<div style="text-align:center;margin-bottom:16px"><span style="background:#8a6a3c;color:#fff;padding:5px 18px;border-radius:20px;font-size:11px;font-weight:700">🚪 DOOR</span></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:26px 20px;justify-items:center">';
+  getTables().forEach(function(t){
+    var topCount = Math.ceil(t.seats / 2);
+    var pitch = 79;
+    var contW = topCount * pitch + 40;
+    var surfW = Math.max(110, topCount * pitch - 30);
+    var rot = layout.angled ? (t.col === "left" ? 10 : -10) : 0;
+    html += '<div style="position:relative;width:' + contW + "px;height:148px;transform:rotate(" + rot + 'deg)">' +
+      '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:' + surfW +
+        'px;height:62px;background:linear-gradient(145deg,#c89858,#8a6a3c);border-radius:10px">' +
+      '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:Fredoka,Arial;font-size:15px;font-weight:600;color:rgba(255,251,240,.85)">' + t.id + "</div></div>";
+    for (var i = 1; i <= t.seats; i++){
+      var idx = i - 1, isTop = idx < topCount;
+      var slot = isTop ? idx : idx - topCount;
+      var rowCount = isTop ? topCount : t.seats - topCount;
+      var rowStart = (contW - rowCount * pitch + 7) / 2;
+      var sid = "t" + t.id + "s" + i;
+      var student = seats[sid];
+      var isFront = student && frontPriority.has(student);
+      var cat = student ? categories[student] : null;
+      var bg = student
+        ? (isFront ? "linear-gradient(135deg,#f2b56e,#e0851a)" : "linear-gradient(135deg,#5cc98e,#1fa05e)")
+        : "#fdf6e7";
+      var border = student ? "none" : "2px dashed rgba(139,110,78,.4)";
+      html += '<div style="position:absolute;' + (isTop ? "top:-4px" : "bottom:-4px") + ";left:" +
+        Math.round(rowStart + slot * pitch) + "px;width:72px;height:56px;background:" + bg + ";border:" + border +
+        ';border-radius:9px;color:#fff;text-align:center;font-weight:700;overflow:hidden">' +
+        '<div style="position:absolute;top:2px;left:5px;font-size:8px;opacity:.8">' + t.id + "-" + i + "</div>";
+      if (student){
+        var parts = student.split(" ");
+        html += '<div style="margin-top:14px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px">' + esc(parts[0] || "") + "</div>" +
+          '<div style="font-size:9px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px">' + esc(parts.slice(1).join(" ")) + "</div>";
+        if (cat) html += '<div style="position:absolute;bottom:2px;right:3px;width:12px;height:12px;border-radius:3px;background:' + CAT_HEX[cat] + ';font-size:8px;line-height:12px">' + cat + "</div>";
+      }
+      html += "</div>";
+    }
+    html += "</div>";
+  });
+  html += "</div>" +
+    '<div style="text-align:center;margin-top:18px"><span style="background:#1fa05e;color:#fff;padding:5px 18px;border-radius:20px;font-size:11px;font-weight:700">📖 FRONT OF CLASS</span></div>';
+  if (students.length){
+    var sorted = students.slice().sort(function(a, b){
+      return a.split(" ").pop().toLowerCase().localeCompare(b.split(" ").pop().toLowerCase());
+    });
+    html += '<div style="margin-top:26px;padding-top:16px;border-top:2px solid #e0d5bc">' +
+      '<div style="font-family:Fredoka,Arial;font-size:15px;font-weight:600;color:#374253;text-align:center;margin-bottom:12px">Roster</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:10px;color:#374253">';
+    sorted.forEach(function(s, i){
+      var isFront = frontPriority.has(s), cat = categories[s];
+      html += '<div style="padding:5px 7px;background:' + (isFront ? "#ffe9a8" : "#f6efdd") + ';border-radius:5px">' +
+        (i + 1) + ". " + esc(s) + (isFront ? " ⬆" : "") +
+        (cat ? ' <span style="display:inline-block;width:11px;height:11px;background:' + CAT_HEX[cat] + ';border-radius:2px;color:#fff;font-size:8px;text-align:center;line-height:11px">' + cat + "</span>" : "") + "</div>";
+    });
+    html += "</div></div>";
+  }
+  if (conflicts.length){
+    html += '<div style="margin-top:14px;padding:12px;background:#fdeae6;border-radius:8px;font-size:11px;color:#e0492f">' +
+      "<b>⚡ Can’t sit together:</b> " +
+      conflicts.map(function(c){ return esc(c.student1) + " ↔ " + esc(c.student2); }).join(" · ") + "</div>";
+  }
+  wrap.innerHTML = html;
+  return wrap;
+}
+window.downloadSeatingChart = function(format){
+  showProcessing("Fetching the image renderer…");
+  var libs = loadLib("html2canvas");
+  if (format === "pdf") libs = libs.then(function(){ return loadLib("jspdf"); });
+  libs.then(function(){
+    showProcessing("Drawing the chart…");
+    var el = createPrintableChart();
+    document.body.appendChild(el);
+    return (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function(){
+      return html2canvas(el, { scale: 2, backgroundColor: "#ffffff", logging: false });
+    }).then(function(canvas){
+      document.body.removeChild(el);
+      if (format === "png"){
+        var a = document.createElement("a");
+        a.download = "seating-chart-" + getDateString() + ".png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      } else {
+        var jsPDF = window.jspdf.jsPDF;
+        var pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
+        var pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+        var ratio = Math.min((pw - 40) / canvas.width, (ph - 60) / canvas.height);
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG",
+          (pw - canvas.width * ratio) / 2, 30, canvas.width * ratio, canvas.height * ratio);
+        // page 2: seat-by-seat roster table
+        pdf.addPage();
+        pdf.setFontSize(18); pdf.setFont("helvetica", "bold");
+        pdf.text("Seat Assignments", pw / 2, 40, { align: "center" });
+        pdf.setFontSize(9); pdf.setFont("helvetica", "normal");
+        pdf.text("Generated " + new Date().toLocaleDateString(), pw / 2, 54, { align: "center" });
+        var y = 80;
+        pdf.setFillColor(31, 160, 94);
+        pdf.rect(30, y - 12, pw - 60, 18, "F");
+        pdf.setTextColor(255, 255, 255); pdf.setFont("helvetica", "bold");
+        pdf.text("Seat", 40, y); pdf.text("Student", 100, y); pdf.text("Level", 330, y); pdf.text("Front", 390, y);
+        pdf.setTextColor(55, 66, 83); pdf.setFont("helvetica", "normal");
+        y += 20;
+        getTables().forEach(function(t){
+          for (var i = 1; i <= t.seats; i++){
+            var s = seats["t" + t.id + "s" + i];
+            pdf.text(t.id + "-" + i, 40, y);
+            pdf.text(s || "(empty)", 100, y);
+            pdf.text(s && categories[s] ? categories[s] : "-", 330, y);
+            pdf.text(s && frontPriority.has(s) ? "Yes" : "", 390, y);
+            y += 16;
+            if (y > ph - 50){ pdf.addPage(); y = 40; }
+          }
+        });
+        if (conflicts.length){
+          y += 10;
+          if (y > ph - 80){ pdf.addPage(); y = 40; }
+          pdf.setTextColor(224, 73, 47); pdf.setFont("helvetica", "bold");
+          pdf.text("Can't sit together:", 40, y);
+          pdf.setFont("helvetica", "normal");
+          conflicts.forEach(function(c, i){
+            pdf.text("- " + c.student1 + "  <->  " + c.student2, 50, y + 16 + i * 14);
+          });
+        }
+        pdf.save("seating-chart-" + getDateString() + ".pdf");
+      }
+      hideProcessing();
+      showStatus("ok", "Downloaded as " + format.toUpperCase() + ".");
+    });
+  }).catch(function(err){
+    hideProcessing();
+    showStatus("err", "Download failed: " + err.message);
+  });
+};
+
 /* ---------- demo + clear ---------- */
 var demoStudents = ["Emma Johnson","Liam Smith","Olivia Williams","Noah Brown","Ava Garcia",
   "Ethan Martinez","Sophia Rodriguez","Mason Davis","Isabella Wilson","Lucas Anderson",
@@ -910,8 +1253,8 @@ window.clearAllData = function(){
   students = []; seats = {}; categories = {}; conflicts = []; frontPriority = new Set();
   document.getElementById("studentInput").value = "";
   updateUI();
-  try { localStorage.removeItem(LS_KEY); localStorage.removeItem(MAP_KEY); } catch(e){}
-  showStatus("ok", "Cleared. The classroom page ghost map is gone too.");
+  try { localStorage.removeItem(LS_KEY); localStorage.removeItem("dmeves-seatmap"); } catch(e){}
+  showStatus("ok", "All cleared.");
 };
 
 /* ---------- go ---------- */

@@ -51,9 +51,15 @@
   Anything you type into the hypothesis helper exists only while the page is open.
   Clearing your browser data removes all of it.</p>
 
-  <h2>Fonts and media</h2>
+  <h2>Fonts, media, and the one exception</h2>
   <p>The fonts are hosted on this site itself, so no font provider or CDN sees your
-  visit. There are no embedded videos, pixels, or third-party resources of any kind.</p>
+  visit, and the classroom pages make no third-party requests of any kind. The one
+  narrow exception: the teacher’s seating tool has optional import/export buttons
+  (reading an Excel file or a photo of a roster, downloading a PNG/PDF). If — and
+  only if — one of those buttons is used, the browser fetches the well-known
+  open-source code library that powers it from a public CDN. That fetch delivers
+  <b>code, not data</b>: the roster, photos, and everything else are processed
+  entirely on the device and never uploaded anywhere.</p>
 
   <h2>Links to other places</h2>
   <p>Objects in the room link out to class materials — for example Google Classroom
