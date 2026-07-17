@@ -60,6 +60,7 @@
     --c-teacher:#a8702a;
     --c-books:#8a683a;
     --c-door:#3d80c4;
+    --c-pass:#b8862f;
     --display:"Fredoka",ui-rounded,"Hiragino Maru Gothic ProN","Segoe UI",system-ui,sans-serif;
     --body:"Nunito","Segoe UI",system-ui,sans-serif;
     --hand:"Caveat","Segoe Print","Bradley Hand","Comic Sans MS",cursive;
@@ -696,6 +697,7 @@
     <button data-id="teacher" style="--a:var(--c-teacher)">Teacher's desk</button>
     <button data-id="books" style="--a:var(--c-books)">Bookshelf</button>
     <button data-id="door" style="--a:var(--c-door)">The door</button>
+    <button data-id="pass" style="--a:var(--c-pass)">Hall pass</button>
   </nav>
 
   <div class="hint">
@@ -1120,13 +1122,18 @@
     '<rect x="30" y="74" width="24" height="34" rx="2" fill="#bfe4f2" stroke="#2c6a94" stroke-width="2"/>' +
     '<path d="M30 85 L54 85 M30 96 L54 96 M42 74 L42 108" stroke="#7cb8d8" stroke-width="1"/>' +
     '<rect x="8" y="150" width="68" height="7" rx="3.5" fill="#f2f6f8"/>' +
-    '<rect x="0" y="222" width="84" height="26" fill="#cfe6f2" opacity=".8"/>' +
-    // hall pass hanging beside the door
-    '<g transform="rotate(-6 100 120)"><path d="M100 112 L100 120" stroke="#6e5a3c" stroke-width="1.6"/>' +
-    '<rect x="93" y="120" width="15" height="22" rx="2" fill="#e0a458" stroke="rgba(8,6,2,.4)"/>' +
-    txt(100.5,132,"hall",6.5,"#3c3020",CHALK + ' text-anchor="middle"') +
-    txt(100.5,139,"pass",6.5,"#3c3020",CHALK + ' text-anchor="middle"') + "</g>";
+    '<rect x="0" y="222" width="84" height="26" fill="#cfe6f2" opacity=".8"/>';
   S.push(wrapObj("door","The door — what did I miss?","var(--c-door)",gLeft(496,-30,248,door)));
+  // …and hang the hall pass beside it as its own thing, gently swinging
+  var passSvg = '<circle cx="101" cy="130" r="17" fill="rgba(0,0,0,0)" stroke="none"/>' +
+    '<g class="pend"><path d="M101 110 L101 119" stroke="#6e5a3c" stroke-width="1.8"/>' +
+    '<circle cx="101" cy="109" r="2.2" fill="none" stroke="#8a6a3c" stroke-width="1.4"/>' +
+    '<g transform="rotate(-6 101 121)">' +
+    '<rect x="92" y="119" width="18" height="26" rx="3" fill="#e0a458" stroke="rgba(112,72,28,.5)" stroke-width="1.2"/>' +
+    '<circle cx="101" cy="123" r="1.6" fill="#8a5f30"/>' +
+    txt(101,133,"hall",7.5,"#3c3020",CHALK + ' text-anchor="middle"') +
+    txt(101,141,"pass",7.5,"#3c3020",CHALK + ' text-anchor="middle"') + "</g></g>";
+  S.push(wrapObj("pass","The hall pass — go when you need to","var(--c-pass)",gLeft(496,-30,248,passSvg)));
 
   /* ---------- wall B: smart board ---------- */
   var smart = '<rect x="-7" y="-7" width="174" height="112" rx="4" fill="#22262b" stroke="rgba(8,6,2,.55)" stroke-width="2"/>' +
@@ -1501,7 +1508,7 @@
         var ini = "";
         if (name){
           var np = String(name).trim().split(/\s+/);
-          ini = (np[0] ? np[0][0] : "") + (np[1] ? np[1][0] : "");
+          ini = (np[0] ? np[0][0] : "") + (np.length > 1 ? np[np.length - 1][0] : "");
         }
         ghost += '<rect x="' + (sx - 12) + '" y="' + sy + '" width="24" height="13" rx="3" fill="' +
           (name ? "rgba(122,130,140,.34)" : "rgba(255,255,255,.3)") + '" stroke="rgba(95,107,120,.55)" stroke-width="1.1" stroke-dasharray="3 2.4"/>';
@@ -1666,6 +1673,15 @@
         return m.tables.map(function(t){ return "Table " + t.id + " · " + t.seats + " seats"; });
       },
       links: [{label:"open the seating chart", href:"/seating/"}]
+    },
+    pass: {
+      kicker: "The hall pass · by the door",
+      title: "Go when you need to — nobody performs their best while holding it",
+      story: "You will never be told no for a real need, and you never have to announce anything to the room. Here’s the whole system: catch my eye and hold up crossed fingers — that’s the silent signal. I nod, you take the pass, you jot your name and the time on the sign-out sheet, and off you go. One pass means one person out; if it’s gone, hang tight. Aim for work time — the first ten and last ten minutes are where instructions and the good stuff live, so save those unless it’s urgent (urgent always wins, no questions, ever — and health stuff like cramps or a medical plan overrides every rule on this list). Phone stays at your seat, and back in about five. If the pass starts becoming somebody’s daily field trip, that’s a quiet private chat with me — never a call-out, and sometimes it turns out there’s a real reason, which is exactly why we talk.",
+      chips: function(){
+        return ["🤞 silent signal → nod → go","One out at a time","Sign out, sign in","Skip the first & last 10 min","Urgent? Just go","Phone stays here","Back in ~5","Patterns → private chat, never a call-out"];
+      },
+      links: []
     },
     door: {
       kicker: "The door · absent?",
@@ -1844,6 +1860,12 @@
       noise({filter:"bandpass", freq:500, freqEnd:1200, q:1, dur:0.2, g:0.1});
       noise({filter:"lowpass", freq:200, at:0.22, dur:0.08, g:0.14});
     },
+    pass: function(){ // wooden pass knocking on the door frame
+      noise({filter:"lowpass", freq:1400, dur:0.035, g:0.15});
+      tone(420, {type:"triangle", dur:0.06, g:0.08});
+      noise({filter:"lowpass", freq:1100, at:0.12, dur:0.03, g:0.11});
+      tone(380, {type:"triangle", at:0.12, dur:0.06, g:0.07});
+    },
     door: function(){ // creak + hallway air
       tone(180, {type:"sawtooth", dur:0.3, g:0.02, end:240});
       noise({filter:"lowpass", freq:500, at:0.25, dur:0.5, g:0.04});
@@ -1858,7 +1880,7 @@
   var HAPTICS = {
     board:[10,30,10], smart:[15,40,15], ptable:[8,25,8,25,8], lab:[12,30,12],
     wizard:[8,20,8,20,20], safety:[40,60,40], globe:[60], clock:[10,280,10],
-    cal:[12,25,12], teacher:[10,20,10], books:[20,30,10], door:[25,50,15], bell:[30,40,30,40,30],
+    cal:[12,25,12], teacher:[10,20,10], books:[20,30,10], door:[25,50,15], pass:[15,30,15], bell:[30,40,30,40,30],
     eyewash:[15,60,80], showerpull:[25,80,140]
   };
   function buzz(id){

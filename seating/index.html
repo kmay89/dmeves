@@ -386,6 +386,14 @@ var frontPriority = new Set();
 var layout = { count: 7, seatsDefault: 4, overrides: {}, angled: true };
 var draggedStudent = null, draggedFromSeat = null;
 
+function shuffle(arr){
+  for (var i = arr.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+
 function esc(s){
   return String(s).replace(/[&<>"']/g, function(ch){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
@@ -520,6 +528,8 @@ window.handleFileUpload = function(event){
     if (!names.length){ showStatus("err", "No names found in that file."); return; }
     document.getElementById("studentInput").value = names.join("\n");
     loadStudentsWithValidation();
+  }).catch(function(err){
+    showStatus("err", "Couldn’t read that file: " + err.message);
   });
   event.target.value = "";
 };
@@ -580,14 +590,15 @@ function showDuplicateModal(dupes){
     document.getElementById("duplicateList").innerHTML = Object.keys(dupes).map(function(name){
       return '<div class="dupe"><span><b>' + esc(name) + "</b> × " + dupes[name] + "</span>" +
         '<span class="dactions">' +
-        '<button class="sel" onclick="setDupe(this,\'' + esc(name).replace(/'/g, "\\'") + '\',\'one\')">Keep 1</button>' +
-        '<button onclick="setDupe(this,\'' + esc(name).replace(/'/g, "\\'") + '\',\'all\')">Twins — keep all</button>' +
+        '<button class="sel" data-name="' + esc(name) + '" onclick="setDupe(this,\'one\')">Keep 1</button>' +
+        '<button data-name="' + esc(name) + '" onclick="setDupe(this,\'all\')">Twins — keep all</button>' +
         "</span></div>";
     }).join("");
     document.getElementById("duplicateModal").classList.add("active");
   });
 }
-window.setDupe = function(btn, name, decision){
+window.setDupe = function(btn, decision){
+  var name = btn.getAttribute("data-name");
   duplicateDecisions[name] = decision;
   btn.parentElement.querySelectorAll("button").forEach(function(b){ b.classList.remove("sel"); });
   btn.classList.add("sel");
@@ -670,7 +681,7 @@ function hasConflictAtTable(student, tableStudents){
 function interleaveByCategory(list){
   var by = { A: [], B: [], C: [], D: [], none: [] };
   list.forEach(function(s){ by[categories[s] || "none"].push(s); });
-  Object.keys(by).forEach(function(k){ by[k].sort(function(){ return Math.random() - 0.5; }); });
+  Object.keys(by).forEach(function(k){ shuffle(by[k]); });
   var out = [], added = true;
   while (added){
     added = false;
@@ -686,7 +697,7 @@ function tableScore(student, current, table){
   if (cat !== "none" && tcats.indexOf(cat) === -1) score += 10;
   score -= tcats.filter(function(c){ return c === cat; }).length * 5;
   score += (table.seats - current.length);
-  if (table.isFront && !frontPriority.has(student)) score += 1;
+  if (table.isFront) score += frontPriority.has(student) ? 10 : 1;
   return score;
 }
 window.shuffleSeats = function(){
@@ -696,8 +707,7 @@ window.shuffleSeats = function(){
   var assign = {};
   tables.forEach(function(t){ assign[t.id] = []; });
   var frontTables = tables.filter(function(t){ return t.isFront; });
-  var frontStudents = students.filter(function(s){ return frontPriority.has(s); })
-    .sort(function(){ return Math.random() - 0.5; });
+  var frontStudents = shuffle(students.filter(function(s){ return frontPriority.has(s); }));
   var fi = 0;
   frontStudents.forEach(function(student){
     var placed = false;
@@ -740,17 +750,21 @@ window.shuffleSeats = function(){
 };
 
 /* ---------- categories / front / conflicts ---------- */
-window.setCategory = function(student, cat){
+window.setCategory = function(btn, cat){
+  var student = btn.getAttribute("data-student");
   if (categories[student] === cat) delete categories[student];
   else categories[student] = cat;
   updateUI(); saveAll();
 };
-window.toggleFrontPriority = function(student){
+window.toggleFrontPriority = function(btn){
+  var student = btn.getAttribute("data-student");
   if (frontPriority.has(student)) frontPriority.delete(student);
   else frontPriority.add(student);
   shuffleSeats();
 };
-window.openConflictModal = function(pre){
+window.openConflictModal = function(btnOrName){
+  var pre = typeof btnOrName === "string" ? btnOrName
+    : (btnOrName && btnOrName.getAttribute) ? btnOrName.getAttribute("data-student") : "";
   var opts = students.map(function(s){ return '<option value="' + esc(s) + '">' + esc(s) + "</option>"; }).join("");
   document.getElementById("conflict1").innerHTML = '<option value="">First student…</option>' + opts;
   document.getElementById("conflict2").innerHTML = '<option value="">Second student…</option>' + opts;
@@ -806,16 +820,16 @@ function updateUI(){
     var isFront = frontPriority.has(student);
     var hasConf = conflicts.some(function(c){ return c.student1 === student || c.student2 === student; });
     var cat = categories[student] || null;
-    var e = esc(student).replace(/'/g, "\\'");
+    var e = esc(student);
     function catBtn(k){
       return '<button class="cat cat-' + k.toLowerCase() + (cat === k ? " on" : "") +
-        '" onclick="setCategory(\'' + e + "','" + k + '\')" title="Level ' + k + '">' + k + "</button>";
+        '" data-student="' + e + '" onclick="setCategory(this,\'' + k + '\')" title="Level ' + k + '">' + k + "</button>";
     }
     return '<div class="stu' + (isFront ? " front" : "") + '"><span class="cats">' +
       catBtn("A") + catBtn("B") + catBtn("C") + catBtn("D") + "</span>" +
-      '<span class="nm">' + esc(student) + "</span>" +
-      '<button class="abtn' + (isFront ? " front-on" : "") + '" onclick="toggleFrontPriority(\'' + e + '\')" title="Needs a front seat">⬆</button>' +
-      '<button class="abtn' + (hasConf ? " conf-on" : "") + '" onclick="openConflictModal(\'' + e + '\')" title="Add a can’t-sit-with pair">⚡</button></div>';
+      '<span class="nm">' + e + "</span>" +
+      '<button class="abtn' + (isFront ? " front-on" : "") + '" data-student="' + e + '" onclick="toggleFrontPriority(this)" title="Needs a front seat">⬆</button>' +
+      '<button class="abtn' + (hasConf ? " conf-on" : "") + '" data-student="' + e + '" onclick="openConflictModal(this)" title="Add a can’t-sit-with pair">⚡</button></div>';
   }).join("");
 
   document.getElementById("conflictList").innerHTML = conflicts.map(function(c, i){
