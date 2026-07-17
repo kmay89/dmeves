@@ -18,6 +18,7 @@ uses, so students explore the room instead of scrolling a list of links:
 | Teacher's desk | Office hours, extra help, contact |
 | Bookshelf | Online textbook & readings |
 | The door | "What did I miss?" → the Classroom stream |
+| 🥚 Clipboard on the teacher's desk | An easter egg: opens **Seat Smart**, the built-in seating chart tool |
 
 Single `index.html`, no frameworks, no build step, no trackers. Sound is
 synthesized in the browser and off until the first click. Typography is
@@ -68,6 +69,19 @@ door-code unlock flag, in the student's own browser. `robots.txt` and
 `noindex` keep it out of search engines. Plain-language `/privacy/`,
 `/terms/`, and `/accessibility/` pages are included and linked in the
 footer.
+
+### Seat Smart (the seating chart, `/seating/`)
+
+A full seating-chart tool lives at `/seating/`, reachable via the clipboard
+on the teacher's desk. Paste or CSV-upload a roster, tag students A–D for
+mixing, mark front-row needs, add "can't sit together" pairs, then shuffle —
+the assigner balances categories per table, honors conflicts, and fills
+front tables first. Drag any two students to swap. **The layout is fully
+configurable**: number of tables, seats per table (2/4/6, with per-table
+overrides via the number circles), and angled-toward-the-front placement.
+Print gives a clean handout. Everything is stored only in the teacher's own
+browser — and the classroom page reads the same layout to project a ghosted
+gray seating map onto the room's floor, initials and all.
 
 ### Link previews (iMessage etc.)
 

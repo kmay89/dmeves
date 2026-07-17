@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#fdf6e7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AA%91%3C/text%3E%3C/svg%3E">
+<title>Seat Smart — The Classroom</title>
+<style>
+  @font-face{font-family:"Fredoka";src:url("/fonts/fredoka.woff2") format("woff2");font-weight:300 700;font-display:swap}
+  @font-face{font-family:"Nunito";src:url("/fonts/nunito.woff2") format("woff2");font-weight:200 1000;font-display:swap}
+  @font-face{font-family:"Caveat";src:url("/fonts/caveat.woff2") format("woff2");font-weight:400 700;font-display:swap}
+  :root{
+    --paper:#fdf6e7; --card:#fffdf7; --sun:#f7a823; --sun-deep:#c07d10;
+    --ink:#374253; --ink-dim:#5f6b78; --ink-faint:#93938a;
+    --green:#1fa05e; --teal:#0fa396; --red:#e0492f; --red-light:#fdeae6;
+    --wood:#c89858; --wood-dark:#8a6a3c; --purple:#8a53d6; --blue:#2f7fd6;
+    --amber:#e0851a; --pink:#d64f86; --highlight:#ffe9a8;
+    --display:"Fredoka",ui-rounded,"Segoe UI",system-ui,sans-serif;
+    --body:"Nunito","Segoe UI",system-ui,sans-serif;
+    --hand:"Caveat","Segoe Print","Bradley Hand",cursive;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--paper);min-height:100vh;color:var(--ink);font-weight:600}
+  ::selection{background:var(--sun);color:#fff}
+  .app{display:grid;grid-template-columns:330px 1fr;min-height:100vh}
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    background:var(--card);
+    border-right:2px solid rgba(200,160,80,.3);
+    padding:26px 22px 40px;overflow-y:auto;max-height:100vh;position:sticky;top:0;
+  }
+  .logo{font-family:var(--display);font-size:1.4rem;font-weight:600;color:var(--ink);
+    display:flex;align-items:center;gap:10px}
+  .logo span{font-size:1.6rem}
+  .sublogo{font-family:var(--hand);font-size:1.1rem;color:var(--sun-deep);margin:2px 0 6px 44px}
+  .backlink{display:inline-block;margin:0 0 18px 44px;font-size:.78rem;color:var(--ink-dim);
+    text-decoration:none;border-bottom:2px solid rgba(247,168,35,.5)}
+  .backlink:hover{color:var(--sun-deep)}
+  .section{margin-bottom:24px}
+  .section-title{
+    font-family:var(--display);font-size:.85rem;font-weight:600;color:var(--wood-dark);
+    letter-spacing:.03em;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  }
+  .section-title::before{content:"";width:4px;height:15px;background:var(--sun);border-radius:2px}
+  .tip-note{font-size:.75rem;color:var(--ink-dim);font-weight:600;margin-bottom:10px;line-height:1.5}
+
+  /* layout controls */
+  .layout-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .layout-row label{font-size:.8rem;color:var(--ink-dim)}
+  .stepper{display:flex;align-items:center;gap:6px}
+  .stepper button{
+    width:28px;height:28px;border:2px solid rgba(200,160,80,.4);border-radius:8px;
+    background:#fff;color:var(--ink);font-family:var(--display);font-weight:600;cursor:pointer;
+  }
+  .stepper button:hover{border-color:var(--sun)}
+  .stepper .val{min-width:26px;text-align:center;font-family:var(--display);font-weight:600}
+  .seg{display:flex;gap:4px}
+  .seg button{
+    padding:5px 11px;border:2px solid rgba(200,160,80,.4);border-radius:999px;background:#fff;
+    font-family:var(--display);font-size:.75rem;font-weight:600;color:var(--ink-dim);cursor:pointer;
+  }
+  .seg button.on{background:var(--sun);border-color:var(--sun);color:#fff}
+  .toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;color:var(--ink-dim)}
+  .toggle input{accent-color:var(--sun);width:16px;height:16px}
+
+  textarea{
+    width:100%;height:120px;padding:12px;border:2px solid rgba(200,160,80,.4);border-radius:12px;
+    font-family:var(--body);font-weight:600;font-size:.85rem;resize:vertical;background:#fff;line-height:1.55;color:var(--ink);
+  }
+  textarea:focus{outline:none;border-color:var(--sun);box-shadow:0 0 0 3px rgba(247,168,35,.2)}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    padding:10px 16px;border:none;border-radius:999px;
+    font-family:var(--display);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .15s ease;
+  }
+  .btn-primary{background:var(--green);color:#fff;box-shadow:0 3px 0 #157043}
+  .btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn-secondary{background:#fff;color:var(--ink);border:2px solid rgba(200,160,80,.4)}
+  .btn-secondary:hover{border-color:var(--sun);color:var(--sun-deep)}
+  .btn-group{display:flex;gap:8px;margin-top:10px}
+  .btn-group .btn{flex:1}
+  .filebtn{
+    display:flex;flex-direction:column;align-items:center;width:100%;
+    padding:12px;background:#fff;border:2px dashed rgba(200,160,80,.5);border-radius:12px;
+    cursor:pointer;transition:all .15s ease;font-family:var(--body);
+  }
+  .filebtn:hover{border-color:var(--sun);background:rgba(247,168,35,.06)}
+  .filebtn b{font-size:.82rem}
+  .filebtn small{font-size:.68rem;color:var(--ink-faint)}
+  .status{margin-top:10px;padding:9px 12px;border-radius:10px;font-size:.78rem;display:none}
+  .status.ok{display:block;background:rgba(31,160,94,.12);color:#157043}
+  .status.err{display:block;background:var(--red-light);color:var(--red)}
+  .divider{display:flex;align-items:center;margin:14px 0;color:var(--ink-faint);font-family:var(--hand);font-size:.95rem}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:rgba(200,160,80,.35)}
+  .divider span{padding:0 10px}
+
+  /* student list */
+  .student-list{max-height:230px;overflow-y:auto;margin-top:8px}
+  .stu{
+    display:flex;align-items:center;gap:8px;padding:7px 9px;background:#fff;border-radius:10px;
+    margin-bottom:5px;border:1.5px solid rgba(200,160,80,.25);
+  }
+  .stu.front{background:linear-gradient(90deg,var(--highlight) 0%,#fff 40%);border-color:var(--wood)}
+  .stu .nm{flex:1;font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cats{display:flex;gap:3px}
+  .cat{
+    width:20px;height:20px;border:1.5px solid rgba(200,160,80,.4);border-radius:5px;background:#fff;
+    color:var(--ink-faint);font-size:.62rem;font-weight:800;cursor:pointer;font-family:var(--body);
+  }
+  .cat.on{border:none;color:#fff}
+  .cat-a.on{background:var(--blue)} .cat-b.on{background:var(--amber)}
+  .cat-c.on{background:var(--teal)} .cat-d.on{background:var(--pink)}
+  .abtn{
+    width:26px;height:26px;border:none;border-radius:7px;cursor:pointer;font-size:.72rem;
+    background:var(--paper);color:var(--ink-dim);
+  }
+  .abtn:hover{background:var(--highlight)}
+  .abtn.front-on{background:var(--amber);color:#fff}
+  .abtn.conf-on{background:var(--red);color:#fff}
+  .conflict-pair{
+    display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--red-light);
+    border-radius:9px;margin-bottom:5px;font-size:.76rem;
+  }
+  .conflict-pair .names{flex:1;color:var(--red)}
+  .conflict-pair button{background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem;opacity:.6}
+  .conflict-pair button:hover{opacity:1}
+
+  /* ---------- main ---------- */
+  .main{padding:32px 28px;display:flex;flex-direction:column;align-items:center}
+  .head{text-align:center;margin-bottom:18px}
+  .title{font-family:var(--display);font-size:1.7rem;font-weight:600}
+  .stats{display:flex;gap:20px;justify-content:center;color:var(--ink-dim);font-size:.85rem;margin-top:4px}
+  .stats b{color:var(--green)}
+  .actions{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+
+  .classroom{
+    background:var(--card);border:2px solid rgba(200,160,80,.35);border-radius:22px;
+    padding:44px 26px 48px;position:relative;width:100%;max-width:880px;
+    box-shadow:0 10px 40px rgba(140,100,40,.12);
+  }
+  .marker{
+    position:absolute;left:50%;transform:translateX(-50%);
+    padding:5px 18px;border-radius:999px;font-family:var(--display);
+    font-size:.72rem;font-weight:500;color:#fff;letter-spacing:.05em;
+  }
+  .marker.door{top:-13px;background:var(--wood-dark)}
+  .marker.front{bottom:-13px;background:var(--green)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:34px 30px;justify-items:center}
+  @media (max-width:640px){ .grid{grid-template-columns:1fr;gap:44px} .tbl{transform:none !important} }
+
+  .tbl{position:relative}
+  .tbl-surface{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:linear-gradient(145deg,var(--wood) 0%,var(--wood-dark) 100%);
+    border-radius:10px;box-shadow:0 4px 12px rgba(139,110,78,.35);
+  }
+  .tbl-num{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;
+    background:rgba(255,251,240,.92);color:var(--wood-dark);
+    font-family:var(--display);font-size:.95rem;font-weight:600;z-index:3;
+    box-shadow:0 2px 6px rgba(60,40,10,.25);
+  }
+  .tbl-num:hover{background:var(--highlight)}
+  .seat{
+    position:absolute;width:72px;height:58px;background:var(--paper);
+    border:2.5px dashed rgba(139,110,78,.4);border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;transition:transform .15s ease;font-size:.62rem;text-align:center;
+    padding:3px;overflow:hidden;line-height:1.15;z-index:2;
+  }
+  .seat:hover{border-color:var(--green);transform:scale(1.07);z-index:10}
+  .seat.occupied{
+    background:linear-gradient(135deg,#5cc98e 0%,var(--green) 100%);
+    border:none;color:#fff;box-shadow:0 3px 9px rgba(31,160,94,.35);
+  }
+  .seat.front-pri{background:linear-gradient(135deg,#f2b56e 0%,var(--amber) 100%);box-shadow:0 3px 9px rgba(224,133,26,.35)}
+  .seat .no{position:absolute;top:2px;left:5px;font-size:.55rem;opacity:.75;font-weight:800}
+  .seat .fn{font-size:.72rem;font-weight:800;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat .ln{font-size:.62rem;font-weight:700;opacity:.95;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat .catdot{position:absolute;bottom:2px;right:3px;width:13px;height:13px;border-radius:4px;
+    font-size:.55rem;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center}
+  .seat.warn{animation:pw 1s ease-in-out infinite}
+  @keyframes pw{0%,100%{box-shadow:0 0 0 0 rgba(224,73,47,.45)}50%{box-shadow:0 0 0 8px rgba(224,73,47,0)}}
+  .seat.dragging{opacity:.45}
+  .seat.dragover{border:3px solid var(--green);background:rgba(31,160,94,.15)}
+
+  .legend{display:flex;gap:20px;justify-content:center;margin-top:24px;flex-wrap:wrap;
+    font-size:.78rem;color:var(--ink-dim)}
+  .legend div{display:flex;align-items:center;gap:7px}
+  .sw{width:18px;height:18px;border-radius:6px}
+  .sw.reg{background:linear-gradient(135deg,#5cc98e,var(--green))}
+  .sw.pri{background:linear-gradient(135deg,#f2b56e,var(--amber))}
+  .sw.emp{background:var(--paper);border:2px dashed rgba(139,110,78,.4)}
+  .privacy-line{margin-top:18px;font-family:var(--hand);font-size:1rem;color:var(--ink-faint);text-align:center}
+
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(84,64,28,.45);backdrop-filter:blur(3px);
+    display:flex;align-items:center;justify-content:center;z-index:100;
+    opacity:0;visibility:hidden;transition:all .25s ease;padding:1rem;
+  }
+  .overlay.active{opacity:1;visibility:visible}
+  .modal{
+    background:var(--card);border:2px solid rgba(200,160,80,.45);border-top:6px solid var(--sun);
+    border-radius:18px;padding:24px;width:100%;max-width:420px;max-height:82vh;overflow-y:auto;
+  }
+  .modal h3{font-family:var(--display);font-size:1.15rem;font-weight:600;margin-bottom:10px}
+  .modal p{font-size:.82rem;color:var(--ink-dim);margin-bottom:12px;line-height:1.5}
+  .modal select{
+    width:100%;padding:11px;border:2px solid rgba(200,160,80,.4);border-radius:10px;
+    font-family:var(--body);font-weight:600;font-size:.85rem;margin-bottom:10px;background:#fff;color:var(--ink);
+  }
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  .dupe{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;
+    background:var(--paper);border-radius:10px;margin-bottom:7px;font-size:.8rem}
+  .dupe .dactions{display:flex;gap:6px}
+  .dupe button{padding:5px 10px;border:none;border-radius:7px;font-size:.7rem;font-weight:700;cursor:pointer;
+    background:#fff;border:1.5px solid rgba(200,160,80,.4);color:var(--ink-dim)}
+  .dupe button.sel{background:var(--green);border-color:var(--green);color:#fff}
+  .capstat{display:flex;justify-content:space-between;padding:7px 4px;font-size:.82rem;
+    border-bottom:1px solid rgba(200,160,80,.2)}
+  .capstat:last-child{border:none}
+  .capstat b.bad{color:var(--red)} .capstat b.good{color:var(--green)}
+
+  @media (max-width:900px){
+    .app{grid-template-columns:1fr}
+    .sidebar{position:relative;max-height:none;border-right:none;border-bottom:2px solid rgba(200,160,80,.3)}
+  }
+  /* print: just the chart, clean */
+  @media print{
+    .sidebar,.actions,.privacy-line,.backlink{display:none !important}
+    .app{display:block}
+    .main{padding:0}
+    .classroom{box-shadow:none;border-color:#bbb}
+    .seat{transition:none}
+    body{background:#fff}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><span aria-hidden="true">🪑</span> Seat Smart</div>
+    <p class="sublogo">the seating chart that argues less than they do</p>
+    <a class="backlink" href="/">← back to the classroom</a>
+
+    <div class="section">
+      <h3 class="section-title">Room Layout</h3>
+      <div class="layout-row">
+        <label for="tblCount">Tables</label>
+        <div class="stepper">
+          <button type="button" onclick="bumpTables(-1)" aria-label="Fewer tables">−</button>
+          <span class="val" id="tblCount">7</span>
+          <button type="button" onclick="bumpTables(1)" aria-label="More tables">+</button>
+        </div>
+      </div>
+      <div class="layout-row">
+        <label>Seats per table</label>
+        <div class="seg" id="segSeats">
+          <button type="button" data-v="2">2</button>
+          <button type="button" data-v="4" class="on">4</button>
+          <button type="button" data-v="6">6</button>
+        </div>
+      </div>
+      <div class="layout-row">
+        <label class="toggle"><input type="checkbox" id="angledChk" checked>
+          Angle tables toward the front</label>
+      </div>
+      <p class="tip-note">Click a table’s <b>number circle</b> in the chart to change just that
+      table’s seats (2 → 4 → 6). Total seats: <b id="totalSeats">28</b>.
+      The classroom page mirrors this layout as a ghost map.</p>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">Class Roster</h3>
+      <input type="file" id="fileUpload" accept=".csv,text/csv" style="display:none" onchange="handleFileUpload(event)">
+      <button class="filebtn" onclick="document.getElementById('fileUpload').click()">
+        <b>📁 Upload CSV</b><small>First Name, Last Name — or one name per line</small>
+      </button>
+      <div class="divider"><span>or type names</span></div>
+      <textarea id="studentInput" placeholder="One student per line:&#10;&#10;Emma Johnson&#10;Liam Smith&#10;Olivia Williams&#10;…"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="loadStudentsWithValidation()">✓ Load</button>
+        <button class="btn btn-secondary" onclick="shuffleSeats(); saveAll();">🔀 Shuffle</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="loadDemoData()">👥 Demo</button>
+        <button class="btn btn-secondary" onclick="clearAllData()">🗑️ Clear</button>
+      </div>
+      <div class="status" id="status" role="status"></div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">Students (<span id="studentCount">0</span>)</h3>
+      <p class="tip-note">A–D sets a mixing level (tables aim for one of each) ·
+        ⬆ needs a front seat · ⚡ add a can’t-sit-with pair</p>
+      <div class="student-list" id="studentList"></div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">Can’t Sit Together</h3>
+      <div id="conflictList"></div>
+      <button class="btn btn-secondary" style="width:100%;margin-top:6px" onclick="openConflictModal()">⚡ Add a pair</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="head">
+      <h1 class="title">The Seating Chart</h1>
+      <div class="stats">
+        <span><b id="seatedCount">0</b> seated</span>
+        <span><b id="statSeats">28</b> seats</span>
+        <span><b id="statTables">7</b> tables</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print / save as PDF</button>
+      </div>
+    </div>
+
+    <div class="classroom" id="classroom">
+      <div class="marker door">🚪 Door</div>
+      <div class="marker front">📖 Front of class</div>
+      <div class="grid" id="tableGrid"></div>
+    </div>
+
+    <div class="legend">
+      <div><span class="sw reg"></span> seated</div>
+      <div><span class="sw pri"></span> front priority</div>
+      <div><span class="sw emp"></span> empty</div>
+    </div>
+    <p class="privacy-line">names live only in this browser — nothing is ever uploaded anywhere ✏️</p>
+  </main>
+</div>
+
+<div class="overlay" id="conflictModal">
+  <div class="modal">
+    <h3>Who can’t sit together?</h3>
+    <p>Pick two students who should never share a table. The shuffler will keep them apart.</p>
+    <select id="conflict1"><option value="">First student…</option></select>
+    <select id="conflict2"><option value="">Second student…</option></select>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeConflictModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addConflict()">Add pair</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="duplicateModal">
+  <div class="modal">
+    <h3>Duplicate names found</h3>
+    <p>These names appear more than once — twins, or a paste hiccup?</p>
+    <div id="duplicateList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeDuplicateModal(false)">Cancel</button>
+      <button class="btn btn-primary" onclick="closeDuplicateModal(true)">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="capacityModal">
+  <div class="modal">
+    <h3 id="capacityTitle">Roster size</h3>
+    <p id="capacityMessage"></p>
+    <div id="capacityDetails" style="background:var(--paper);border-radius:10px;padding:10px 12px;margin-bottom:8px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCapacityModal(false)">Cancel</button>
+      <button class="btn btn-primary" id="capacityConfirmBtn" onclick="closeCapacityModal(true)">Continue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* Seat Smart — self-contained, no libraries, no network.
+   Everything lives in this browser's localStorage and nowhere else. */
+var LS_KEY = "dmeves-seating";     // full tool state
+var MAP_KEY = "dmeves-seatmap";    // compact layout+assignments, read by the classroom page
+
+var students = [], seats = {}, categories = {}, conflicts = [];
+var frontPriority = new Set();
+var layout = { count: 7, seatsDefault: 4, overrides: {}, angled: true };
+var draggedStudent = null, draggedFromSeat = null;
+
+function shuffle(arr){
+  for (var i = arr.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(ch){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
+  });
+}
+
+/* ---------- layout model: tables flow into two angled columns ---------- */
+function getTables(){
+  var out = [];
+  for (var i = 1; i <= layout.count; i++){
+    var s = layout.overrides[i] || layout.seatsDefault;
+    out.push({ id: i, seats: s, col: (i % 2 === 1) ? "left" : "right", row: Math.floor((i - 1) / 2) });
+  }
+  var maxRow = out.length ? Math.max.apply(null, out.map(function(t){ return t.row; })) : 0;
+  out.forEach(function(t){ t.isFront = t.row >= maxRow - (out.length > 4 ? 1 : 0); });
+  return out;
+}
+function totalSeats(){
+  return getTables().reduce(function(a, t){ return a + t.seats; }, 0);
+}
+
+/* ---------- persistence + the bridge to the classroom page ---------- */
+function saveAll(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      students: students, seats: seats, categories: categories,
+      conflicts: conflicts, front: Array.from(frontPriority), layout: layout
+    }));
+    localStorage.setItem(MAP_KEY, JSON.stringify({
+      v: 1, angled: layout.angled,
+      tables: getTables().map(function(t){ return { id: t.id, seats: t.seats, col: t.col, row: t.row }; }),
+      seats: seats
+    }));
+  } catch(e){}
+}
+function loadAll(){
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    var d = JSON.parse(raw);
+    students = d.students || [];
+    seats = d.seats || {};
+    categories = d.categories || {};
+    conflicts = d.conflicts || [];
+    frontPriority = new Set(d.front || []);
+    if (d.layout) layout = d.layout;
+    document.getElementById("studentInput").value = students.join("\n");
+    return students.length > 0;
+  } catch(e){ return false; }
+}
+
+/* ---------- layout controls ---------- */
+window.bumpTables = function(d){
+  layout.count = Math.max(1, Math.min(12, layout.count + d));
+  layoutChanged();
+};
+document.querySelectorAll("#segSeats button").forEach(function(b){
+  b.addEventListener("click", function(){
+    layout.seatsDefault = +b.dataset.v;
+    layout.overrides = {}; // a new default clears per-table tweaks
+    document.querySelectorAll("#segSeats button").forEach(function(x){ x.classList.toggle("on", x === b); });
+    layoutChanged();
+  });
+});
+document.getElementById("angledChk").addEventListener("change", function(){
+  layout.angled = this.checked;
+  layoutChanged();
+});
+window.cycleTableSeats = function(id){
+  var cur = layout.overrides[id] || layout.seatsDefault;
+  var next = cur === 2 ? 4 : cur === 4 ? 6 : 2;
+  if (next === layout.seatsDefault) delete layout.overrides[id];
+  else layout.overrides[id] = next;
+  layoutChanged();
+};
+function layoutChanged(){
+  // seats may no longer exist — re-run the smart assign over the new furniture
+  renderTables();
+  if (students.length) shuffleSeats(); else updateUI();
+  syncLayoutControls();
+  saveAll();
+}
+function syncLayoutControls(){
+  document.getElementById("tblCount").textContent = layout.count;
+  document.getElementById("totalSeats").textContent = totalSeats();
+  document.getElementById("statSeats").textContent = totalSeats();
+  document.getElementById("statTables").textContent = layout.count;
+  document.getElementById("angledChk").checked = !!layout.angled;
+  document.querySelectorAll("#segSeats button").forEach(function(x){
+    x.classList.toggle("on", +x.dataset.v === layout.seatsDefault);
+  });
+}
+
+/* ---------- table rendering (any table count, 2/4/6 seats) ---------- */
+function renderTables(){
+  var grid = document.getElementById("tableGrid");
+  grid.innerHTML = "";
+  getTables().forEach(function(table){
+    var topCount = Math.ceil(table.seats / 2);
+    var pitch = 79;
+    var contW = topCount * pitch + 40;
+    var surfW = Math.max(110, topCount * pitch - 30);
+    var el = document.createElement("div");
+    el.className = "tbl";
+    el.style.width = contW + "px";
+    el.style.height = "150px";
+    if (layout.angled) el.style.transform = "rotate(" + (table.col === "left" ? 12 : -12) + "deg)";
+    var html = '<div class="tbl-surface" style="width:' + surfW + 'px;height:64px"></div>' +
+      '<button class="tbl-num" onclick="cycleTableSeats(' + table.id + ')" title="Table ' + table.id +
+      " — " + table.seats + ' seats. Click to change.">' + table.id + "</button>";
+    for (var i = 1; i <= table.seats; i++){
+      var idx = i - 1, isTop = idx < topCount;
+      var slot = isTop ? idx : idx - topCount;
+      var rowCount = isTop ? topCount : table.seats - topCount;
+      var rowStart = (contW - rowCount * pitch + 7) / 2;
+      var seatId = "t" + table.id + "s" + i;
+      html += '<div class="seat" style="' + (isTop ? "top:-4px" : "bottom:-4px") + ";left:" +
+        Math.round(rowStart + slot * pitch) + 'px" data-seat-id="' + seatId + '" data-table-id="' + table.id + '"' +
+        ' ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)"></div>';
+    }
+    el.innerHTML = html;
+    grid.appendChild(el);
+  });
+}
+
+/* ---------- roster input ---------- */
+window.handleFileUpload = function(event){
+  var file = event.target.files[0];
+  if (!file) return;
+  file.text().then(function(text){
+    var names = parseCSVData(text);
+    if (!names.length){ showStatus("err", "No names found in that file."); return; }
+    document.getElementById("studentInput").value = names.join("\n");
+    loadStudentsWithValidation();
+  }).catch(function(err){
+    showStatus("err", "Couldn’t read that file: " + err.message);
+  });
+  event.target.value = "";
+};
+function parseCSVLine(line){
+  var result = [], current = "", inQ = false;
+  for (var i = 0; i < line.length; i++){
+    var ch = line[i];
+    if (ch === '"') inQ = !inQ;
+    else if (ch === "," && !inQ){ result.push(current); current = ""; }
+    else current += ch;
+  }
+  result.push(current);
+  return result.map(function(s){ return s.replace(/^"|"$/g, "").trim(); });
+}
+function isHeaderRow(a, b){
+  var h = ["first", "last", "name", "student", "fname", "lname", "given", "surname"];
+  var c = (a + " " + b).toLowerCase();
+  return h.some(function(x){ return c.indexOf(x) !== -1; });
+}
+function parseCSVData(text){
+  var names = [];
+  text.split(/\r?\n/).forEach(function(line, i){
+    if (!line.trim()) return;
+    var parts = parseCSVLine(line);
+    if (parts.length >= 2 && parts[0] && parts[1]){
+      if (!isHeaderRow(parts[0], parts[1])) names.push(parts[0] + " " + parts[1]);
+    } else if (parts[0] && parts[0].indexOf(" ") !== -1 && !isHeaderRow(parts[0], "")){
+      names.push(parts[0]);
+    }
+  });
+  return names;
+}
+function showStatus(type, msg){
+  var el = document.getElementById("status");
+  el.className = "status " + type;
+  el.textContent = msg;
+}
+
+/* ---------- duplicates + capacity ---------- */
+var duplicateDecisions = {}, dupResolve = null, capResolve = null;
+function findDuplicates(names){
+  var counts = {};
+  names.forEach(function(n){ var k = n.trim().toLowerCase(); counts[k] = (counts[k] || 0) + 1; });
+  var dupes = {};
+  Object.keys(counts).forEach(function(k){
+    if (counts[k] > 1){
+      var orig = names.filter(function(n){ return n.trim().toLowerCase() === k; })[0];
+      dupes[orig] = counts[k];
+    }
+  });
+  return dupes;
+}
+function showDuplicateModal(dupes){
+  return new Promise(function(resolve){
+    dupResolve = resolve;
+    duplicateDecisions = {};
+    Object.keys(dupes).forEach(function(n){ duplicateDecisions[n] = "one"; });
+    document.getElementById("duplicateList").innerHTML = Object.keys(dupes).map(function(name){
+      return '<div class="dupe"><span><b>' + esc(name) + "</b> × " + dupes[name] + "</span>" +
+        '<span class="dactions">' +
+        '<button class="sel" data-name="' + esc(name) + '" onclick="setDupe(this,\'one\')">Keep 1</button>' +
+        '<button data-name="' + esc(name) + '" onclick="setDupe(this,\'all\')">Twins — keep all</button>' +
+        "</span></div>";
+    }).join("");
+    document.getElementById("duplicateModal").classList.add("active");
+  });
+}
+window.setDupe = function(btn, decision){
+  var name = btn.getAttribute("data-name");
+  duplicateDecisions[name] = decision;
+  btn.parentElement.querySelectorAll("button").forEach(function(b){ b.classList.remove("sel"); });
+  btn.classList.add("sel");
+};
+window.closeDuplicateModal = function(ok){
+  document.getElementById("duplicateModal").classList.remove("active");
+  if (dupResolve){ dupResolve(ok ? duplicateDecisions : null); dupResolve = null; }
+};
+function applyDuplicateDecisions(names, decisions){
+  if (!decisions) return names;
+  var seen = {}, out = [];
+  names.forEach(function(name){
+    var k = name.trim().toLowerCase();
+    var key = Object.keys(decisions).filter(function(n){ return n.toLowerCase() === k; })[0];
+    if (key && decisions[key] === "one"){
+      if (!seen[k]){ seen[k] = true; out.push(name); }
+    } else out.push(name);
+  });
+  return out;
+}
+function showCapacityModal(n, cap){
+  return new Promise(function(resolve){
+    capResolve = resolve;
+    var over = n > cap, diff = Math.abs(n - cap);
+    document.getElementById("capacityTitle").textContent = over ? "Not enough seats!" : "Room to spare";
+    document.getElementById("capacityMessage").textContent = over
+      ? diff + " student" + (diff > 1 ? "s" : "") + " won’t get a seat with this layout. Add tables or bump seats per table?"
+      : diff + " seat" + (diff > 1 ? "s" : "") + " will stay empty — that’s fine.";
+    document.getElementById("capacityDetails").innerHTML =
+      '<div class="capstat"><span>Students</span><b class="' + (over ? "bad" : "") + '">' + n + "</b></div>" +
+      '<div class="capstat"><span>Seats in layout</span><b>' + cap + "</b></div>" +
+      '<div class="capstat"><span>' + (over ? "Left standing" : "Empty seats") + '</span><b class="' + (over ? "bad" : "good") + '">' + diff + "</b></div>";
+    document.getElementById("capacityConfirmBtn").textContent = over ? "Seat the first " + cap : "Continue";
+    document.getElementById("capacityModal").classList.add("active");
+  });
+}
+window.closeCapacityModal = function(ok){
+  document.getElementById("capacityModal").classList.remove("active");
+  if (capResolve){ capResolve(ok); capResolve = null; }
+};
+
+window.loadStudentsWithValidation = function(){
+  var names = document.getElementById("studentInput").value.split("\n")
+    .map(function(n){ return n.trim(); }).filter(Boolean);
+  if (!names.length){ showStatus("err", "Type or upload at least one name first."); return; }
+  var run = Promise.resolve(names);
+  var dupes = findDuplicates(names);
+  if (Object.keys(dupes).length){
+    run = showDuplicateModal(dupes).then(function(dec){
+      if (!dec) return null;
+      return applyDuplicateDecisions(names, dec);
+    });
+  }
+  run.then(function(list){
+    if (!list) return;
+    var proceed = list.length === totalSeats()
+      ? Promise.resolve(true)
+      : showCapacityModal(list.length, totalSeats());
+    proceed.then(function(ok){
+      if (!ok) return;
+      students = list;
+      document.getElementById("studentInput").value = list.join("\n");
+      frontPriority = new Set(Array.from(frontPriority).filter(function(s){ return list.indexOf(s) !== -1; }));
+      conflicts = conflicts.filter(function(c){ return list.indexOf(c.student1) !== -1 && list.indexOf(c.student2) !== -1; });
+      shuffleSeats();
+      showStatus("ok", "Loaded " + list.length + " students.");
+      saveAll();
+    });
+  });
+};
+
+/* ---------- the smart seat assigner (category mix, conflicts, front rows) ---------- */
+function hasConflictAtTable(student, tableStudents){
+  return conflicts.some(function(c){
+    if (c.student1 !== student && c.student2 !== student) return false;
+    var other = c.student1 === student ? c.student2 : c.student1;
+    return tableStudents.indexOf(other) !== -1;
+  });
+}
+function interleaveByCategory(list){
+  var by = { A: [], B: [], C: [], D: [], none: [] };
+  list.forEach(function(s){ by[categories[s] || "none"].push(s); });
+  Object.keys(by).forEach(function(k){ shuffle(by[k]); });
+  var out = [], added = true;
+  while (added){
+    added = false;
+    ["A","B","C","D","none"].forEach(function(k){
+      if (by[k].length){ out.push(by[k].shift()); added = true; }
+    });
+  }
+  return out;
+}
+function tableScore(student, current, table){
+  var cat = categories[student] || "none", score = 0;
+  var tcats = current.map(function(s){ return categories[s] || "none"; });
+  if (cat !== "none" && tcats.indexOf(cat) === -1) score += 10;
+  score -= tcats.filter(function(c){ return c === cat; }).length * 5;
+  score += (table.seats - current.length);
+  if (table.isFront) score += frontPriority.has(student) ? 10 : 1;
+  return score;
+}
+window.shuffleSeats = function(){
+  if (!students.length){ updateUI(); return; }
+  seats = {};
+  var tables = getTables();
+  var assign = {};
+  tables.forEach(function(t){ assign[t.id] = []; });
+  var frontTables = tables.filter(function(t){ return t.isFront; });
+  var frontStudents = shuffle(students.filter(function(s){ return frontPriority.has(s); }));
+  var fi = 0;
+  frontStudents.forEach(function(student){
+    var placed = false;
+    for (var a = 0; a < frontTables.length && !placed; a++){
+      var t = frontTables[(fi + a) % frontTables.length];
+      if (assign[t.id].length < t.seats && !hasConflictAtTable(student, assign[t.id])){
+        assign[t.id].push(student); placed = true;
+        fi = (fi + a + 1) % frontTables.length;
+      }
+    }
+    if (!placed){
+      tables.some(function(t){
+        if (assign[t.id].length < t.seats && !hasConflictAtTable(student, assign[t.id])){
+          assign[t.id].push(student); return true;
+        }
+        return false;
+      });
+    }
+  });
+  var placedSet = {};
+  Object.keys(assign).forEach(function(id){ assign[id].forEach(function(s){ placedSet[s] = 1; }); });
+  var rest = interleaveByCategory(students.filter(function(s){ return !placedSet[s]; }));
+  rest.forEach(function(student){
+    var best = null, bestScore = -Infinity;
+    tables.forEach(function(t){
+      if (assign[t.id].length >= t.seats) return;
+      if (hasConflictAtTable(student, assign[t.id])) return;
+      var sc = tableScore(student, assign[t.id], t);
+      if (sc > bestScore){ bestScore = sc; best = t.id; }
+    });
+    if (best !== null) assign[best].push(student);
+  });
+  tables.forEach(function(t){
+    assign[t.id].forEach(function(s, i){
+      if (i < t.seats) seats["t" + t.id + "s" + (i + 1)] = s;
+    });
+  });
+  updateUI();
+  saveAll();
+};
+
+/* ---------- categories / front / conflicts ---------- */
+window.setCategory = function(btn, cat){
+  var student = btn.getAttribute("data-student");
+  if (categories[student] === cat) delete categories[student];
+  else categories[student] = cat;
+  updateUI(); saveAll();
+};
+window.toggleFrontPriority = function(btn){
+  var student = btn.getAttribute("data-student");
+  if (frontPriority.has(student)) frontPriority.delete(student);
+  else frontPriority.add(student);
+  shuffleSeats();
+};
+window.openConflictModal = function(btnOrName){
+  var pre = typeof btnOrName === "string" ? btnOrName
+    : (btnOrName && btnOrName.getAttribute) ? btnOrName.getAttribute("data-student") : "";
+  var opts = students.map(function(s){ return '<option value="' + esc(s) + '">' + esc(s) + "</option>"; }).join("");
+  document.getElementById("conflict1").innerHTML = '<option value="">First student…</option>' + opts;
+  document.getElementById("conflict2").innerHTML = '<option value="">Second student…</option>' + opts;
+  if (pre) document.getElementById("conflict1").value = pre;
+  document.getElementById("conflictModal").classList.add("active");
+};
+window.closeConflictModal = function(){
+  document.getElementById("conflictModal").classList.remove("active");
+};
+window.addConflict = function(){
+  var a = document.getElementById("conflict1").value, b = document.getElementById("conflict2").value;
+  if (!a || !b || a === b){ showStatus("err", "Pick two different students."); return; }
+  var exists = conflicts.some(function(c){
+    return (c.student1 === a && c.student2 === b) || (c.student1 === b && c.student2 === a);
+  });
+  if (!exists){ conflicts.push({ student1: a, student2: b }); }
+  closeConflictModal();
+  shuffleSeats();
+};
+window.removeConflict = function(i){
+  conflicts.splice(i, 1);
+  updateUI(); saveAll();
+};
+
+/* ---------- drag & drop ---------- */
+window.handleDragOver = function(e){ e.preventDefault(); e.target.closest(".seat").classList.add("dragover"); };
+window.handleDragLeave = function(e){ var s = e.target.closest(".seat"); if (s) s.classList.remove("dragover"); };
+window.handleDrop = function(e){
+  e.preventDefault();
+  var seatEl = e.target.closest(".seat");
+  if (!seatEl) return;
+  seatEl.classList.remove("dragover");
+  var target = seatEl.dataset.seatId;
+  if (!target || !draggedStudent) return;
+  var occupant = seats[target];
+  if (draggedFromSeat){
+    if (occupant) seats[draggedFromSeat] = occupant;
+    else delete seats[draggedFromSeat];
+  }
+  seats[target] = draggedStudent;
+  draggedStudent = null; draggedFromSeat = null;
+  updateUI(); saveAll();
+};
+
+/* ---------- render everything ---------- */
+var CAT_BG = { A: "var(--blue)", B: "var(--amber)", C: "var(--teal)", D: "var(--pink)" };
+function updateUI(){
+  document.getElementById("studentCount").textContent = students.length;
+  document.getElementById("seatedCount").textContent = Object.keys(seats).length;
+  syncLayoutControls();
+
+  document.getElementById("studentList").innerHTML = students.map(function(student){
+    var isFront = frontPriority.has(student);
+    var hasConf = conflicts.some(function(c){ return c.student1 === student || c.student2 === student; });
+    var cat = categories[student] || null;
+    var e = esc(student);
+    function catBtn(k){
+      return '<button class="cat cat-' + k.toLowerCase() + (cat === k ? " on" : "") +
+        '" data-student="' + e + '" onclick="setCategory(this,\'' + k + '\')" title="Level ' + k + '">' + k + "</button>";
+    }
+    return '<div class="stu' + (isFront ? " front" : "") + '"><span class="cats">' +
+      catBtn("A") + catBtn("B") + catBtn("C") + catBtn("D") + "</span>" +
+      '<span class="nm">' + e + "</span>" +
+      '<button class="abtn' + (isFront ? " front-on" : "") + '" data-student="' + e + '" onclick="toggleFrontPriority(this)" title="Needs a front seat">⬆</button>' +
+      '<button class="abtn' + (hasConf ? " conf-on" : "") + '" data-student="' + e + '" onclick="openConflictModal(this)" title="Add a can’t-sit-with pair">⚡</button></div>';
+  }).join("");
+
+  document.getElementById("conflictList").innerHTML = conflicts.map(function(c, i){
+    return '<div class="conflict-pair"><span class="names">' + esc(c.student1) + " ↔ " + esc(c.student2) +
+      '</span><button onclick="removeConflict(' + i + ')" aria-label="Remove pair">×</button></div>';
+  }).join("");
+
+  document.querySelectorAll(".seat").forEach(function(el){
+    var seatId = el.dataset.seatId;
+    var student = seats[seatId];
+    var m = seatId.match(/t(\d+)s(\d+)/);
+    var label = m ? m[1] + "-" + m[2] : "";
+    el.classList.remove("occupied", "front-pri", "warn");
+    el.draggable = false;
+    el.ondragstart = null;
+    if (student){
+      var parts = student.split(" ");
+      var cat = categories[student];
+      el.innerHTML = '<span class="no">' + label + '</span><span class="fn">' + esc(parts[0] || "") +
+        '</span><span class="ln">' + esc(parts.slice(1).join(" ")) + "</span>" +
+        (cat ? '<span class="catdot" style="background:' + CAT_BG[cat] + '">' + cat + "</span>" : "");
+      el.title = "Seat " + label + ": " + student + " — drag to move";
+      el.classList.add("occupied");
+      if (frontPriority.has(student)) el.classList.add("front-pri");
+      el.draggable = true;
+      el.ondragstart = function(ev){
+        draggedStudent = student; draggedFromSeat = seatId;
+        el.classList.add("dragging");
+        ev.dataTransfer.effectAllowed = "move";
+        ev.dataTransfer.setData("text/plain", student);
+      };
+      el.ondragend = function(){
+        document.querySelectorAll(".seat").forEach(function(s){ s.classList.remove("dragging"); });
+      };
+    } else {
+      el.innerHTML = '<span class="no">' + label + "</span>";
+      el.title = "Seat " + label + ": empty";
+    }
+  });
+
+  // pulse any table that ended up with a forbidden pair (e.g. after a manual drag)
+  getTables().forEach(function(t){
+    var here = [];
+    for (var i = 1; i <= t.seats; i++){
+      var sid = "t" + t.id + "s" + i;
+      if (seats[sid]) here.push({ sid: sid, s: seats[sid] });
+    }
+    conflicts.forEach(function(c){
+      var a = here.filter(function(x){ return x.s === c.student1; })[0];
+      var b = here.filter(function(x){ return x.s === c.student2; })[0];
+      if (a && b){
+        var ea = document.querySelector('[data-seat-id="' + a.sid + '"]');
+        var eb = document.querySelector('[data-seat-id="' + b.sid + '"]');
+        if (ea) ea.classList.add("warn");
+        if (eb) eb.classList.add("warn");
+      }
+    });
+  });
+}
+
+/* ---------- demo + clear ---------- */
+var demoStudents = ["Emma Johnson","Liam Smith","Olivia Williams","Noah Brown","Ava Garcia",
+  "Ethan Martinez","Sophia Rodriguez","Mason Davis","Isabella Wilson","Lucas Anderson",
+  "Mia Taylor","Oliver Thomas","Charlotte Moore","Elijah Jackson","Amelia White","Aiden Harris",
+  "Harper Martin","Caden Thompson","Evelyn Clark","Grayson Lewis","Abigail Robinson",
+  "Jackson Walker","Emily Hall","Sebastian Young","Ella King","Carter Wright","Scarlett Lopez","Wyatt Hill"];
+window.loadDemoData = function(){
+  students = demoStudents.slice(0, Math.min(demoStudents.length, totalSeats()));
+  categories = {};
+  students.forEach(function(s, i){ categories[s] = "ABCD"[i % 4]; });
+  frontPriority = new Set([students[10], students[15]].filter(Boolean));
+  conflicts = students.length > 3 ? [{ student1: students[1], student2: students[3] }] : [];
+  document.getElementById("studentInput").value = students.join("\n");
+  shuffleSeats();
+  showStatus("ok", "Demo class loaded — " + students.length + " students.");
+};
+window.clearAllData = function(){
+  students = []; seats = {}; categories = {}; conflicts = []; frontPriority = new Set();
+  document.getElementById("studentInput").value = "";
+  updateUI();
+  try { localStorage.removeItem(LS_KEY); localStorage.removeItem(MAP_KEY); } catch(e){}
+  showStatus("ok", "Cleared. The classroom page ghost map is gone too.");
+};
+
+/* ---------- go ---------- */
+var had = loadAll();
+renderTables();
+if (had) updateUI(); else loadDemoData();
+saveAll();
+})();
+</script>
+</body>
+</html>

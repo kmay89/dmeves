@@ -60,6 +60,7 @@
     --c-teacher:#a8702a;
     --c-books:#8a683a;
     --c-door:#3d80c4;
+    --c-pass:#b8862f;
     --display:"Fredoka",ui-rounded,"Hiragino Maru Gothic ProN","Segoe UI",system-ui,sans-serif;
     --body:"Nunito","Segoe UI",system-ui,sans-serif;
     --hand:"Caveat","Segoe Print","Bradley Hand","Comic Sans MS",cursive;
@@ -696,6 +697,7 @@
     <button data-id="teacher" style="--a:var(--c-teacher)">Teacher's desk</button>
     <button data-id="books" style="--a:var(--c-books)">Bookshelf</button>
     <button data-id="door" style="--a:var(--c-door)">The door</button>
+    <button data-id="pass" style="--a:var(--c-pass)">Hall pass</button>
   </nav>
 
   <div class="hint">
@@ -1120,13 +1122,18 @@
     '<rect x="30" y="74" width="24" height="34" rx="2" fill="#bfe4f2" stroke="#2c6a94" stroke-width="2"/>' +
     '<path d="M30 85 L54 85 M30 96 L54 96 M42 74 L42 108" stroke="#7cb8d8" stroke-width="1"/>' +
     '<rect x="8" y="150" width="68" height="7" rx="3.5" fill="#f2f6f8"/>' +
-    '<rect x="0" y="222" width="84" height="26" fill="#cfe6f2" opacity=".8"/>' +
-    // hall pass hanging beside the door
-    '<g transform="rotate(-6 100 120)"><path d="M100 112 L100 120" stroke="#6e5a3c" stroke-width="1.6"/>' +
-    '<rect x="93" y="120" width="15" height="22" rx="2" fill="#e0a458" stroke="rgba(8,6,2,.4)"/>' +
-    txt(100.5,132,"hall",6.5,"#3c3020",CHALK + ' text-anchor="middle"') +
-    txt(100.5,139,"pass",6.5,"#3c3020",CHALK + ' text-anchor="middle"') + "</g>";
+    '<rect x="0" y="222" width="84" height="26" fill="#cfe6f2" opacity=".8"/>';
   S.push(wrapObj("door","The door — what did I miss?","var(--c-door)",gLeft(496,-30,248,door)));
+  // …and hang the hall pass beside it as its own thing, gently swinging
+  var passSvg = '<circle cx="101" cy="130" r="17" fill="rgba(0,0,0,0)" stroke="none"/>' +
+    '<g class="pend"><path d="M101 110 L101 119" stroke="#6e5a3c" stroke-width="1.8"/>' +
+    '<circle cx="101" cy="109" r="2.2" fill="none" stroke="#8a6a3c" stroke-width="1.4"/>' +
+    '<g transform="rotate(-6 101 121)">' +
+    '<rect x="92" y="119" width="18" height="26" rx="3" fill="#e0a458" stroke="rgba(112,72,28,.5)" stroke-width="1.2"/>' +
+    '<circle cx="101" cy="123" r="1.6" fill="#8a5f30"/>' +
+    txt(101,133,"hall",7.5,"#3c3020",CHALK + ' text-anchor="middle"') +
+    txt(101,141,"pass",7.5,"#3c3020",CHALK + ' text-anchor="middle"') + "</g></g>";
+  S.push(wrapObj("pass","The hall pass — go when you need to","var(--c-pass)",gLeft(496,-30,248,passSvg)));
 
   /* ---------- wall B: smart board ---------- */
   var smart = '<rect x="-7" y="-7" width="174" height="112" rx="4" fill="#22262b" stroke="rgba(8,6,2,.55)" stroke-width="2"/>' +
@@ -1201,9 +1208,14 @@
   S.push(shadowW(284,200,28,28,6,.24));     // wizard stool
   S.push(shadowW(18,352,80,58,8,.26));      // safety corner
   S.push(shadowW(572,32,28,28,5,.22));      // recycling bin
-  [[150,240],[290,240],[430,240],[150,330],[290,330],[430,330]].forEach(function(dpos){
-    S.push(shadowW(dpos[0],dpos[1],56,40,6,.22));
-  });
+  var seatmap = null;
+  try { seatmap = JSON.parse(localStorage.getItem("dmeves-seatmap") || "null"); } catch(e){}
+  if (!(seatmap && seatmap.tables && seatmap.tables.length)) seatmap = null;
+  if (!seatmap){
+    [[150,240],[290,240],[430,240],[150,330],[290,330],[430,330]].forEach(function(dpos){
+      S.push(shadowW(dpos[0],dpos[1],56,40,6,.22));
+    });
+  }
 
   /* ---------- bookshelf (against wall A, far left) ---------- */
   var SPINES = ["#b8442f","#33517c","#e0a458","#3f7e52","#8a5bb8","#c46a8a","#4a8ea0","#b8862f","#6b4a2e","#5d7590"];
@@ -1258,6 +1270,21 @@
     '<path class="steam" d="M' + (msT[0]-4) + " " + msT[1] + ' q3 -6 -1 -11 q-3 -5 1 -9"/>' +
     '<path class="steam s2" d="M' + (msT[0]+4) + " " + (msT[1]-2) + ' q3 -5 -1 -10 q-3 -5 1 -8"/></g>';
   S.push(wrapObj("teacher","The teacher’s desk — help and contact","var(--c-teacher)",tdesk));
+  // a clipboard tucked on the desk corner — the teacher's secret seating chart
+  var clip = gTop(212,126,50,
+    '<g transform="rotate(9)">' +
+    '<rect x="0" y="0" width="26" height="34" rx="2.5" fill="#a8763e" stroke="rgba(112,72,28,.5)" stroke-width="1"/>' +
+    '<rect x="2" y="4" width="22" height="28" rx="1.5" fill="#fffdf6"/>' +
+    '<rect x="8" y="-2" width="10" height="5" rx="2" fill="#7d858f"/>' +
+    (function(){
+      var s = "";
+      for (var r = 0; r < 3; r++) for (var c = 0; c < 2; c++){
+        s += '<rect x="' + (5 + c * 9.5) + '" y="' + (7 + r * 8) + '" width="7" height="5" rx="1" fill="none" stroke="#9aa4ae" stroke-width=".9"/>' +
+          '<path d="M' + (6 + c * 9.5) + " " + (9.5 + r * 8) + ' h5" stroke="#c0c8ce" stroke-width=".8"/>';
+      }
+      return s;
+    })() + "</g>");
+  S.push(wrapObj("seating","The seating chart — teacher’s clipboard","var(--c-teacher)",clip));
 
   /* ---------- the globe (on the teacher desk corner) ---------- */
   var gb = P(230,95,80);
@@ -1454,16 +1481,55 @@
   var planeTop = gTop(444,338,40,'<g transform="rotate(22 14 8)">' +
     '<path d="M0 8 L28 0 L12 16 Z" fill="#e8e2d2" stroke="rgba(8,6,2,.35)"/>' +
     '<path d="M28 0 L12 10 L12 16" fill="#c9c3b0" stroke="rgba(8,6,2,.35)"/></g>');
-  S.push('<g aria-hidden="true">' +
-    studentDesk(150,240,noteTop) + studentDesk(290,240) + studentDesk(430,240) +
-    studentDesk(150,330) + studentDesk(290,330) + studentDesk(430,330,planeTop) +
-  "</g>");
-  // backpack slouched against a desk leg
-  var bp = P(268,306,0);
-  S.push('<g aria-hidden="true" transform="translate(' + bp[0] + "," + bp[1] + ')">' +
-    '<path d="M-8 0 Q-11 -22 0 -26 Q11 -22 9 0 Z" fill="#8a5bb8" ' + OUT + "/>" +
-    '<path d="M-4 0 Q-5 -12 0 -14 Q6 -12 5 0 Z" fill="#a07ad0" ' + OUT + "/>" +
-    '<path d="M-6 -24 Q0 -30 6 -24" stroke="#5d3a8e" stroke-width="2.5" fill="none"/></g>');
+  /* If the teacher has built a seating chart (in /seating/), its layout is
+     projected onto the floor as a ghost map — same tables, same seats,
+     same angles — instead of the default furniture. */
+  if (seatmap){
+    var rows = 1 + Math.max.apply(null, seatmap.tables.map(function(t){ return t.row; }));
+    var rowH = Math.min(84, 168 / rows);
+    var gf = Math.min(1, rowH / 80);
+    var ghost = '<g fill="none" stroke-linejoin="round">';
+    seatmap.tables.forEach(function(t){
+      var topCount = Math.ceil(t.seats / 2);
+      var w = topCount * 30 + 10;
+      var cx = t.col === "left" ? 92 : 278;
+      var cy = t.row * rowH + rowH / 2 + 14;
+      var rot = seatmap.angled ? (t.col === "left" ? 12 : -12) : 0;
+      ghost += '<g transform="translate(' + cx + " " + cy + ') rotate(' + rot + ') scale(' + gf.toFixed(2) + ')">' +
+        '<rect x="' + (-w/2) + '" y="-13" width="' + w + '" height="26" rx="5" fill="rgba(122,130,140,.22)" stroke="rgba(95,107,120,.7)" stroke-width="1.6" stroke-dasharray="5 3"/>' +
+        '<text x="0" y="4" font-size="11" fill="rgba(95,107,120,.85)" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="600">' + t.id + "</text>";
+      for (var i = 1; i <= t.seats; i++){
+        var idx = i - 1, isTop = idx < topCount;
+        var slot = isTop ? idx : idx - topCount;
+        var rowCount = isTop ? topCount : t.seats - topCount;
+        var sx = -(rowCount * 30) / 2 + slot * 30 + 15;
+        var sy = isTop ? -29 : 16;
+        var name = (seatmap.seats || {})["t" + t.id + "s" + i];
+        var ini = "";
+        if (name){
+          var np = String(name).trim().split(/\s+/);
+          ini = (np[0] ? np[0][0] : "") + (np.length > 1 ? np[np.length - 1][0] : "");
+        }
+        ghost += '<rect x="' + (sx - 12) + '" y="' + sy + '" width="24" height="13" rx="3" fill="' +
+          (name ? "rgba(122,130,140,.34)" : "rgba(255,255,255,.3)") + '" stroke="rgba(95,107,120,.55)" stroke-width="1.1" stroke-dasharray="3 2.4"/>';
+        if (ini) ghost += '<text x="' + sx + '" y="' + (sy + 10) + '" font-size="8.5" fill="rgba(74,84,96,.9)" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="600">' + ini.toUpperCase() + "</text>";
+      }
+      ghost += "</g>";
+    });
+    ghost += '<text x="185" y="' + (rows * rowH + 34) + '" font-size="15" fill="rgba(95,107,120,.75)" text-anchor="middle" font-family="Caveat,cursive">today’s seating — from the teacher’s chart ✎</text></g>';
+    S.push(wrapObj("seatmap","Today’s seating map — projected from the seating chart","#7b8794",gTop(150,232,0,ghost)));
+  } else {
+    S.push('<g aria-hidden="true">' +
+      studentDesk(150,240,noteTop) + studentDesk(290,240) + studentDesk(430,240) +
+      studentDesk(150,330) + studentDesk(290,330) + studentDesk(430,330,planeTop) +
+    "</g>");
+    // backpack slouched against a desk leg
+    var bp = P(268,306,0);
+    S.push('<g aria-hidden="true" transform="translate(' + bp[0] + "," + bp[1] + ')">' +
+      '<path d="M-8 0 Q-11 -22 0 -26 Q11 -22 9 0 Z" fill="#8a5bb8" ' + OUT + "/>" +
+      '<path d="M-4 0 Q-5 -12 0 -14 Q6 -12 5 0 Z" fill="#a07ad0" ' + OUT + "/>" +
+      '<path d="M-6 -24 Q0 -30 6 -24" stroke="#5d3a8e" stroke-width="2.5" fill="none"/></g>');
+  }
   // recycling bin by the door
   S.push(cyl(586,46,0,13,26,"#33689c"));
   S.push((function(){
@@ -1577,7 +1643,8 @@
       title: "Stuck? That’s what this desk is for",
       story: "Extra help happens here — before school, after school, or whenever the room is open and I’m not mid-coffee. Bring the problem that’s bugging you, half-finished work, or just a question that sounds too weird to ask in class (those are the best ones). The apple is decorative. The help is real.",
       chips: ["Extra help before & after school","Questions welcome, weird ones especially","Retakes by appointment"],
-      links: [{label:"open Google Classroom", href:LNK("classroom")}].concat(mailLink())
+      links: [{label:"open Google Classroom", href:LNK("classroom")},
+        {label:"seating chart (teacher tool)", href:"/seating/"}].concat(mailLink())
     },
     books: {
       kicker: "The bookshelf · back of the room",
@@ -1585,6 +1652,36 @@
       story: "The online textbook goes everywhere your phone goes, which is more than this shelf can say. Readings get assigned from it, but the shelf keeps the fun stuff too — the beat-up field guides and the one book about bridges that three students a year fall in love with. Borrow anything; just bring it back.",
       chips: ["Online textbook","Assigned readings","The bridge book"],
       links: [{label:"the textbook", href:LNK("textbook")}]
+    },
+    seatmap: {
+      kicker: "The floor · today’s seating",
+      title: "The seating chart, projected into the room",
+      story: function(){
+        var m = null;
+        try { m = JSON.parse(localStorage.getItem("dmeves-seatmap") || "null"); } catch(e){}
+        if (!m || !m.tables) return "Build a chart in the seating tool and its layout appears here as a ghost on the floor.";
+        var seatsTotal = m.tables.reduce(function(a, t){ return a + t.seats; }, 0);
+        var seated = Object.keys(m.seats || {}).length;
+        return "These gray outlines are the live layout from the seating chart — " + m.tables.length +
+          " tables, " + seatsTotal + " seats, " + seated +
+          " students placed, angled so every seat faces the front. Change the chart and the floor redraws itself. Find your initials; that’s your spot.";
+      },
+      chips: function(){
+        var m = null;
+        try { m = JSON.parse(localStorage.getItem("dmeves-seatmap") || "null"); } catch(e){}
+        if (!m || !m.tables) return [];
+        return m.tables.map(function(t){ return "Table " + t.id + " · " + t.seats + " seats"; });
+      },
+      links: [{label:"open the seating chart", href:"/seating/"}]
+    },
+    pass: {
+      kicker: "The hall pass · by the door",
+      title: "Go when you need to — nobody performs their best while holding it",
+      story: "You will never be told no for a real need, and you never have to announce anything to the room. Here’s the whole system: catch my eye and hold up crossed fingers — that’s the silent signal. I nod, you take the pass, you jot your name and the time on the sign-out sheet, and off you go. One pass means one person out; if it’s gone, hang tight. Aim for work time — the first ten and last ten minutes are where instructions and the good stuff live, so save those unless it’s urgent (urgent always wins, no questions, ever — and health stuff like cramps or a medical plan overrides every rule on this list). Phone stays at your seat, and back in about five. If the pass starts becoming somebody’s daily field trip, that’s a quiet private chat with me — never a call-out, and sometimes it turns out there’s a real reason, which is exactly why we talk.",
+      chips: function(){
+        return ["🤞 silent signal → nod → go","One out at a time","Sign out, sign in","Skip the first & last 10 min","Urgent? Just go","Phone stays here","Back in ~5","Patterns → private chat, never a call-out"];
+      },
+      links: []
     },
     door: {
       kicker: "The door · absent?",
@@ -1750,6 +1847,11 @@
     cal: function(){ // page flip
       noise({filter:"bandpass", freq:600, freqEnd:2600, q:1.1, dur:0.25, g:0.12});
     },
+    seating: function(){ // clipboard flip + pencil tick
+      noise({filter:"bandpass", freq:700, freqEnd:2200, q:1, dur:0.18, g:0.11});
+      tone(1900, {type:"sine", at:0.2, dur:0.04, g:0.05});
+      tone(1500, {type:"sine", at:0.27, dur:0.04, g:0.05});
+    },
     teacher: function(){ // paper shuffle + mug set down
       noise({filter:"bandpass", freq:800, freqEnd:1800, q:1, dur:0.18, g:0.09});
       tone(340, {type:"sine", at:0.22, dur:0.07, g:0.06});
@@ -1757,6 +1859,12 @@
     books: function(){ // book slide + thump
       noise({filter:"bandpass", freq:500, freqEnd:1200, q:1, dur:0.2, g:0.1});
       noise({filter:"lowpass", freq:200, at:0.22, dur:0.08, g:0.14});
+    },
+    pass: function(){ // wooden pass knocking on the door frame
+      noise({filter:"lowpass", freq:1400, dur:0.035, g:0.15});
+      tone(420, {type:"triangle", dur:0.06, g:0.08});
+      noise({filter:"lowpass", freq:1100, at:0.12, dur:0.03, g:0.11});
+      tone(380, {type:"triangle", at:0.12, dur:0.06, g:0.07});
     },
     door: function(){ // creak + hallway air
       tone(180, {type:"sawtooth", dur:0.3, g:0.02, end:240});
@@ -1772,7 +1880,7 @@
   var HAPTICS = {
     board:[10,30,10], smart:[15,40,15], ptable:[8,25,8,25,8], lab:[12,30,12],
     wizard:[8,20,8,20,20], safety:[40,60,40], globe:[60], clock:[10,280,10],
-    cal:[12,25,12], teacher:[10,20,10], books:[20,30,10], door:[25,50,15], bell:[30,40,30,40,30],
+    cal:[12,25,12], teacher:[10,20,10], books:[20,30,10], door:[25,50,15], pass:[15,30,15], bell:[30,40,30,40,30],
     eyewash:[15,60,80], showerpull:[25,80,140]
   };
   function buzz(id){
@@ -2257,6 +2365,7 @@
     else if (id === "wizard") openWizard();
     else if (id === "eyewash") runEyewash();
     else if (id === "showerpull") runShower();
+    else if (id === "seating"){ setTimeout(function(){ location.href = "/seating/"; }, 240); }
     else openSpot(id, accent);
   }
   document.querySelectorAll(".iso-obj").forEach(function(btn){
