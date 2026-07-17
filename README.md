@@ -20,7 +20,9 @@ uses, so students explore the room instead of scrolling a list of links:
 | The door | "What did I miss?" → the Classroom stream |
 
 Single `index.html`, no frameworks, no build step, no trackers. Sound is
-synthesized in the browser and off until the first click.
+synthesized in the browser and off until the first click. Typography is
+Fredoka + Nunito + Caveat, self-hosted from `/fonts` (~120 KB total) so
+no font CDN ever sees your students.
 
 ## Teacher setup
 
