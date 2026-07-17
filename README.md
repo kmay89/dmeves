@@ -73,15 +73,19 @@ footer.
 ### Seat Smart (the seating chart, `/seating/`)
 
 A full seating-chart tool lives at `/seating/`, reachable via the clipboard
-on the teacher's desk. Paste or CSV-upload a roster, tag students A–D for
-mixing, mark front-row needs, add "can't sit together" pairs, then shuffle —
-the assigner balances categories per table, honors conflicts, and fills
-front tables first. Drag any two students to swap. **The layout is fully
-configurable**: number of tables, seats per table (2/4/6, with per-table
-overrides via the number circles), and angled-toward-the-front placement.
-Print gives a clean handout. Everything is stored only in the teacher's own
-browser — and the classroom page reads the same layout to project a ghosted
-gray seating map onto the room's floor, initials and all.
+on the teacher's desk. Load a roster by pasting, uploading a CSV or Excel
+file, or snapping/uploading a **photo of a printed list** (OCR runs locally
+in the browser). Tag students A–D for mixing, mark front-row needs, add
+"can't sit together" pairs, then shuffle — the assigner balances categories
+per table, honors conflicts, and fills front tables first. Drag any two
+students to swap. **The layout is fully configurable**: number of tables
+and seats per table as **any whole number 1–8** (odd counts welcome — three
+kids at a four-top just leaves an empty spot), per-table overrides via the
+number circles, and angled-toward-the-front placement. Export as **PNG,
+PDF (chart + seat-by-seat roster), or print**. The roster is stored only in
+the teacher's own browser; the optional import/export features fetch their
+open-source libraries from a CDN at the moment of use (code only — names
+never leave the device).
 
 ### Link previews (iMessage etc.)
 
