@@ -2085,8 +2085,8 @@
     return h.toString(16);
   }
   function sha256Hex(s){
-    if (!(window.crypto && crypto.subtle && window.TextEncoder)) return Promise.resolve(null);
-    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function(buf){
+    if (!(window.crypto && window.crypto.subtle && window.TextEncoder)) return Promise.resolve(null);
+    return window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function(buf){
       return Array.prototype.map.call(new Uint8Array(buf), function(b){
         return ("0" + b.toString(16)).slice(-2);
       }).join("");
@@ -2104,6 +2104,10 @@
     hash: function(code){
       var salted = "dmeves|" + code;
       return sha256Hex(salted).then(function(hex){
+        if (hex === null){
+          console.warn("SHA-256 isn't available here (open the site over https, not file:// or plain http) — no hash generated.");
+          return null;
+        }
         var out = { sha256: hex, djb2: djb2(salted) };
         console.log("Paste into CONFIG.gate →", JSON.stringify(out));
         return out;
@@ -2164,7 +2168,7 @@
       b.type = "button"; b.textContent = k;
       if (k === "⌫"){
         b.setAttribute("aria-label", "Delete last digit");
-        b.addEventListener("click", function(){ gTyped = gTyped.slice(0, -1); gRender(); });
+        b.addEventListener("click", function(){ if (gLockedOut) return; gTyped = gTyped.slice(0, -1); gRender(); });
       } else if (k === ""){
         b.disabled = true; b.style.opacity = "0"; b.style.cursor = "default";
         b.setAttribute("aria-hidden", "true"); b.tabIndex = -1;
@@ -2176,7 +2180,7 @@
     document.addEventListener("keydown", function(e){
       if (gateEl.classList.contains("open")) return;
       if (e.key >= "0" && e.key <= "9") gPress(e.key);
-      else if (e.key === "Backspace"){ gTyped = gTyped.slice(0, -1); gRender(); }
+      else if (e.key === "Backspace" && !gLockedOut){ gTyped = gTyped.slice(0, -1); gRender(); }
     });
     // remembered from a previous visit? magic link (?code=…) from the teacher?
     var remembered = null;
