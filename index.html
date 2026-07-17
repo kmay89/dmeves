@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An interactive isometric science classroom. Every poster, beaker, and chalk scribble in the room links back to the real class materials — syllabus, homework, labs, safety, and more.">
+<meta name="theme-color" content="#0b0d11">
+<link rel="canonical" href="https://dmeves.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Physical Science">
+<meta property="og:title" content="Physical Science — The Classroom">
+<meta property="og:description" content="An interactive classroom where everything on the walls and benches links to the real class materials. Come in and pick something up.">
+<meta property="og:url" content="https://dmeves.com/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Physical Science — The Classroom">
+<meta name="twitter:description" content="An interactive classroom where everything links to the real class materials.">
+<title>Physical Science — The Classroom</title>
+<style>
+  :root{
+    --room:#0b0d11;
+    --room-deep:#07080b;
+    --lamp:#ffd98a;
+    --ink:#eef0e9;
+    --ink-dim:#a9b0a3;
+    --ink-faint:#6f7669;
+    --c-board:#7ee0a3;
+    --c-smart:#7cb8ff;
+    --c-ptable:#ffb84d;
+    --c-lab:#64dfdf;
+    --c-wizard:#c79bff;
+    --c-safety:#ff6b5e;
+    --c-globe:#ffd166;
+    --c-clock:#9be3ff;
+    --c-cal:#ff9ec2;
+    --c-teacher:#e0a458;
+    --c-books:#d3b68a;
+    --c-door:#a3b3cc;
+    --mono:ui-monospace,"Cascadia Code","Source Code Pro",Menlo,Consolas,monospace;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--room);
+    color:var(--ink);
+    font-family:var(--serif);
+    overflow-x:hidden;
+    min-height:100vh;
+  }
+  ::selection{background:var(--lamp);color:var(--room)}
+
+  /* ---------- scene ---------- */
+  .scene{
+    position:relative;
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 60% -10%, rgba(255,217,138,.13), transparent 55%),
+      radial-gradient(80% 60% at 50% 105%, rgba(24,34,28,.6), transparent 70%),
+      linear-gradient(var(--room-deep), var(--room) 30%);
+  }
+  #dust{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+
+  .intro{
+    position:relative;z-index:4;
+    padding:clamp(1.25rem,4vw,3rem) clamp(1.25rem,5vw,4rem) 0;
+    max-width:46rem;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.22em;
+    color:var(--lamp);
+    text-transform:uppercase;
+  }
+  .intro h1{
+    margin-top:.9rem;
+    font-size:clamp(2.1rem,5.2vw,3.6rem);
+    line-height:1.05;
+    font-weight:600;
+    letter-spacing:-.01em;
+    text-wrap:balance;
+  }
+  .intro h1 em{font-style:italic;color:var(--lamp)}
+  .intro .lede{
+    margin-top:1rem;
+    max-width:36rem;
+    color:var(--ink-dim);
+    font-size:clamp(.98rem,1.5vw,1.12rem);
+    line-height:1.55;
+  }
+
+  /* ---------- isometric classroom ---------- */
+  .room-wrap{
+    position:relative;z-index:2;
+    flex:1;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    padding:clamp(.5rem,2vh,1.5rem) 0 0;
+  }
+  #iso{
+    display:block;
+    width:100%;
+    min-width:740px;
+    max-width:1200px;
+    margin:0 auto;
+    transform:translate3d(var(--px,0px),var(--py,0px),0);
+  }
+  .iso-obj{cursor:pointer;outline:none}
+  .iso-obj > *{transition:transform .3s cubic-bezier(.2,.9,.3,1.35)}
+  .iso-obj:hover > *,.iso-obj:focus-visible > *{transform:translateY(-8px)}
+  .iso-obj:hover,.iso-obj:focus-visible{
+    filter:drop-shadow(0 0 14px color-mix(in srgb, var(--a) 55%, transparent));
+  }
+  .iso-obj.picked > *{transform:translateY(-8px)}
+  .iso-obj.picked{
+    filter:drop-shadow(0 0 8px var(--a)) drop-shadow(0 0 22px var(--a));
+    animation:pickedPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pickedPulse{
+    0%,100%{filter:drop-shadow(0 0 5px var(--a)) drop-shadow(0 0 14px var(--a))}
+    50%{filter:drop-shadow(0 0 12px var(--a)) drop-shadow(0 0 30px var(--a))}
+  }
+  .tip{
+    position:absolute;z-index:6;
+    transform:translate(-50%,-100%);
+    background:rgba(13,18,15,.94);
+    border:1px solid var(--a,#ffd98a);
+    border-radius:5px;
+    padding:.4em .8em;
+    font-family:var(--mono);
+    font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink);
+    pointer-events:none;white-space:nowrap;
+    opacity:0;visibility:hidden;
+    transition:opacity .15s ease;
+  }
+  .tip.show{opacity:1;visibility:visible}
+  .legend{
+    position:relative;z-index:4;
+    display:flex;flex-wrap:wrap;gap:.5rem .6rem;justify-content:center;
+    padding:.9rem clamp(1.25rem,5vw,4rem) 0;
+  }
+  .legend button{
+    font-family:var(--mono);
+    font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-dim);
+    background:color-mix(in srgb, var(--a) 8%, transparent);
+    border:1px solid color-mix(in srgb, var(--a) 38%, transparent);
+    border-radius:999px;
+    padding:.42em .95em;
+    cursor:pointer;
+    transition:color .25s ease, background .25s ease;
+  }
+  .legend button:hover,.legend button:focus-visible{
+    color:var(--a);
+    background:color-mix(in srgb, var(--a) 18%, transparent);
+  }
+  .legend button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+
+  /* scene animations */
+  .steam{animation:steam 3.6s ease-in-out infinite;transform-origin:center bottom}
+  .steam.s2{animation-delay:-1.7s}
+  @keyframes steam{
+    0%,100%{opacity:.10;transform:translateY(0)}
+    50%{opacity:.34;transform:translateY(-5px)}
+  }
+  .led{animation:led 2.2s ease-in-out infinite}
+  @keyframes led{0%,100%{opacity:1}50%{opacity:.15}}
+  .flame{animation:flame 1.1s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
+  @keyframes flame{0%,100%{transform:scale(1)}40%{transform:scale(1.15,1.35)}70%{transform:scale(.92,1.05)}}
+  .bob2{animation:bob2 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .bub{animation:bub 2.8s linear infinite;transform-box:fill-box;transform-origin:center}
+  .bub.b2{animation-delay:-1s}.bub.b3{animation-delay:-1.9s}
+  @keyframes bub{0%{transform:translateY(0);opacity:0}15%{opacity:.8}80%{opacity:.6}100%{transform:translateY(-16px);opacity:0}}
+  .scrn{animation:scrn 6s steps(2) infinite}
+  @keyframes scrn{0%,94%,100%{opacity:1}96%{opacity:.7}}
+  .pend{animation:pend 2s ease-in-out infinite;transform-box:fill-box;transform-origin:top center}
+  @keyframes pend{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-7deg)}}
+
+  .hint{
+    position:relative;z-index:4;
+    display:flex;flex-wrap:wrap;align-items:center;gap:.9rem;
+    padding:1rem clamp(1.25rem,5vw,4rem) 1.4rem;
+    font-family:var(--mono);
+    font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-faint);
+    background:linear-gradient(transparent, rgba(7,8,11,.6));
+  }
+  .hint .sep{opacity:.4}
+  .hint .pan-hint{display:none}
+  @media (max-width:760px){ .hint .pan-hint{display:inline} }
+  .chip{
+    font-family:var(--mono);
+    font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--lamp);
+    background:rgba(255,217,138,.08);
+    border:1px solid rgba(255,217,138,.35);
+    border-radius:999px;
+    padding:.45em 1em;
+    cursor:pointer;
+    transition:background .25s ease,color .25s ease;
+  }
+  .chip:hover,.chip:focus-visible{background:rgba(255,217,138,.18)}
+  .chip:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+  .chip[aria-pressed="false"]{color:var(--ink-faint);border-color:rgba(169,176,163,.3);background:transparent}
+
+  /* ---------- dossier ---------- */
+  .scrim{
+    position:fixed;inset:0;z-index:40;
+    background:rgba(4,5,7,.62);
+    backdrop-filter:blur(3px);
+    opacity:0;transition:opacity .3s ease;
+  }
+  .scrim.show{opacity:1}
+  .scrim.spot{
+    -webkit-mask-image:radial-gradient(circle at var(--sx,50%) var(--sy,40%), transparent var(--sr,80px), #000 calc(var(--sr,80px)*2.6));
+    mask-image:radial-gradient(circle at var(--sx,50%) var(--sy,40%), transparent var(--sr,80px), #000 calc(var(--sr,80px)*2.6));
+  }
+  .dossier{
+    position:fixed;left:50%;bottom:0;z-index:41;
+    transform:translate(-50%,105%);
+    width:min(44rem,calc(100vw - 1.5rem));
+    max-height:min(78vh,40rem);
+    overflow-y:auto;
+    background:linear-gradient(160deg,#141a16,#0d1210 55%);
+    border:1px solid color-mix(in srgb, var(--a,#ffd98a) 45%, transparent);
+    border-bottom:0;
+    border-radius:14px 14px 0 0;
+    box-shadow:0 -30px 80px rgba(0,0,0,.7), 0 0 60px color-mix(in srgb, var(--a,#ffd98a) 12%, transparent);
+    padding:clamp(1.25rem,3.5vw,2.25rem) clamp(1.25rem,4vw,2.5rem) clamp(1.75rem,4vw,2.5rem);
+    transition:transform .45s cubic-bezier(.2,.9,.25,1);
+  }
+  .dossier.show{transform:translate(-50%,0)}
+  .d-head{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+  .d-kicker{
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--a)
+  }
+  .dossier h2{
+    margin-top:.8rem;
+    font-size:clamp(1.4rem,3.4vw,2rem);
+    line-height:1.12;font-weight:600;text-wrap:balance;
+  }
+  .dossier .story{
+    margin-top:.9rem;color:var(--ink-dim);
+    line-height:1.62;font-size:1rem;max-width:60ch;
+  }
+  .chips{list-style:none;display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem}
+  .chips li{
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink);
+    border:1px solid color-mix(in srgb, var(--a) 40%, transparent);
+    background:color-mix(in srgb, var(--a) 9%, transparent);
+    border-radius:4px;padding:.4em .7em;
+  }
+  .d-links{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.3rem}
+  .d-links a{
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;
+    color:var(--room);background:var(--a);
+    text-decoration:none;border-radius:4px;padding:.55em .9em;
+    cursor:pointer;
+    transition:filter .2s ease;
+  }
+  .d-links a:hover,.d-links a:focus-visible{filter:brightness(1.15)}
+  .d-links a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .d-links a[target="_blank"]::after{content:" ↗"}
+
+  /* ---------- shared modal stage ---------- */
+  .stage{
+    position:fixed;left:50%;top:50%;z-index:42;
+    transform:translate(-50%,-46%) scale(.97);
+    width:min(50rem,calc(100vw - 1.5rem));
+    max-height:min(86vh,46rem);
+    overflow-y:auto;
+    background:linear-gradient(165deg,#151b17,#0d1210 60%);
+    border:1px solid color-mix(in srgb, var(--a,#ffd98a) 45%, transparent);
+    border-radius:14px;
+    box-shadow:0 40px 100px rgba(0,0,0,.75), 0 0 70px color-mix(in srgb, var(--a,#ffd98a) 12%, transparent);
+    padding:1.2rem 1.4rem 1.4rem;
+    opacity:0;visibility:hidden;
+    transition:opacity .3s ease, transform .3s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .stage.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+
+  /* ---------- hypothesis machine ---------- */
+  #wizStage{--a:var(--c-wizard);width:min(34rem,calc(100vw - 1.5rem))}
+  .wz-dots{display:flex;gap:.45rem;margin-top:1rem}
+  .wz-dots span{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(169,176,163,.25);
+    transition:background .3s ease;
+  }
+  .wz-dots span.on{background:var(--a)}
+  .wz-body{margin-top:1rem;min-height:11.5em}
+  .wz-body h3{font-size:1.15rem;font-weight:600;line-height:1.25;text-wrap:balance}
+  .wz-body p{margin-top:.55rem;color:var(--ink-dim);line-height:1.55;font-size:.94rem}
+  .wz-body p b,.wz-body p i{color:var(--ink)}
+  .wz-body label{
+    display:block;margin-top:.9rem;
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--a);
+  }
+  .wz-body input[type="text"],.wz-body textarea{
+    width:100%;margin-top:.4rem;
+    font-family:var(--serif);font-size:1rem;color:var(--ink);
+    background:rgba(199,155,255,.06);
+    border:1px solid color-mix(in srgb, var(--a) 35%, transparent);
+    border-radius:8px;padding:.6em .8em;
+    outline:none;resize:vertical;
+  }
+  .wz-body input:focus,.wz-body textarea:focus{border-color:var(--a);box-shadow:0 0 0 2px color-mix(in srgb, var(--a) 25%, transparent)}
+  .wz-choice{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem}
+  .wz-choice button{
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;
+    color:var(--ink-dim);
+    background:transparent;
+    border:1px solid color-mix(in srgb, var(--a) 30%, transparent);
+    border-radius:999px;padding:.5em 1em;cursor:pointer;
+  }
+  .wz-choice button[aria-pressed="true"]{color:var(--room);background:var(--a);border-color:var(--a)}
+  .wz-out{
+    margin-top:.9rem;padding:1em 1.1em;
+    border:1px dashed color-mix(in srgb, var(--a) 45%, transparent);
+    border-radius:10px;
+    background:color-mix(in srgb, var(--a) 6%, transparent);
+    font-size:1.05rem;line-height:1.6;
+  }
+  .wz-out b{color:var(--a)}
+  .wz-nav{display:flex;justify-content:space-between;gap:.6rem;margin-top:1.1rem}
+  .wz-nav button{
+    font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;
+    border-radius:8px;padding:.65em 1.2em;cursor:pointer;
+  }
+  .wz-nav .wz-back{color:var(--ink-dim);background:transparent;border:1px solid rgba(169,176,163,.3)}
+  .wz-nav .wz-back:disabled{opacity:.3;cursor:default}
+  .wz-nav .wz-next{color:var(--room);background:var(--a);border:0}
+  .wz-nav .wz-next:disabled{opacity:.35;cursor:default}
+  .wz-nav .wz-next:not(:disabled):hover{filter:brightness(1.12)}
+
+  /* ---------- periodic table ---------- */
+  #ptStage{--a:var(--c-ptable);width:min(56rem,calc(100vw - 1.5rem))}
+  .pt-scroll{overflow-x:auto;margin-top:1rem;padding-bottom:.4rem}
+  .pt-grid{
+    display:grid;
+    grid-template-columns:repeat(18,minmax(27px,1fr));
+    gap:3px;
+    min-width:580px;
+  }
+  .pt-grid button{
+    position:relative;
+    aspect-ratio:1;
+    font-family:var(--mono);
+    font-size:.66rem;font-weight:600;
+    color:var(--e);
+    background:color-mix(in srgb, var(--e) 13%, transparent);
+    border:1px solid color-mix(in srgb, var(--e) 40%, transparent);
+    border-radius:4px;cursor:pointer;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .pt-grid button:hover{background:color-mix(in srgb, var(--e) 30%, transparent);transform:translateY(-2px)}
+  .pt-grid button:focus-visible{outline:2px solid var(--e);outline-offset:1px;z-index:1}
+  .pt-grid button.sel{background:var(--e);color:var(--room)}
+  .pt-grid button i{
+    position:absolute;top:1px;left:3px;
+    font-style:normal;font-weight:400;font-size:.44rem;opacity:.75;
+  }
+  .pt-detail{
+    margin-top:1rem;display:flex;align-items:center;gap:1.1rem;
+    border:1px solid color-mix(in srgb, var(--e,#ffb84d) 40%, transparent);
+    background:color-mix(in srgb, var(--e,#ffb84d) 7%, transparent);
+    border-radius:12px;padding:.9rem 1.1rem;min-height:6.4rem;
+  }
+  .pt-tile{
+    flex:none;width:4.6rem;height:4.6rem;border-radius:9px;
+    display:grid;place-items:center;position:relative;
+    background:color-mix(in srgb, var(--e,#ffb84d) 18%, transparent);
+    border:1.5px solid var(--e,#ffb84d);
+    font-family:var(--mono);font-size:1.7rem;font-weight:700;color:var(--e,#ffb84d);
+  }
+  .pt-tile i{position:absolute;top:.3rem;left:.45rem;font-style:normal;font-weight:400;font-size:.6rem;opacity:.8}
+  .pt-info h3{font-size:1.2rem;font-weight:600}
+  .pt-info p{margin-top:.25rem;color:var(--ink-dim);font-size:.9rem;line-height:1.5}
+  .pt-info p b{color:var(--ink)}
+  .pt-key{display:flex;flex-wrap:wrap;gap:.4rem .8rem;margin-top:.9rem}
+  .pt-key span{
+    font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-dim);display:inline-flex;align-items:center;gap:.4em;
+  }
+  .pt-key span::before{
+    content:"";width:9px;height:9px;border-radius:2px;
+    background:var(--k);border:1px solid color-mix(in srgb, var(--k) 70%, #000);
+  }
+
+  /* ---------- orrery ---------- */
+  #orStage{--a:var(--c-globe);width:min(36rem,calc(100vw - 1.5rem))}
+  #orSvg{display:block;width:min(78vw,330px);margin:.8rem auto 0;overflow:visible}
+  .or-row{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin-top:.8rem}
+  .or-row button{
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-dim);background:transparent;
+    border:1px solid color-mix(in srgb, var(--p,#ffd166) 40%, transparent);
+    border-radius:999px;padding:.4em .8em;cursor:pointer;
+  }
+  .or-row button[aria-pressed="true"]{color:var(--room);background:var(--p,#ffd166);border-color:var(--p)}
+  .or-fact{
+    margin-top:.9rem;min-height:4.2em;text-align:center;
+    color:var(--ink-dim);line-height:1.55;font-size:.95rem;
+    padding:0 .5rem;
+  }
+  .or-fact b{color:var(--ink)}
+
+  /* ---------- footer ---------- */
+  footer{
+    border-top:1px solid rgba(255,217,138,.14);
+    padding:2rem clamp(1.25rem,5vw,4rem) 2.5rem;
+    display:flex;flex-wrap:wrap;gap:1rem 2.5rem;
+    align-items:baseline;justify-content:space-between;
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;
+    color:var(--ink-faint);
+    background:var(--room-deep);
+  }
+  footer a{color:var(--ink-dim);text-decoration:none;border-bottom:1px solid rgba(169,176,163,.35)}
+  footer a:hover{color:var(--lamp);border-color:var(--lamp)}
+  footer .cols{display:flex;flex-wrap:wrap;gap:.4rem 1.6rem}
+
+  @media (prefers-reduced-motion:reduce){
+    #iso{transform:none !important}
+    .iso-obj > *,.dossier,.scrim,.stage{transition:none}
+    .iso-obj.picked{animation:none}
+    .steam,.led,.flame,.bob2,.bub,.scrn,.pend{animation:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<main class="scene" id="scene">
+  <canvas id="dust" aria-hidden="true"></canvas>
+
+  <header class="intro">
+    <p class="eyebrow" id="eyebrow">Physical Science</p>
+    <h1 id="introH">Welcome to <em>the classroom</em> — everything for this class is hiding in plain sight.</h1>
+    <p class="lede">This room is the syllabus. The chalkboard knows this week's homework,
+    the lab bench knows how to write a report, the flask in the corner will help you
+    build a hypothesis, and the door knows what you missed. Everything links back to
+    the real assignments in Google Classroom. Wander around — nothing in here bites.</p>
+  </header>
+
+  <div class="room-wrap">
+    <svg id="iso" viewBox="-470 -300 1105 830" role="group"
+         aria-label="An isometric science classroom: chalkboard, smart board, periodic table, lab bench, safety corner, teacher desk, and more — each one opens class materials"></svg>
+  </div>
+  <div class="tip" id="tip" aria-hidden="true"></div>
+
+  <nav class="legend" aria-label="Things in the room">
+    <button data-id="board" style="--a:var(--c-board)">Chalkboard</button>
+    <button data-id="smart" style="--a:var(--c-smart)">Smart board</button>
+    <button data-id="ptable" style="--a:var(--c-ptable)">Periodic table</button>
+    <button data-id="lab" style="--a:var(--c-lab)">Lab bench</button>
+    <button data-id="wizard" style="--a:var(--c-wizard)">Hypothesis helper</button>
+    <button data-id="safety" style="--a:var(--c-safety)">Safety corner</button>
+    <button data-id="globe" style="--a:var(--c-globe)">The globe</button>
+    <button data-id="clock" style="--a:var(--c-clock)">Clock &amp; bells</button>
+    <button data-id="cal" style="--a:var(--c-cal)">Calendar</button>
+    <button data-id="teacher" style="--a:var(--c-teacher)">Teacher's desk</button>
+    <button data-id="books" style="--a:var(--c-books)">Bookshelf</button>
+    <button data-id="door" style="--a:var(--c-door)">The door</button>
+  </nav>
+
+  <div class="hint">
+    <span>Hover to look</span><span class="sep">/</span>
+    <span>Click to pick up</span><span class="sep">/</span>
+    <span class="pan-hint">Drag the room to pan</span><span class="sep pan-hint">/</span>
+    <button id="bellBtn" class="chip">Ring the bell</button>
+    <button id="sndBtn" class="chip" aria-pressed="true">Sound: on</button>
+  </div>
+</main>
+
+<section class="stage" id="wizStage" role="dialog" aria-modal="true" aria-label="The hypothesis machine" hidden>
+  <div class="d-head">
+    <p class="d-kicker">The hypothesis machine</p>
+    <button class="chip" id="wzClose">Put it back ×</button>
+  </div>
+  <div class="wz-dots" id="wzDots" aria-hidden="true"></div>
+  <div class="wz-body" id="wzBody"></div>
+  <div class="wz-nav">
+    <button class="wz-back" id="wzBack">← Back</button>
+    <button class="wz-next" id="wzNext">Next →</button>
+  </div>
+</section>
+
+<section class="stage" id="ptStage" role="dialog" aria-modal="true" aria-label="The periodic table" hidden>
+  <div class="d-head">
+    <p class="d-kicker">The periodic table — all 118, no substitutions</p>
+    <button class="chip" id="ptClose">Put it back ×</button>
+  </div>
+  <div class="pt-key" id="ptKey"></div>
+  <div class="pt-scroll"><div class="pt-grid" id="ptGrid"></div></div>
+  <div class="pt-detail" id="ptDetail">
+    <div class="pt-tile" id="ptTile"><i id="ptNum">?</i><span id="ptSym">?</span></div>
+    <div class="pt-info">
+      <h3 id="ptName">Pick an element</h3>
+      <p id="ptFacts">Every box is a different kind of atom. Click one — start with the
+      square that shares your initials, or the one taped above the lab bench.</p>
+    </div>
+  </div>
+</section>
+
+<section class="stage" id="orStage" role="dialog" aria-modal="true" aria-label="The solar system" hidden>
+  <div class="d-head">
+    <p class="d-kicker">The solar system — not to scale, not even close</p>
+    <button class="chip" id="orClose">Put it back ×</button>
+  </div>
+  <svg id="orSvg" viewBox="-170 -170 340 340" aria-hidden="true"></svg>
+  <div class="or-row" id="orRow"></div>
+  <p class="or-fact" id="orFact" aria-live="polite"></p>
+</section>
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="dossier" id="dossier" role="dialog" aria-modal="true" aria-labelledby="dTitle" hidden>
+  <div class="d-head">
+    <p class="d-kicker" id="dKicker"></p>
+    <button class="chip" id="dClose">Put it back ×</button>
+  </div>
+  <h2 id="dTitle"></h2>
+  <p class="story" id="dStory"></p>
+  <ul class="chips" id="dChips"></ul>
+  <div class="d-links" id="dLinks"></div>
+</section>
+
+<footer>
+  <div class="cols" id="footLinks"></div>
+  <span id="footNote">© Physical Science — built with chalk dust, no frameworks, no trackers.</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ================================================================
+     TEACHER SETUP — this is the only part you need to edit.
+     Paste your real links below. Any link left as "" quietly falls
+     back to your main Google Classroom link, so nothing ever 404s.
+     Times in the bell schedule are 24-hour ("13:38" = 1:38 pm).
+     ================================================================ */
+  var CONFIG = {
+    course:  "Physical Science",
+    teacher: "D. Meves",
+    room:    "Room 113",
+    year:    "2026–27",
+    school:  "",                        // optional, shows in the header
+    email:   "",                        // optional, adds "email the teacher" links
+    links: {
+      classroom:        "https://classroom.google.com/",
+      syllabus:         "",             // the syllabus doc
+      homework:         "",             // where homework gets posted
+      goals:            "",             // class goals / dreams board doc
+      labReport:        "",             // lab report template / how-to
+      scientificMethod: "",             // scientific method notes
+      safetyContract:   "",             // lab safety contract
+      calendar:         "",             // class calendar
+      textbook:         "",             // online textbook / readings
+      stream:           ""              // the Classroom stream (what did I miss?)
+    },
+    bellSchedule: [
+      {p:"Period 1", s:"7:45",  e:"8:33"},
+      {p:"Period 2", s:"8:38",  e:"9:26"},
+      {p:"Period 3", s:"9:31",  e:"10:19"},
+      {p:"Period 4", s:"10:24", e:"11:12"},
+      {p:"Lunch",    s:"11:12", e:"11:47"},
+      {p:"Period 5", s:"11:52", e:"12:40"},
+      {p:"Period 6", s:"12:45", e:"13:33"},
+      {p:"Period 7", s:"13:38", e:"14:26"}
+    ],
+    goals: [
+      "Ask one question a day that starts with “what if”",
+      "Read a graph like a headline",
+      "Break something safely and explain why it broke",
+      "Measure twice, wonder always",
+      "Leave the room better than we found it"
+    ]
+  };
+  function LNK(key){ return CONFIG.links[key] || CONFIG.links.classroom; }
+
+  /* ================================================================
+     ISOMETRIC SCENE — classic 2:1 dimetric projection, generated
+     programmatically so light, outlines, and perspective stay consistent.
+     World axes: +x → screen right-down, +y → screen left-down, +z → up.
+     ================================================================ */
+  function P(x,y,z){ return [x - y, (x + y) / 2 - z]; }
+  function pj(x,y,z){ var p = P(x,y,z); return p[0].toFixed(1) + "," + p[1].toFixed(1); }
+  function shade(hex, f){
+    var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    function ch(c){ c = f > 0 ? c + (255 - c) * f : c * (1 + f); return Math.round(Math.min(255, Math.max(0, c))); }
+    return "rgb(" + ch(r) + "," + ch(g) + "," + ch(b) + ")";
+  }
+  var OUT = 'stroke="rgba(8,12,10,.45)" stroke-width="1" stroke-linejoin="round"';
+  function polyW(cs, fill, extra){
+    return '<polygon points="' + cs.map(function(c){ return pj(c[0],c[1],c[2]); }).join(" ") + '" fill="' + fill + '" ' + (extra || OUT) + "/>";
+  }
+  // A box drawn with its three visible faces: left (y+d), right (x+w), top.
+  function box(x,y,z,w,d,h,c,o){
+    o = o || {};
+    var t = z + h, s = "";
+    s += polyW([[x,y+d,t],[x+w,y+d,t],[x+w,y+d,z],[x,y+d,z]], o.left  || shade(c,-.24));
+    s += polyW([[x+w,y,t],[x+w,y+d,t],[x+w,y+d,z],[x+w,y,z]], o.right || shade(c,-.08));
+    s += polyW([[x,y,t],[x+w,y,t],[x+w,y+d,t],[x,y+d,t]],     o.top   || shade(c,.20));
+    return s;
+  }
+  // 2D detail groups projected onto a face. Local (u,v) coords.
+  function mTop(x,y,z){ var p = P(x,y,z); return "matrix(1,0.5,-1,0.5," + p[0] + "," + p[1] + ")"; }
+  function mLeft(x,y,z){ var p = P(x,y,z); return "matrix(1,0.5,0,1," + p[0] + "," + p[1] + ")"; }
+  function mRight(x,y,z){ var p = P(x,y,z); return "matrix(1,-0.5,0,1," + p[0] + "," + p[1] + ")"; }
+  function gTop(x,y,z,inner,extra){ return '<g transform="' + mTop(x,y,z) + (extra||"") + '">' + inner + "</g>"; }
+  function gLeft(x,y,z,inner){ return '<g transform="' + mLeft(x,y,z) + '">' + inner + "</g>"; }
+  function gRight(x,y,z,inner){ return '<g transform="' + mRight(x,y,z) + '">' + inner + "</g>"; }
+  function shadowW(x,y,w,d,g,op){
+    g = g || 7;
+    return polyW([[x-g,y-g,0],[x+w+g,y-g,0],[x+w+g,y+d+g,0],[x-g,y+d+g,0]],
+      "rgba(4,8,6," + (op || .30) + ")", 'filter="url(#soft)"');
+  }
+  function isoEllipse(cx,cy,z,r,fill,extra){
+    var p = P(cx,cy,z), R = r * 1.414;
+    return '<ellipse cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" rx="' + R.toFixed(1) + '" ry="' + (R/2).toFixed(1) + '" fill="' + fill + '" ' + (extra || OUT) + "/>";
+  }
+  function cyl(cx,cy,z,r,h,c){
+    var R = r * 1.414, pB = P(cx,cy,z), pT = P(cx,cy,z+h);
+    var s = '<path d="M' + (pT[0]-R).toFixed(1) + " " + pT[1].toFixed(1) +
+      " L" + (pB[0]-R).toFixed(1) + " " + pB[1].toFixed(1) +
+      " A" + R.toFixed(1) + " " + (R/2).toFixed(1) + " 0 0 0 " + (pB[0]+R).toFixed(1) + " " + pB[1].toFixed(1) +
+      " L" + (pT[0]+R).toFixed(1) + " " + pT[1].toFixed(1) + ' Z" fill="' + shade(c,-.14) + '" ' + OUT + "/>";
+    s += isoEllipse(cx,cy,z+h,r,shade(c,.16));
+    return s;
+  }
+  function txt(x,y,str,size,fill,extra){
+    return '<text x="' + x + '" y="' + y + '" font-size="' + size + '" fill="' + fill + '" ' + (extra || "") + ">" + str + "</text>";
+  }
+  var MONO = 'font-family="ui-monospace,Menlo,Consolas,monospace"';
+  var SERIF = 'font-family="Iowan Old Style,Palatino,Georgia,serif"';
+  var CHALK = SERIF + ' font-style="italic"';
+  function wrapObj(id,label,accent,inner,cls){
+    return '<g class="iso-obj' + (cls ? " " + cls : "") + '" data-id="' + id + '" tabindex="0" role="button" aria-haspopup="dialog" aria-label="' + label + '" style="--a:' + accent + '">' +
+      "<g>" + inner + "</g></g>";
+  }
+
+  /* ---------- build the room ---------- */
+  var S = [];
+  S.push('<defs>' +
+    '<filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4"/></filter>' +
+    '<linearGradient id="wallA" x1="0" y1="-290" x2="0" y2="120" gradientUnits="userSpaceOnUse">' +
+      '<stop offset="0" stop-color="#2c3230"/><stop offset=".72" stop-color="#1b201e"/><stop offset="1" stop-color="#0b0d11"/></linearGradient>' +
+    '<linearGradient id="wallB" x1="0" y1="-290" x2="0" y2="200" gradientUnits="userSpaceOnUse">' +
+      '<stop offset="0" stop-color="#252b2c"/><stop offset=".72" stop-color="#161b1a"/><stop offset="1" stop-color="#0b0d11"/></linearGradient>' +
+    '<linearGradient id="floorG" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0" stop-color="#3c3a33"/><stop offset=".55" stop-color="#312f29"/><stop offset="1" stop-color="#232119"/></linearGradient>' +
+    '<linearGradient id="slate" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0" stop-color="#28483a"/><stop offset=".6" stop-color="#1e3a2e"/><stop offset="1" stop-color="#183226"/></linearGradient>' +
+    '<radialGradient id="smartGlow" cx=".5" cy=".45" r=".75">' +
+      '<stop offset="0" stop-color="#dceeff"/><stop offset=".65" stop-color="#9cc6ee"/><stop offset="1" stop-color="#5c86b4"/></radialGradient>' +
+    '<radialGradient id="poolGlow" cx=".5" cy=".5" r=".7">' +
+      '<stop offset="0" stop-color="rgba(255,217,138,.14)"/><stop offset="1" stop-color="rgba(255,217,138,0)"/></radialGradient>' +
+    '<radialGradient id="bulbGlow" cx=".5" cy=".5" r=".5">' +
+      '<stop offset="0" stop-color="rgba(255,224,150,.9)"/><stop offset=".6" stop-color="rgba(255,209,102,.35)"/><stop offset="1" stop-color="rgba(255,209,102,0)"/></radialGradient>' +
+    '<radialGradient id="globeSea" cx=".38" cy=".32" r=".95">' +
+      '<stop offset="0" stop-color="#7fb8d8"/><stop offset=".6" stop-color="#3d7ba6"/><stop offset="1" stop-color="#204d70"/></radialGradient>' +
+  '</defs>');
+
+  /* ---------- walls + floor ---------- */
+  S.push(polyW([[-30,-30,250],[-30,420,250],[-30,420,-40],[-30,-30,-40]], "url(#wallB)", 'stroke="none"'));
+  S.push(polyW([[-30,-30,250],[620,-30,250],[620,-30,-40],[-30,-30,-40]], "url(#wallA)", 'stroke="none"'));
+  S.push(polyW([[-30,-30,0],[620,-30,0],[620,420,0],[-30,420,0]], "url(#floorG)", 'stroke="none"'));
+  // vinyl tile seams
+  S.push(gTop(-30,-30,0,(function(){
+    var g = '<g stroke="#15130e" stroke-width="1.2" opacity=".5">';
+    for (var u = 50; u < 650; u += 50) g += '<path d="M' + u + ' 0 L' + u + ' 450"/>';
+    for (var v = 50; v < 450; v += 50) g += '<path d="M0 ' + v + ' L650 ' + v + '"/>';
+    g += "</g>";
+    // a few darker checker tiles, classroom-vinyl style
+    var t = "";
+    [[1,1],[3,2],[6,0],[8,3],[2,5],[5,6],[9,6],[11,1],[12,4],[7,7],[10,7],[0,3]].forEach(function(c){
+      t += '<rect x="' + (c[0]*50) + '" y="' + (c[1]*50) + '" width="50" height="50" fill="rgba(10,10,6,.16)"/>';
+    });
+    return t + g;
+  })()));
+  // wainscot strip along both walls
+  S.push(polyW([[-30,-30,26],[620,-30,26],[620,-30,18],[-30,-30,18]], "#141917", 'stroke="none"'));
+  S.push(polyW([[-30,-30,26],[-30,420,26],[-30,420,18],[-30,-30,18]], "#11201d", 'stroke="none"'));
+  // warm pool of light in the middle of the floor + cool spill from the smart board
+  S.push(gTop(-30,-30,0,'<ellipse cx="330" cy="220" rx="330" ry="240" fill="url(#poolGlow)"/>' +
+    '<ellipse cx="70" cy="150" rx="120" ry="90" fill="rgba(124,184,255,.05)"/>', ''));
+
+  /* ---------- wall A: flag ---------- */
+  var flag = '<path d="M6 0 L6 64" stroke="#6e5a3c" stroke-width="2.5"/>' +
+    '<circle cx="6" cy="-2" r="2.5" fill="#c9a86a"/>' +
+    '<g transform="rotate(3 6 2)">' +
+    (function(){ var s = ""; for (var i = 0; i < 7; i++)
+      s += '<rect x="8" y="' + (2 + i * 3.4) + '" width="42" height="3.4" fill="' + (i % 2 ? "#e8e2d2" : "#b8442f") + '"/>';
+      return s; })() +
+    '<rect x="8" y="2" width="18" height="13" fill="#33517c"/>' +
+    '<g fill="#e8e2d2"><circle cx="12" cy="5.5" r="1"/><circle cx="17" cy="5.5" r="1"/><circle cx="22" cy="5.5" r="1"/>' +
+    '<circle cx="14.5" cy="9" r="1"/><circle cx="19.5" cy="9" r="1"/><circle cx="12" cy="12.5" r="1"/>' +
+    '<circle cx="17" cy="12.5" r="1"/><circle cx="22" cy="12.5" r="1"/></g></g>';
+  S.push('<g aria-hidden="true">' + gLeft(66,-30,244,flag) + "</g>");
+
+  /* ---------- wall A: the chalkboard ---------- */
+  var bw = 350, bh = 115;
+  var board = '<rect x="-9" y="-9" width="' + (bw+18) + '" height="' + (bh+18) + '" rx="3" fill="#5d4a30" stroke="rgba(8,6,2,.55)" stroke-width="2"/>' +
+    '<rect x="0" y="0" width="' + bw + '" height="' + bh + '" fill="url(#slate)"/>' +
+    // ghost of yesterday's lesson, half erased
+    '<g opacity=".08" fill="#dfe8dc">' + txt(196,86,"E = mc²",15,"#dfe8dc",CHALK) +
+      '<path d="M180 92 q30 10 70 2" stroke="#dfe8dc" stroke-width="6" fill="none" opacity=".5"/></g>' +
+    // headline
+    txt(bw/2,22,"PHYSICAL SCIENCE",17,"#eef3ea",CHALK + ' text-anchor="middle" letter-spacing="3"') +
+    '<path d="M' + (bw/2-92) + ' 28 Q ' + (bw/2) + ' 34 ' + (bw/2+92) + ' 28" stroke="#eef3ea" stroke-width="1.6" fill="none" opacity=".8"/>' +
+    // left column: this week
+    txt(16,48,"this week ↓",11,"#ffe9a8",CHALK) +
+    txt(16,64,"• Mon — density lab",10.5,"#dfe8dc",CHALK) +
+    txt(16,79,"• Wed — quiz: motion",10.5,"#dfe8dc",CHALK) +
+    txt(16,94,"• Fri — HW #6 due",10.5,"#dfe8dc",CHALK) +
+    '<path d="M99 90 q6 5 3 9 m0 -9 q-6 5 -3 9" stroke="#ffe9a8" stroke-width="1.4" fill="none"/>' +
+    // right: the homework box that points at Google Classroom
+    '<g transform="rotate(-1.5 268 66)">' +
+    '<rect x="206" y="40" width="126" height="52" rx="7" fill="none" stroke="#ffe9a8" stroke-width="1.8" stroke-dasharray="5 4"/>' +
+    txt(269,57,"homework lives in",10,"#dfe8dc",CHALK + ' text-anchor="middle"') +
+    txt(269,74,"GOOGLE CLASSROOM",11.5,"#ffe9a8",CHALK + ' text-anchor="middle" letter-spacing="1"') +
+    txt(269,86,"(click me — I’ll take you)",8.5,"#bcd0c0",CHALK + ' text-anchor="middle"') + "</g>" +
+    // chalk doodles: atom + F=ma + a wave
+    '<g stroke="#dfe8dc" fill="none" opacity=".85">' +
+      '<ellipse cx="166" cy="70" rx="17" ry="6.5" stroke-width="1.3"/>' +
+      '<ellipse cx="166" cy="70" rx="17" ry="6.5" stroke-width="1.3" transform="rotate(60 166 70)"/>' +
+      '<ellipse cx="166" cy="70" rx="17" ry="6.5" stroke-width="1.3" transform="rotate(-60 166 70)"/>' +
+      '<circle cx="166" cy="70" r="2.4" fill="#ffe9a8" stroke="none"/></g>' +
+    txt(150,104,"F = ma",10.5,"#dfe8dc",CHALK) +
+    '<path d="M196 101 q7 -9 14 0 t14 0 t14 0" stroke="#dfe8dc" stroke-width="1.3" fill="none" opacity=".8"/>' +
+    // tray with chalk + eraser
+    '<rect x="-9" y="' + (bh+9) + '" width="' + (bw+18) + '" height="7" fill="#4a3a26"/>' +
+    '<rect x="30" y="' + (bh+9.5) + '" width="16" height="3.4" rx="1.7" fill="#eef3ea"/>' +
+    '<rect x="54" y="' + (bh+9.5) + '" width="13" height="3.4" rx="1.7" fill="#ffe9a8"/>' +
+    '<rect x="' + (bw-58) + '" y="' + (bh+6.5) + '" width="30" height="8" rx="2" fill="#2c2c34"/>' +
+    '<rect x="' + (bw-58) + '" y="' + (bh+6.5) + '" width="30" height="3" rx="1.5" fill="#585866"/>';
+  S.push(wrapObj("board","The chalkboard — syllabus and this week","var(--c-board)",gLeft(130,-30,210,board)));
+
+  /* ---------- wall A: clock (live hands, set by JS) ---------- */
+  var clock = '<circle cx="0" cy="0" r="19" fill="#31383e" stroke="rgba(8,6,2,.55)" stroke-width="2"/>' +
+    '<circle cx="0" cy="0" r="16" fill="#e9ecef"/>' +
+    (function(){ var s = ""; for (var i = 0; i < 12; i++){
+      var a = i * Math.PI / 6, r1 = i % 3 ? 13.6 : 12.4;
+      s += '<path d="M' + (Math.sin(a)*r1).toFixed(1) + " " + (-Math.cos(a)*r1).toFixed(1) +
+        " L" + (Math.sin(a)*15).toFixed(1) + " " + (-Math.cos(a)*15).toFixed(1) +
+        '" stroke="#3a4148" stroke-width="' + (i % 3 ? 1 : 1.8) + '"/>'; } return s; })() +
+    '<g id="handH"><path d="M0 1.5 L0 -8" stroke="#22262a" stroke-width="2.6" stroke-linecap="round"/></g>' +
+    '<g id="handM"><path d="M0 2 L0 -13" stroke="#22262a" stroke-width="1.7" stroke-linecap="round"/></g>' +
+    '<circle cx="0" cy="0" r="1.6" fill="#c23b30"/>';
+  S.push(wrapObj("clock","The clock — bell schedule","var(--c-clock)",gLeft(305,-30,232,clock)));
+
+  /* ---------- wall A: calendar (this month, drawn live) ---------- */
+  var CAL_ACCENT = "#e05c7e";
+  function calendarSVG(){
+    var now = new Date();
+    var y = now.getFullYear(), m = now.getMonth(), today = now.getDate();
+    var names = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+    var first = new Date(y, m, 1).getDay();
+    var days = new Date(y, m + 1, 0).getDate();
+    var s = '<rect x="-5" y="-5" width="78" height="96" rx="2" fill="#d8d2c0" stroke="rgba(8,6,2,.5)" stroke-width="1.5"/>' +
+      '<circle cx="34" cy="-1" r="2.6" fill="' + CAL_ACCENT + '"/>' +
+      '<rect x="-1" y="3" width="70" height="14" rx="2" fill="' + CAL_ACCENT + '"/>' +
+      txt(34,13,names[m] + " " + y,7,"#fff6ee",MONO + ' text-anchor="middle" letter-spacing="1" font-weight="bold"');
+    var cell = 10, ox = -1, oy = 22;
+    for (var d = 1; d <= days; d++){
+      var idx = first + d - 1, col = idx % 7, row = Math.floor(idx / 7);
+      var cx = ox + col * cell + cell/2, cyv = oy + row * cell + cell/2;
+      if (d === today) s += '<circle cx="' + cx + '" cy="' + cyv + '" r="4.6" fill="' + CAL_ACCENT + '"/>';
+      s += txt(cx, cyv + 2.4, d, 5.4, d === today ? "#fff6ee" : "#57503f", MONO + ' text-anchor="middle"');
+    }
+    s += txt(34,88,"one week at a time",6.2,"#8a8168",CHALK + ' text-anchor="middle"');
+    return s;
+  }
+  S.push(wrapObj("cal","The calendar — due dates","var(--c-cal)",gLeft(38,-30,196,calendarSVG())));
+
+  /* ---------- wall A: the door (+ exit sign) ---------- */
+  var door = '<rect x="8" y="18" width="12" height="26" rx="2" fill="#173a26" stroke="#2c5a3e"/>' +
+    txt(14,36,"EXIT",6.5,"#7ee0a3",MONO + ' text-anchor="middle" letter-spacing="1" class="led"') +
+    '<rect x="-8" y="52" width="100" height="196" fill="#3c3020" stroke="rgba(8,6,2,.55)" stroke-width="2"/>' +
+    '<rect x="0" y="60" width="84" height="188" fill="#42566c"/>' +
+    '<rect x="0" y="60" width="84" height="188" fill="none" stroke="#2c3c4e" stroke-width="2.5"/>' +
+    '<rect x="30" y="74" width="24" height="34" rx="2" fill="#0e141c" stroke="#5d7590" stroke-width="2"/>' +
+    '<path d="M30 85 L54 85 M30 96 L54 96 M42 74 L42 108" stroke="#2c3c4e" stroke-width="1"/>' +
+    '<rect x="8" y="150" width="68" height="7" rx="3.5" fill="#8a99ac"/>' +
+    '<rect x="0" y="222" width="84" height="26" fill="#5d7590" opacity=".55"/>' +
+    // hall pass hanging beside the door
+    '<g transform="rotate(-6 100 120)"><path d="M100 112 L100 120" stroke="#6e5a3c" stroke-width="1.6"/>' +
+    '<rect x="93" y="120" width="15" height="22" rx="2" fill="#e0a458" stroke="rgba(8,6,2,.4)"/>' +
+    txt(100.5,131,"HALL",4.6,"#3c3020",MONO + ' text-anchor="middle"') +
+    txt(100.5,137,"PASS",4.6,"#3c3020",MONO + ' text-anchor="middle"') + "</g>";
+  S.push(wrapObj("door","The door — what did I miss?","var(--c-door)",gLeft(496,-30,248,door)));
+
+  /* ---------- wall B: smart board ---------- */
+  var smart = '<rect x="-7" y="-7" width="174" height="112" rx="4" fill="#22262b" stroke="rgba(8,6,2,.55)" stroke-width="2"/>' +
+    '<g class="scrn"><rect x="0" y="0" width="160" height="98" rx="2" fill="url(#smartGlow)"/>' +
+    txt(80,20,"OUR YEAR",13,"#1e3550",SERIF + ' text-anchor="middle" font-weight="bold" letter-spacing="2"') +
+    txt(80,32,"goals &amp; dreams — " + CONFIG.year,7.5,"#33517c",CHALK + ' text-anchor="middle"') +
+    // sticky notes
+    '<g transform="rotate(-4 24 52)"><rect x="12" y="42" width="24" height="20" fill="#ffe9a8"/>' + txt(24,54,"ask",6,"#6e5218",CHALK + ' text-anchor="middle"') + txt(24,60,"why",6,"#6e5218",CHALK + ' text-anchor="middle"') + "</g>" +
+    '<g transform="rotate(3 60 58)"><rect x="48" y="46" width="24" height="20" fill="#c9e8b8"/>' + txt(60,58,"break",5.6,"#33591f",CHALK + ' text-anchor="middle"') + txt(60,63.5,"things*",5.6,"#33591f",CHALK + ' text-anchor="middle"') + "</g>" +
+    '<g transform="rotate(-2 96 54)"><rect x="84" y="42" width="24" height="20" fill="#f6c8d8"/>' + txt(96,53,"read",5.8,"#7a2c48",CHALK + ' text-anchor="middle"') + txt(96,59,"graphs",5.8,"#7a2c48",CHALK + ' text-anchor="middle"') + "</g>" +
+    // rocket doodle
+    '<g transform="translate(126,44) rotate(18)"><path d="M0 22 Q-5 8 0 0 Q5 8 0 22 Z" fill="#33517c"/>' +
+    '<circle cx="0" cy="8" r="2.2" fill="#dceeff"/><path d="M-2.5 20 L-6 27 L-1 24 M2.5 20 L6 27 L1 24" fill="#33517c"/>' +
+    '<path d="M0 23 q1.5 4 0 8 q-1.5 -4 0 -8" fill="#e0a458"/></g>' +
+    txt(80,88,"*safely, with goggles on",6.4,"#33517c",CHALK + ' text-anchor="middle"') + "</g>" +
+    // marker tray
+    '<rect x="-7" y="105" width="174" height="6" fill="#181b1f"/>' +
+    '<rect x="14" y="105.5" width="14" height="3" rx="1.5" fill="#7cb8ff"/>' +
+    '<rect x="34" y="105.5" width="14" height="3" rx="1.5" fill="#ff8a80"/>';
+  S.push(wrapObj("smart","The smart board — goals and dreams","var(--c-smart)",gRight(-30,205,212,smart)));
+
+  /* ---------- wall B: periodic table poster ---------- */
+  var PT_POSTER_C = ["#ff9776","#ffc06e","#ffe08a","#a8d8b9","#b5e07f","#7fd0f7","#7fe3d0","#c9a6ff","#f7a8c8","#e08fa8"];
+  var poster = '<rect x="-6" y="-6" width="160" height="106" rx="2" fill="#efe9da" stroke="rgba(8,6,2,.5)" stroke-width="1.5"/>' +
+    txt(74,8,"THE PERIODIC TABLE OF THE ELEMENTS",6.4,"#3c3a33",MONO + ' text-anchor="middle" letter-spacing=".6" font-weight="bold"') +
+    (function(){
+      // a stylized-but-correct silhouette of the table, tiny colored cells
+      var s = "", c = 8, o = 4, top = 14;
+      function cell(col,row,cat){
+        s += '<rect x="' + (o + col*c) + '" y="' + (top + row*c) + '" width="' + (c-1.2) + '" height="' + (c-1.2) +
+          '" rx="1" fill="' + PT_POSTER_C[cat] + '" opacity=".9"/>';
+      }
+      cell(0,0,5); cell(17,0,7);
+      [0,1].forEach(function(col){ for (var r = 1; r < 7; r++) cell(col, r, r > 4 ? col : col); });
+      for (var r2 = 3; r2 < 7; r2++) for (var col2 = 2; col2 < 12; col2++) cell(col2, r2, r2 > 4 && col2 === 2 ? (r2 === 5 ? 8 : 9) : 2);
+      for (var r3 = 1; r3 < 7; r3++) for (var col3 = 12; col3 < 18; col3++){
+        var cat = col3 === 17 ? 7 : col3 === 16 && r3 < 4 ? 6 : r3 < 3 ? 5 : 3;
+        if (r3 === 1 && col3 < 12) continue;
+        cell(col3, r3, cat);
+      }
+      for (var col4 = 3; col4 < 17; col4++){ cell(col4, 7.6, 8); cell(col4, 8.6, 9); }
+      return s;
+    })() +
+    txt(74,99,"118 ways to build everything",5.8,"#8a8168",CHALK + ' text-anchor="middle"');
+  S.push(wrapObj("ptable","The periodic table — pick an element","var(--c-ptable)",gRight(-30,395,206,poster)));
+
+  /* ---------- wall B: safety sign ---------- */
+  var safeSign = '<rect x="0" y="0" width="26" height="32" rx="2" fill="#1e5c38" stroke="rgba(8,6,2,.5)" stroke-width="1.5"/>' +
+    '<path d="M13 6 L13 18 M7 12 L19 12" stroke="#e9f2e6" stroke-width="4" stroke-linecap="round"/>' +
+    txt(13,26,"SAFETY",4.6,"#e9f2e6",MONO + ' text-anchor="middle" letter-spacing=".5"') +
+    '<path d="M13 34 L13 42 M9 38 L13 43 L17 38" stroke="#7ee0a3" stroke-width="1.6" fill="none"/>';
+
+  /* ---------- cast shadows ---------- */
+  S.push(shadowW(20,-28,90,34,8,.28));      // bookshelf
+  S.push(shadowW(110,70,140,75,9,.30));     // teacher desk
+  S.push(shadowW(310,70,210,85,9,.30));     // lab bench
+  S.push(shadowW(284,200,28,28,6,.24));     // wizard stool
+  S.push(shadowW(18,352,80,58,8,.26));      // safety corner
+  S.push(shadowW(572,32,28,28,5,.22));      // recycling bin
+  [[150,240],[290,240],[430,240],[150,330],[290,330],[430,330]].forEach(function(dpos){
+    S.push(shadowW(dpos[0],dpos[1],56,40,6,.22));
+  });
+
+  /* ---------- bookshelf (against wall A, far left) ---------- */
+  var SPINES = ["#b8442f","#33517c","#e0a458","#3f7e52","#8a5bb8","#c46a8a","#4a8ea0","#b8862f","#6b4a2e","#5d7590"];
+  var shelf = box(20,-28,0,90,34,88,"#5d4a30");
+  shelf += gLeft(20,6,88,(function(){
+    var s = '<rect x="2" y="2" width="86" height="84" fill="#33291a"/>';
+    [8,50].forEach(function(rowY,ri){
+      var u = 6;
+      for (var i = 0; i < 9; i++){
+        var w = 6 + ((i * 37 + ri * 13) % 5), h = 30 - ((i * 23 + ri * 7) % 6);
+        var lean = (i === 8 && ri === 0) ? ' transform="rotate(-8 ' + (u + w/2) + ' ' + (rowY + 34) + ')"' : "";
+        s += '<g' + lean + '><rect x="' + u + '" y="' + (rowY + 34 - h) + '" width="' + w + '" height="' + h +
+          '" rx="1" fill="' + SPINES[(i + ri * 3) % SPINES.length] + '"/>' +
+          '<rect x="' + u + '" y="' + (rowY + 34 - h + 3) + '" width="' + w + '" height="1.6" fill="rgba(255,240,210,.5)"/></g>';
+        u += w + 1.4;
+      }
+      s += '<rect x="2" y="' + (rowY + 34.5) + '" width="86" height="4" fill="#4a3a26"/>';
+    });
+    return s;
+  })());
+  // beaker of pencils on top
+  shelf += cyl(50,-16,88,6,12,"#d8dde2");
+  shelf += '<g stroke-linecap="round">' +
+    '<path d="' + (function(){ var a = P(48,-18,100), b = P(48,-18,114); return "M" + a[0] + " " + a[1] + " L" + b[0] + " " + b[1]; })() + '" stroke="#e0a458" stroke-width="2.4"/>' +
+    '<path d="' + (function(){ var a = P(52,-14,100), b = P(53,-13,113); return "M" + a[0] + " " + a[1] + " L" + b[0] + " " + b[1]; })() + '" stroke="#c46a8a" stroke-width="2.4"/></g>';
+  S.push(wrapObj("books","The bookshelf — textbook and readings","var(--c-books)",shelf));
+
+  /* ---------- teacher desk ---------- */
+  var tdesk = box(110,70,0,140,75,50,"#6b4a2e");
+  // modesty panel shading + drawer
+  tdesk += gLeft(110,145,44,'<rect x="6" y="6" width="52" height="30" rx="2" fill="rgba(20,12,4,.25)"/>' +
+    '<circle cx="32" cy="21" r="2.5" fill="#c9a86a"/>');
+  // papers to grade
+  tdesk += gTop(118,84,50,'<g transform="rotate(-6 20 14)"><rect width="34" height="26" rx="1" fill="#e8e2d2"/>' +
+    '<path d="M4 6 h26 M4 11 h26 M4 16 h18" stroke="#a9a390" stroke-width="1.2"/></g>' +
+    '<g transform="rotate(4 24 18) translate(5,4)"><rect width="34" height="26" rx="1" fill="#efe9da"/>' +
+    '<path d="M4 6 h26 M4 11 h22" stroke="#a9a390" stroke-width="1.2"/>' +
+    txt(28,20,"B+",8,"#b8442f",CHALK) + "</g>");
+  // nameplate
+  tdesk += box(168,122,50,44,10,10,"#3c3020");
+  tdesk += gLeft(168,132,60,txt(22,7.6,CONFIG.teacher.toUpperCase(),6.4,"#e8c987",MONO + ' text-anchor="middle" letter-spacing="1"'));
+  // apple
+  var ap = P(150,128,54);
+  tdesk += '<circle cx="' + ap[0] + '" cy="' + (ap[1]-4) + '" r="6.5" fill="#c23b30" ' + OUT + "/>" +
+    '<circle cx="' + (ap[0]-2) + '" cy="' + (ap[1]-6) + '" r="2" fill="rgba(255,255,255,.35)" stroke="none"/>' +
+    '<path d="M' + ap[0] + " " + (ap[1]-10) + ' q1 -4 4 -5" stroke="#3f7e52" stroke-width="1.6" fill="none"/>';
+  // coffee mug with steam
+  tdesk += cyl(128,120,50,7,12,"#33517c");
+  tdesk += isoEllipse(128,120,62,5,"#2c2018",'stroke="rgba(8,6,2,.4)"');
+  var msT = P(128,120,64);
+  tdesk += '<g fill="none" stroke="#eef0e9" stroke-width="2" stroke-linecap="round">' +
+    '<path class="steam" d="M' + (msT[0]-4) + " " + msT[1] + ' q3 -6 -1 -11 q-3 -5 1 -9"/>' +
+    '<path class="steam s2" d="M' + (msT[0]+4) + " " + (msT[1]-2) + ' q3 -5 -1 -10 q-3 -5 1 -8"/></g>';
+  S.push(wrapObj("teacher","The teacher’s desk — help and contact","var(--c-teacher)",tdesk));
+
+  /* ---------- the globe (on the teacher desk corner) ---------- */
+  var gb = P(230,95,80);
+  var globe = cyl(230,95,50,7,4,"#3c3020");
+  globe += '<path d="M' + (gb[0]-9) + " " + (gb[1]+16) + " A 16 16 0 0 1 " + (gb[0]+13) + " " + (gb[1]+9) +
+    '" stroke="#c9a86a" stroke-width="2.4" fill="none"/>';
+  globe += '<circle cx="' + gb[0] + '" cy="' + gb[1] + '" r="15" fill="url(#globeSea)" ' + OUT + "/>";
+  globe += '<g fill="#5f9e54" stroke="rgba(20,50,25,.45)" stroke-width=".6">' +
+    '<path d="M' + (gb[0]-9) + " " + (gb[1]-8) + ' q6 -5 11 -1 q4 3 -1 6 q-7 2 -10 -1 q-2 -2 0 -4 z"/>' +
+    '<path d="M' + (gb[0]+2) + " " + (gb[1]+4) + ' q5 -2 8 2 q2 4 -3 6 q-6 1 -7 -3 q-1 -3 2 -5 z"/>' +
+    '<path d="M' + (gb[0]-12) + " " + (gb[1]+3) + ' q4 -1 5 2 q0 4 -4 3 q-3 -1 -1 -5 z"/></g>' +
+    '<ellipse cx="' + gb[0] + '" cy="' + gb[1] + '" rx="15" ry="5.5" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1"/>' +
+    '<path d="M' + (gb[0]-11) + " " + (gb[1]+21) + " L" + (gb[0]+15) + " " + (gb[1]-13) +
+    '" stroke="#c9a86a" stroke-width="2" opacity=".9"/>' +
+    '<circle cx="' + (gb[0]+15) + '" cy="' + (gb[1]-13) + '" r="2" fill="#c9a86a"/>';
+  S.push(wrapObj("globe","The globe — spin the solar system","var(--c-globe)",globe));
+
+  /* ---------- lab bench ---------- */
+  var bench = box(310,70,0,210,85,52,"#3a4148",{top:"#191d21"});
+  bench += gLeft(310,155,46,'<rect x="8" y="8" width="80" height="26" rx="2" fill="rgba(10,14,18,.4)"/>' +
+    '<rect x="96" y="8" width="80" height="26" rx="2" fill="rgba(10,14,18,.4)"/>' +
+    '<circle cx="48" cy="21" r="2.5" fill="#8a99ac"/><circle cx="136" cy="21" r="2.5" fill="#8a99ac"/>');
+  // bunsen burner + flame
+  bench += cyl(336,102,52,7,3,"#4a5058");
+  bench += cyl(336,102,55,3.6,9,"#b8975a");
+  var fl = P(336,102,64);
+  bench += '<g class="flame"><path d="M' + fl[0] + " " + fl[1] + ' q-4.5 -6 0 -13 q4.5 7 0 13 z" fill="#ffb347" opacity=".9"/>' +
+    '<path d="M' + fl[0] + " " + fl[1] + ' q-2.4 -4 0 -7.5 q2.4 3.5 0 7.5 z" fill="#7cb8ff"/></g>';
+  // beaker with teal liquid
+  var bkB = P(376,124,52), bkT = P(376,124,70);
+  bench += '<path d="M' + (bkB[0]-10) + " " + (bkT[1]) + " L" + (bkB[0]-10) + " " + bkB[1] +
+    " A 10 5 0 0 0 " + (bkB[0]+10) + " " + bkB[1] + " L" + (bkB[0]+10) + " " + bkT[1] +
+    '" fill="rgba(214,236,255,.14)" stroke="rgba(220,240,255,.55)" stroke-width="1.4"/>';
+  bench += isoEllipse(376,124,58,6.2,"rgba(100,223,223,.75)",'stroke="rgba(60,160,160,.6)"');
+  // erlenmeyer flask with bubbling purple liquid
+  var ef = P(414,96,52);
+  bench += '<path d="M' + (ef[0]-3.5) + " " + (ef[1]-26) + " L" + (ef[0]-3.5) + " " + (ef[1]-16) +
+    " L" + (ef[0]-11) + " " + (ef[1]-2) + " A 11 5 0 0 0 " + (ef[0]+11) + " " + (ef[1]-2) +
+    " L" + (ef[0]+3.5) + " " + (ef[1]-16) + " L" + (ef[0]+3.5) + " " + (ef[1]-26) +
+    '" fill="rgba(214,236,255,.14)" stroke="rgba(220,240,255,.55)" stroke-width="1.4"/>';
+  bench += '<path d="M' + (ef[0]-8.4) + " " + (ef[1]-7) + " A 10 4.6 0 0 0 " + (ef[0]+8.4) + " " + (ef[1]-7) +
+    " L" + (ef[0]+11) + " " + (ef[1]-2) + " A 11 5 0 0 1 " + (ef[0]-11) + " " + (ef[1]-2) +
+    ' z" fill="rgba(199,155,255,.7)" stroke="rgba(140,100,200,.6)"/>';
+  bench += '<g fill="rgba(238,240,233,.8)">' +
+    '<circle class="bub" cx="' + (ef[0]-3) + '" cy="' + (ef[1]-8) + '" r="1.3"/>' +
+    '<circle class="bub b2" cx="' + (ef[0]+2) + '" cy="' + (ef[1]-7) + '" r="1.7"/>' +
+    '<circle class="bub b3" cx="' + (ef[0]) + '" cy="' + (ef[1]-9) + '" r="1"/></g>';
+  // test tube rack
+  bench += box(448,112,52,30,12,4,"#6e5a3c");
+  [0,1,2,3].forEach(function(i){
+    var tx = 454 + i * 7;
+    var tb = P(tx,118,56);
+    bench += '<path d="M' + (tb[0]) + " " + (tb[1]-16) + " L" + tb[0] + " " + (tb[1]-2) +
+      '" stroke="rgba(220,240,255,.5)" stroke-width="4" stroke-linecap="round"/>';
+    bench += '<path d="M' + tb[0] + " " + (tb[1]-9) + " L" + tb[0] + " " + (tb[1]-2.6) +
+      '" stroke="' + ["#64dfdf","#ffd166","#ff8a80","#7ee0a3"][i] + '" stroke-width="2.6" stroke-linecap="round"/>';
+  });
+  // safety goggles resting on the bench
+  var gg = P(500,142,53);
+  bench += '<g transform="translate(' + gg[0] + "," + gg[1] + ') rotate(-14)" stroke="rgba(8,6,2,.4)">' +
+    '<rect x="-11" y="-4" width="22" height="8" rx="4" fill="rgba(220,240,255,.35)" stroke="#8a99ac" stroke-width="1.6"/>' +
+    '<path d="M-11 0 q-5 -3 -3 -7 M11 0 q5 -3 3 -7" fill="none" stroke="#8a99ac" stroke-width="1.4"/></g>';
+  // microscope silhouette
+  var mc = P(348,138,52);
+  bench += '<g transform="translate(' + mc[0] + "," + mc[1] + ')">' +
+    '<ellipse cx="0" cy="0" rx="9" ry="4" fill="#22262b" ' + OUT + "/>" +
+    '<path d="M5 -2 Q9 -12 3 -20 L-1 -24" fill="none" stroke="#31383e" stroke-width="4" stroke-linecap="round"/>' +
+    '<rect x="-6" y="-30" width="7" height="10" rx="2" fill="#31383e" transform="rotate(24 -2 -25)"/>' +
+    '<circle cx="-1.5" cy="-19.5" r="1.6" fill="#9be3ff" class="led"/></g>';
+  S.push(wrapObj("lab","The lab bench — labs and lab reports","var(--c-lab)",bench));
+
+  /* ---------- hypothesis helper: the thinking flask ---------- */
+  var stool = cyl(298,214,0,14,40,"#7a5a38");
+  var wf = P(298,214,40);
+  stool += '<circle cx="' + wf[0] + '" cy="' + (wf[1]-22) + '" r="20" fill="url(#bulbGlow)" class="led" stroke="none"/>';
+  stool += '<path d="M' + (wf[0]-4) + " " + (wf[1]-34) + " L" + (wf[0]-4) + " " + (wf[1]-22) +
+    " L" + (wf[0]-13) + " " + (wf[1]-4) + " A 13 6 0 0 0 " + (wf[0]+13) + " " + (wf[1]-4) +
+    " L" + (wf[0]+4) + " " + (wf[1]-22) + " L" + (wf[0]+4) + " " + (wf[1]-34) +
+    '" fill="rgba(214,236,255,.16)" stroke="rgba(220,240,255,.6)" stroke-width="1.5"/>';
+  stool += '<g class="led"><circle cx="' + wf[0] + '" cy="' + (wf[1]-13) + '" r="5" fill="#ffe9a8"/>' +
+    '<path d="M' + (wf[0]-2) + " " + (wf[1]-8) + " h4 M" + (wf[0]-1.5) + " " + (wf[1]-6) +
+    ' h3" stroke="#c9a86a" stroke-width="1.2"/></g>';
+  stool += '<g class="bob2">' + txt(wf[0]+14, wf[1]-40, "?", 13, "#c79bff", SERIF + ' font-weight="bold"') + "</g>" +
+    '<g class="bob2" style="animation-delay:-2s">' + txt(wf[0]-20, wf[1]-48, "?", 9, "#a07ad0", SERIF + ' font-weight="bold"') + "</g>";
+  S.push(wrapObj("wizard","The thinking flask — build a hypothesis","var(--c-wizard)",stool));
+
+  /* ---------- safety corner: shower, eyewash, extinguisher ---------- */
+  var sc = "";
+  // safety shower: pole, arm, head, pull-chain
+  var spB = P(32,392,0), spT = P(32,392,212), shH = P(56,392,204);
+  sc += '<path d="M' + spB[0] + " " + spB[1] + " L" + spT[0] + " " + spT[1] + '" stroke="#7d858f" stroke-width="4.5" stroke-linecap="round"/>';
+  sc += '<path d="M' + spT[0] + " " + spT[1] + " Q" + spT[0] + " " + (spT[1]-10) + " " + shH[0] + " " + (shH[1]-8) +
+    " L" + shH[0] + " " + shH[1] + '" stroke="#7d858f" stroke-width="4" fill="none" stroke-linecap="round"/>';
+  sc += '<ellipse cx="' + shH[0] + '" cy="' + (shH[1]+2) + '" rx="9" ry="3.5" fill="#98a1ac" ' + OUT + "/>";
+  sc += '<g fill="#9be3ff"><circle class="led" cx="' + (shH[0]-4) + '" cy="' + (shH[1]+8) + '" r="1.1"/>' +
+    '<circle class="led" style="animation-delay:-.8s" cx="' + (shH[0]+3) + '" cy="' + (shH[1]+11) + '" r="1.1"/></g>';
+  sc += '<g class="pend"><path d="M' + (shH[0]+6) + " " + (shH[1]+3) + ' l0 26" stroke="#c9cfd6" stroke-width="1.4" stroke-dasharray="3 2.5"/>' +
+    '<path d="M' + (shH[0]+2) + " " + (shH[1]+29) + ' l8 0 l-4 8 z" fill="#c23b30"/></g>';
+  sc += isoEllipse(32,392,1,10,"rgba(155,227,255,.10)",'stroke="none"');
+  // eyewash station
+  sc += cyl(62,364,0,9,30,"#d8dde2");
+  sc += isoEllipse(62,364,30,7,"#3f7e52");
+  var ew = P(62,364,30);
+  sc += '<g stroke="#7d858f" stroke-width="2" stroke-linecap="round" fill="none">' +
+    '<path d="M' + (ew[0]-4) + " " + (ew[1]-1) + ' q0 -5 3 -6"/><path d="M' + (ew[0]+4) + " " + (ew[1]-1) + ' q0 -5 -3 -6"/></g>';
+  // fire extinguisher
+  sc += cyl(88,334,0,6.5,26,"#c23b30");
+  var fx = P(88,334,26);
+  sc += '<path d="M' + fx[0] + " " + fx[1] + ' l-2 -6 l5 0" stroke="#22262a" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+    '<path d="M' + (fx[0]-2) + " " + (fx[1]-5) + ' q-9 3 -8 12" stroke="#22262a" stroke-width="2" fill="none"/>';
+  sc += gRight(-30,420,182,safeSign);
+  S.push(wrapObj("safety","The safety corner — rules, shower, and eyewash","var(--c-safety)",sc));
+
+  /* ---------- student desks (the audience) ---------- */
+  function studentDesk(x,y,extra){
+    var s = box(x+3,y+31,0,4,5,34,"#4a3a26");
+    s += box(x+48,y+31,0,4,5,34,"#4a3a26");
+    s += box(x,y,34,56,40,6,"#8a6a42");
+    // chair tucked behind
+    s += box(x+14,y+46,0,28,6,26,"#4a3a26");
+    s += box(x+12,y+42,24,32,12,4,"#6b4a2e");
+    return s + (extra || "");
+  }
+  // notebook + pencil on the front-left desk
+  var noteTop = gTop(158,248,40,'<g transform="rotate(-5 16 11)">' +
+    '<rect width="30" height="22" rx="1" fill="#e8e2d2"/><path d="M15 1 L15 21" stroke="#c9c3b0" stroke-width="1"/>' +
+    '<path d="M4 6 h8 M4 10 h8 M18 6 h8 M18 10 h8 M18 14 h6" stroke="#a9a390" stroke-width="1"/></g>' +
+    '<path d="M36 6 L48 12" stroke="#e0a458" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<path d="M48 12 l3.5 1.8 l-2.2 -3.8" fill="#3c3020"/>');
+  // paper airplane on a back desk
+  var planeTop = gTop(444,338,40,'<g transform="rotate(22 14 8)">' +
+    '<path d="M0 8 L28 0 L12 16 Z" fill="#e8e2d2" stroke="rgba(8,6,2,.35)"/>' +
+    '<path d="M28 0 L12 10 L12 16" fill="#c9c3b0" stroke="rgba(8,6,2,.35)"/></g>');
+  S.push('<g aria-hidden="true">' +
+    studentDesk(150,240,noteTop) + studentDesk(290,240) + studentDesk(430,240) +
+    studentDesk(150,330) + studentDesk(290,330) + studentDesk(430,330,planeTop) +
+  "</g>");
+  // backpack slouched against a desk leg
+  var bp = P(268,306,0);
+  S.push('<g aria-hidden="true" transform="translate(' + bp[0] + "," + bp[1] + ')">' +
+    '<path d="M-8 0 Q-11 -22 0 -26 Q11 -22 9 0 Z" fill="#8a5bb8" ' + OUT + "/>" +
+    '<path d="M-4 0 Q-5 -12 0 -14 Q6 -12 5 0 Z" fill="#a07ad0" ' + OUT + "/>" +
+    '<path d="M-6 -24 Q0 -30 6 -24" stroke="#5d3a8e" stroke-width="2.5" fill="none"/></g>');
+  // recycling bin by the door
+  S.push(cyl(586,46,0,13,26,"#33689c"));
+  S.push((function(){
+    var rp = P(586,46,26);
+    return '<g aria-hidden="true"><path d="M' + (rp[0]-4) + " " + (rp[1]-1) +
+      ' l4 -6 l4 6 z" fill="none" stroke="#cfe2f4" stroke-width="1.4"/>' +
+      '<path d="M' + (rp[0]-7) + " " + (rp[1]+3) + ' q-2 -5 2 -8 M' + (rp[0]+7) + " " + (rp[1]+3) +
+      ' q2 -5 -2 -8" stroke="#cfe2f4" stroke-width="1.4" fill="none"/>' +
+      '<path d="M' + (rp[0]-2) + " " + (rp[1]-8) + ' l-5 -4 l1 6" fill="#e8e2d2" stroke="none"/></g>';
+  })());
+
+  document.getElementById("iso").innerHTML = S.join("");
+
+  /* ================================================================
+     SPOTS — what each object says when you pick it up.
+     story/chips can be functions so live things (the clock) stay live.
+     Links with {act:"..."} open one of the built-in tools instead.
+     ================================================================ */
+  function mailLink(){ return CONFIG.email ? [{label:"email " + CONFIG.teacher, href:"mailto:" + CONFIG.email}] : []; }
+  var SPOTS = {
+    board: {
+      kicker: "The chalkboard · start here",
+      title: "Everything on this board has a permanent home",
+      story: "Chalk gets erased; Google Classroom doesn’t. Whatever I scribble up here — this week’s plan, quiz dates, which homework is due Friday — gets posted the same day where you can actually find it at 11 pm. The syllabus is the map for the whole year; the homework page is the map for this week.",
+      chips: ["The syllabus","This week’s plan","Homework, always posted"],
+      links: [
+        {label:"the syllabus", href:LNK("syllabus")},
+        {label:"this week’s homework", href:LNK("homework")},
+        {label:"open Google Classroom", href:LNK("classroom")}
+      ]
+    },
+    smart: {
+      kicker: "The smart board · goals & dreams",
+      title: "What we’re actually here to do this year",
+      story: "Grades are a side effect. The board up front keeps the real list — the kind of goals that make a year of science worth having. We add to it, cross things off, and argue about it. Bring a goal of your own; sticky notes are free.",
+      chips: function(){ return CONFIG.goals; },
+      links: [{label:"our goals & dreams board", href:LNK("goals")}]
+    },
+    lab: {
+      kicker: "The lab bench · where the fun is",
+      title: "Labs: the scientific method, with sparks",
+      story: "Every lab in here runs on the same engine — observe, question, hypothesize, test, analyze, share. Your lab report follows those exact steps, in that exact order, which means the report basically writes itself if you did the lab honestly. The template shows every section with an example. And if the hypothesis part feels hard, the glowing flask over there will walk you through it.",
+      chips: ["Observe","Question","Hypothesize","Test","Analyze","Share"],
+      links: [
+        {label:"lab report template", href:LNK("labReport")},
+        {label:"scientific method notes", href:LNK("scientificMethod")},
+        {label:"build a hypothesis", act:"wizard"}
+      ]
+    },
+    safety: {
+      kicker: "The safety corner · non-negotiable",
+      title: "Rule zero: everyone goes home with both eyebrows",
+      story: "The shower and eyewash station live in this corner, and the fire extinguisher hangs beside them — know where they are before you ever need them. The burner gets lit only when I say so. Goggles go on before the first chemical leaves the shelf and stay on until the last one is put away. Sign the safety contract, keep it signed in your heart.",
+      chips: ["Goggles on = goggles ON","No mystery mixing","Tie back hair near flame","Report every spill","Know the shower & eyewash","Food stays outside"],
+      links: [
+        {label:"the safety contract", href:LNK("safetyContract")},
+        {label:"open Google Classroom", href:LNK("classroom")}
+      ]
+    },
+    clock: {
+      kicker: "The clock · tick tock",
+      title: "The bell schedule, according to the wall",
+      story: function(){
+        var now = new Date();
+        var mins = now.getHours() * 60 + now.getMinutes();
+        function pm(t){ var a = t.split(":"); return (+a[0]) * 60 + (+a[1]); }
+        function fmt(t){ var a = t.split(":"), h = +a[0], ap = h < 12 ? "am" : "pm"; h = h % 12 || 12; return h + ":" + a[1] + " " + ap; }
+        var cur = null, next = null;
+        CONFIG.bellSchedule.forEach(function(b){
+          if (mins >= pm(b.s) && mins < pm(b.e)) cur = b;
+          if (!next && mins < pm(b.s)) next = b;
+        });
+        var line = cur ? "Right now it’s " + cur.p + " (" + fmt(cur.s) + "–" + fmt(cur.e) + ")."
+          : next ? "Right now we’re between bells — " + next.p + " starts at " + fmt(next.s) + "."
+          : "The building is quiet — school’s out. The clock keeps counting anyway.";
+        return line + " Same seven hours every day, and somehow never enough of them. The full schedule is below; the calendar knows about the weird days.";
+      },
+      chips: function(){
+        return CONFIG.bellSchedule.map(function(b){
+          function fmt(t){ var a = t.split(":"), h = +a[0]; return (h % 12 || 12) + ":" + a[1]; }
+          return b.p + " · " + fmt(b.s) + "–" + fmt(b.e);
+        });
+      },
+      links: [{label:"class calendar", href:LNK("calendar")}]
+    },
+    cal: {
+      kicker: "The calendar · due dates",
+      title: "The month, at wall scale",
+      story: "Quiz dates, lab days, no-school days, and everything with a deadline lives on the class calendar — the real one updates itself, unlike this paper one, which I have to change with a thumbtack once a month. If it’s due, it’s on here. If it’s not on here, ask me before you assume.",
+      chips: ["Quiz dates","Lab days","Project checkpoints","No-school days"],
+      links: [
+        {label:"the class calendar", href:LNK("calendar")},
+        {label:"open Google Classroom", href:LNK("classroom")}
+      ]
+    },
+    teacher: {
+      kicker: "The big desk · office hours",
+      title: "Stuck? That’s what this desk is for",
+      story: "Extra help happens here — before school, after school, or whenever the room is open and I’m not mid-coffee. Bring the problem that’s bugging you, half-finished work, or just a question that sounds too weird to ask in class (those are the best ones). The apple is decorative. The help is real.",
+      chips: ["Extra help before & after school","Questions welcome, weird ones especially","Retakes by appointment"],
+      links: [{label:"open Google Classroom", href:LNK("classroom")}].concat(mailLink())
+    },
+    books: {
+      kicker: "The bookshelf · back of the room",
+      title: "The textbook, and friends",
+      story: "The online textbook goes everywhere your phone goes, which is more than this shelf can say. Readings get assigned from it, but the shelf keeps the fun stuff too — the beat-up field guides and the one book about bridges that three students a year fall in love with. Borrow anything; just bring it back.",
+      chips: ["Online textbook","Assigned readings","The bridge book"],
+      links: [{label:"the textbook", href:LNK("textbook")}]
+    },
+    door: {
+      kicker: "The door · absent?",
+      title: "Missed a day? The room keeps receipts",
+      story: "Every class day gets posted to the Classroom stream — what we did, what got assigned, what you need to make up. Check the stream first, then come find me for the parts a post can’t cover (like the demo where the flask did the thing). The hall pass hangs right here, one at a time, sign out like it’s 1995.",
+      chips: ["Check the stream first","Make-up work: one week","Demos re-run on request"],
+      links: [
+        {label:"what did I miss? — the stream", href:LNK("stream")}
+      ].concat(mailLink())
+    }
+  };
+
+  /* ================================================================
+     PERIODIC TABLE — all 118 elements.
+     ELEMS[i] = "Symbol|Name|mass"; CATS[i] = one category letter.
+     ================================================================ */
+  var ELEMS = ("H|Hydrogen|1.008,He|Helium|4.003,Li|Lithium|6.94,Be|Beryllium|9.012,B|Boron|10.81,C|Carbon|12.011," +
+    "N|Nitrogen|14.007,O|Oxygen|15.999,F|Fluorine|18.998,Ne|Neon|20.180,Na|Sodium|22.990,Mg|Magnesium|24.305," +
+    "Al|Aluminum|26.982,Si|Silicon|28.085,P|Phosphorus|30.974,S|Sulfur|32.06,Cl|Chlorine|35.45,Ar|Argon|39.95," +
+    "K|Potassium|39.098,Ca|Calcium|40.078,Sc|Scandium|44.956,Ti|Titanium|47.867,V|Vanadium|50.942,Cr|Chromium|51.996," +
+    "Mn|Manganese|54.938,Fe|Iron|55.845,Co|Cobalt|58.933,Ni|Nickel|58.693,Cu|Copper|63.546,Zn|Zinc|65.38," +
+    "Ga|Gallium|69.723,Ge|Germanium|72.63,As|Arsenic|74.922,Se|Selenium|78.971,Br|Bromine|79.904,Kr|Krypton|83.798," +
+    "Rb|Rubidium|85.468,Sr|Strontium|87.62,Y|Yttrium|88.906,Zr|Zirconium|91.224,Nb|Niobium|92.906,Mo|Molybdenum|95.95," +
+    "Tc|Technetium|97,Ru|Ruthenium|101.07,Rh|Rhodium|102.906,Pd|Palladium|106.42,Ag|Silver|107.868,Cd|Cadmium|112.414," +
+    "In|Indium|114.818,Sn|Tin|118.71,Sb|Antimony|121.76,Te|Tellurium|127.6,I|Iodine|126.904,Xe|Xenon|131.293," +
+    "Cs|Cesium|132.905,Ba|Barium|137.327,La|Lanthanum|138.905,Ce|Cerium|140.116,Pr|Praseodymium|140.908,Nd|Neodymium|144.242," +
+    "Pm|Promethium|145,Sm|Samarium|150.36,Eu|Europium|151.964,Gd|Gadolinium|157.25,Tb|Terbium|158.925,Dy|Dysprosium|162.5," +
+    "Ho|Holmium|164.93,Er|Erbium|167.259,Tm|Thulium|168.934,Yb|Ytterbium|173.045,Lu|Lutetium|174.967,Hf|Hafnium|178.486," +
+    "Ta|Tantalum|180.948,W|Tungsten|183.84,Re|Rhenium|186.207,Os|Osmium|190.23,Ir|Iridium|192.217,Pt|Platinum|195.084," +
+    "Au|Gold|196.967,Hg|Mercury|200.592,Tl|Thallium|204.38,Pb|Lead|207.2,Bi|Bismuth|208.98,Po|Polonium|209," +
+    "At|Astatine|210,Rn|Radon|222,Fr|Francium|223,Ra|Radium|226,Ac|Actinium|227,Th|Thorium|232.038," +
+    "Pa|Protactinium|231.036,U|Uranium|238.029,Np|Neptunium|237,Pu|Plutonium|244,Am|Americium|243,Cm|Curium|247," +
+    "Bk|Berkelium|247,Cf|Californium|251,Es|Einsteinium|252,Fm|Fermium|257,Md|Mendelevium|258,No|Nobelium|259," +
+    "Lr|Lawrencium|266,Rf|Rutherfordium|267,Db|Dubnium|268,Sg|Seaborgium|269,Bh|Bohrium|270,Hs|Hassium|277," +
+    "Mt|Meitnerium|278,Ds|Darmstadtium|281,Rg|Roentgenium|282,Cn|Copernicium|285,Nh|Nihonium|286,Fl|Flerovium|289," +
+    "Mc|Moscovium|290,Lv|Livermorium|293,Ts|Tennessine|294,Og|Oganesson|294").split(",");
+  var CATS =
+    "ng" +            // H He
+    "abmnnnhg" +      // Li Be B C N O F Ne
+    "abpmnnhg" +      // Na Mg Al Si P S Cl Ar
+    "ab" + "tttttttttt" + "pmmnhg" +   // K..Kr
+    "ab" + "tttttttttt" + "ppmmhg" +   // Rb..Xe
+    "ab" + "lllllllllllllll" + "ttttttttt" + "pppphg" +  // Cs..Rn (La–Lu = l)
+    "ab" + "ccccccccccccccc" + "ttttttttt" + "pppphg";   // Fr..Og (Ac–Lr = c)
+  var CAT_INFO = {
+    a:{name:"Alkali metal", c:"#ff9776", blurb:"soft, shiny, and dramatic in water — stored under oil so they behave"},
+    b:{name:"Alkaline earth metal", c:"#ffc06e", blurb:"reactive metals that build bones, fireworks, and cement"},
+    t:{name:"Transition metal", c:"#ffe08a", blurb:"the workhorse metals — strong, colorful compounds, good wiring"},
+    p:{name:"Post-transition metal", c:"#a8d8b9", blurb:"softer metals with lower melting points — foil, solder, pipes"},
+    m:{name:"Metalloid", c:"#b5e07f", blurb:"half metal, half not — the reason computer chips exist"},
+    n:{name:"Nonmetal", c:"#7fd0f7", blurb:"the stuff of air and life — most of you is made of these"},
+    h:{name:"Halogen", c:"#7fe3d0", blurb:"aggressive nonmetals that grab an electron and won’t give it back"},
+    g:{name:"Noble gas", c:"#c9a6ff", blurb:"complete outer shells, zero interest in reacting with anyone"},
+    l:{name:"Lanthanide", c:"#f7a8c8", blurb:"rare-earth metals hiding in your headphones and screens"},
+    c:{name:"Actinide", c:"#e08fa8", blurb:"heavy and radioactive — handle with robots"}
+  };
+  // standard 18-column layout: [column 1-18, row]
+  function ptPos(n){
+    if (n === 1) return [1,1];
+    if (n === 2) return [18,1];
+    if (n <= 4)  return [n - 2, 2];
+    if (n <= 10) return [n + 8, 2];
+    if (n <= 12) return [n - 10, 3];
+    if (n <= 18) return [n, 3];
+    if (n <= 36) return [n - 18, 4];
+    if (n <= 54) return [n - 36, 5];
+    if (n <= 56) return [n - 54, 6];
+    if (n <= 71) return [n - 54, 9];   // lanthanides, pulled-out row
+    if (n <= 86) return [n - 68, 6];
+    if (n <= 88) return [n - 86, 7];
+    if (n <= 103) return [n - 86, 10]; // actinides
+    return [n - 100, 7];
+  }
+
+  /* ================================================================
+     PLANETS — for the orrery. r = orbit radius (px), s = planet size,
+     yr = orbital period in Earth years.
+     ================================================================ */
+  var PLANETS = [
+    {n:"Mercury", c:"#b8a68f", r:34,  s:3,   yr:0.24, f:"A year on <b>Mercury</b> is 88 days — it laps the Sun four times while Earth does it once. Watch it sprint."},
+    {n:"Venus",   c:"#e8c987", r:48,  s:5,   yr:0.62, f:"<b>Venus</b> spins backwards, and so slowly that its day is longer than its year. Also it rains acid. Hard pass."},
+    {n:"Earth",   c:"#6fa8dc", r:63,  s:5,   yr:1.00, f:"<b>Earth</b> — one orbit is the definition of a year. Everything you have ever done happened on this dot."},
+    {n:"Mars",    c:"#d0765a", r:78,  s:4,   yr:1.88, f:"<b>Mars</b> has the tallest volcano in the solar system — Olympus Mons, about three times the height of Everest."},
+    {n:"Jupiter", c:"#d8a878", r:98,  s:11,  yr:11.9, f:"<b>Jupiter</b> outweighs every other planet combined. Its Great Red Spot is a storm bigger than Earth that has raged for centuries."},
+    {n:"Saturn",  c:"#e0cba0", r:118, s:9,   yr:29.5, f:"<b>Saturn’s</b> rings are mostly water ice, some pieces dust-sized, some house-sized — and it’s less dense than water."},
+    {n:"Uranus",  c:"#a8d8dc", r:136, s:7,   yr:84,   f:"<b>Uranus</b> rolls around the Sun on its side, probably knocked over by an ancient collision. It has barely moved since class started."},
+    {n:"Neptune", c:"#7a9ee0", r:152, s:7,   yr:165,  f:"<b>Neptune</b> was found with math before telescopes confirmed it — the first planet discovered by prediction. One orbit: 165 years."}
+  ];
+
+  /* ================================================================
+     AUDIO — synthesized, created only on an explicit user gesture
+     ================================================================ */
+  var ctx = null, master = null, soundOn = true;
+  function ac(force){
+    if (!soundOn) return null;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!ctx){
+      if (!force) return null; // only create on an explicit gesture (autoplay policy)
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = 0.5;
+      master.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended" && force) ctx.resume();
+    return ctx;
+  }
+  ["pointerdown","keydown"].forEach(function(ev){
+    var unlock = function(){ ac(true); document.removeEventListener(ev, unlock); };
+    document.addEventListener(ev, unlock);
+  });
+  function tone(freq, opts){
+    var c = ac(); if (!c) return;
+    opts = opts || {};
+    var t = c.currentTime + (opts.at || 0);
+    var dur = opts.dur || 0.15;
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = opts.type || "sine";
+    o.frequency.setValueAtTime(freq, t);
+    if (opts.end) o.frequency.exponentialRampToValueAtTime(opts.end, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(opts.g || 0.12, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  function noise(opts){
+    var c = ac(); if (!c) return;
+    opts = opts || {};
+    var t = c.currentTime + (opts.at || 0);
+    var dur = opts.dur || 0.08;
+    var len = Math.max(1, Math.floor(c.sampleRate * dur));
+    var buf = c.createBuffer(1, len, c.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    var src = c.createBufferSource(); src.buffer = buf;
+    var f = c.createBiquadFilter();
+    f.type = opts.filter || "lowpass";
+    f.frequency.setValueAtTime(opts.freq || 1200, t);
+    if (opts.freqEnd) f.frequency.exponentialRampToValueAtTime(opts.freqEnd, t + dur);
+    f.Q.value = opts.q || 0.8;
+    var g = c.createGain(); g.gain.value = opts.g || 0.1;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t);
+  }
+  var SOUNDS = {
+    hover: function(){ tone(1900, {type:"sine", dur:0.045, g:0.025}); },
+    board: function(){ // chalk taps + a short drag
+      noise({filter:"highpass", freq:3200, dur:0.03, g:0.12});
+      noise({filter:"highpass", freq:2800, at:0.09, dur:0.03, g:0.10});
+      noise({filter:"bandpass", freq:2200, freqEnd:3400, q:2, at:0.18, dur:0.22, g:0.05});
+    },
+    smart: function(){ // projector wake-up chord
+      tone(392, {type:"sine", dur:0.5, g:0.05});
+      tone(494, {type:"sine", at:0.05, dur:0.5, g:0.045});
+      tone(587, {type:"sine", at:0.10, dur:0.6, g:0.04});
+      noise({filter:"lowpass", freq:300, dur:0.5, g:0.03});
+    },
+    ptable: function(){ // little ascending element blips
+      tone(660,  {type:"triangle", dur:0.07, g:0.07});
+      tone(880,  {type:"triangle", at:0.08, dur:0.07, g:0.07});
+      tone(1174, {type:"triangle", at:0.16, dur:0.1, g:0.07});
+    },
+    lab: function(){ // glass clink + a bubble
+      tone(2400, {type:"sine", dur:0.05, g:0.09});
+      tone(3100, {type:"sine", at:0.06, dur:0.04, g:0.06});
+      tone(220, {type:"sine", at:0.15, dur:0.12, g:0.06, end:520});
+    },
+    wizard: function(){ // idea sparkle
+      tone(1046, {type:"triangle", dur:0.09, g:0.07});
+      tone(1318, {type:"triangle", at:0.07, dur:0.09, g:0.07});
+      tone(1568, {type:"triangle", at:0.14, dur:0.12, g:0.07});
+      tone(2093, {type:"triangle", at:0.21, dur:0.2, g:0.06});
+    },
+    safety: function(){ // two-beep alert + water
+      tone(880, {type:"square", dur:0.09, g:0.045});
+      tone(880, {type:"square", at:0.16, dur:0.09, g:0.045});
+      noise({filter:"lowpass", freq:900, at:0.3, dur:0.4, g:0.05});
+    },
+    globe: function(){ // deep space hum
+      tone(82.4, {type:"sine", dur:1.1, g:0.07});
+      tone(123.5, {type:"sine", at:0.05, dur:1.0, g:0.05});
+      tone(1760, {type:"sine", at:0.3, dur:0.4, g:0.02});
+    },
+    clock: function(){ // tick, tock
+      noise({filter:"highpass", freq:2000, dur:0.02, g:0.10});
+      noise({filter:"highpass", freq:1400, at:0.3, dur:0.02, g:0.08});
+    },
+    cal: function(){ // page flip
+      noise({filter:"bandpass", freq:600, freqEnd:2600, q:1.1, dur:0.25, g:0.12});
+    },
+    teacher: function(){ // paper shuffle + mug set down
+      noise({filter:"bandpass", freq:800, freqEnd:1800, q:1, dur:0.18, g:0.09});
+      tone(340, {type:"sine", at:0.22, dur:0.07, g:0.06});
+    },
+    books: function(){ // book slide + thump
+      noise({filter:"bandpass", freq:500, freqEnd:1200, q:1, dur:0.2, g:0.1});
+      noise({filter:"lowpass", freq:200, at:0.22, dur:0.08, g:0.14});
+    },
+    door: function(){ // creak + hallway air
+      tone(180, {type:"sawtooth", dur:0.3, g:0.02, end:240});
+      noise({filter:"lowpass", freq:500, at:0.25, dur:0.5, g:0.04});
+    },
+    bell: function(){ // the school bell — brace yourself
+      for (var i = 0; i < 14; i++){
+        tone(i % 2 ? 1520 : 1480, {type:"square", at:i * 0.05, dur:0.045, g:0.035});
+      }
+      noise({filter:"highpass", freq:3000, dur:0.7, g:0.02});
+    }
+  };
+  var HAPTICS = {
+    board:[10,30,10], smart:[15,40,15], ptable:[8,25,8,25,8], lab:[12,30,12],
+    wizard:[8,20,8,20,20], safety:[40,60,40], globe:[60], clock:[10,280,10],
+    cal:[12,25,12], teacher:[10,20,10], books:[20,30,10], door:[25,50,15], bell:[30,40,30,40,30]
+  };
+  function buzz(id){
+    if (navigator.vibrate) { try { navigator.vibrate(HAPTICS[id] || 15); } catch(e){} }
+  }
+
+  /* ================================================================
+     MODAL MANAGEMENT — dossier + three tool stages share one scrim
+     ================================================================ */
+  var dossier  = document.getElementById("dossier");
+  var wizStage = document.getElementById("wizStage");
+  var ptStage  = document.getElementById("ptStage");
+  var orStage  = document.getElementById("orStage");
+  var scrim    = document.getElementById("scrim");
+  var STAGES = [dossier, wizStage, ptStage, orStage];
+  var lastFocus = null, hideTimer = null;
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(ch){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch];
+    });
+  }
+  function cancelHide(){
+    if (hideTimer){ clearTimeout(hideTimer); hideTimer = null; }
+    STAGES.forEach(function(el){ if (!el.classList.contains("show")) el.hidden = true; });
+  }
+  function scheduleHide(el, ms){
+    var done = function(){ hideTimer = null; scrim.hidden = true; el.hidden = true; };
+    if (REDUCED) done(); else hideTimer = setTimeout(done, ms);
+  }
+  var bgEls = [document.getElementById("scene"), document.querySelector("footer")];
+  function setBackgroundInert(on){ bgEls.forEach(function(el){ el.inert = on; }); }
+  var wrap = document.querySelector(".room-wrap");
+  var pickedEls = [];
+  function clearPicked(){
+    pickedEls.forEach(function(el){ el.classList.remove("picked"); });
+    pickedEls = [];
+    scrim.classList.remove("spot");
+  }
+  function pickObjects(id){
+    clearPicked();
+    document.querySelectorAll('.iso-obj[data-id="' + id + '"]').forEach(function(el){
+      el.classList.add("picked");
+      pickedEls.push(el);
+    });
+    if (!pickedEls.length) return;
+    var el = pickedEls[0];
+    var r = el.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (wrap.scrollWidth > wrap.clientWidth){
+      var w = wrap.getBoundingClientRect();
+      var target = Math.max(0, Math.min(wrap.scrollWidth - wrap.clientWidth,
+        wrap.scrollLeft + cx - (w.left + w.width / 2)));
+      cx -= target - wrap.scrollLeft;
+      wrap.scrollTo({ left: target, behavior: REDUCED ? "auto" : "smooth" });
+    }
+    scrim.classList.add("spot");
+    scrim.style.setProperty("--sx", cx.toFixed(0) + "px");
+    scrim.style.setProperty("--sy", cy.toFixed(0) + "px");
+    scrim.style.setProperty("--sr", (Math.max(r.width, r.height) / 2 + 30).toFixed(0) + "px");
+  }
+  function openStage(el, id, focusEl){
+    lastFocus = document.activeElement;
+    cancelHide();
+    if (id) pickObjects(id);
+    setBackgroundInert(true);
+    scrim.hidden = false; el.hidden = false;
+    requestAnimationFrame(function(){ scrim.classList.add("show"); el.classList.add("show"); });
+    if (focusEl) focusEl.focus();
+  }
+  function closeStage(el, ms){
+    cancelHide();
+    clearPicked();
+    scrim.classList.remove("show"); el.classList.remove("show");
+    scheduleHide(el, ms || 320);
+    setBackgroundInert(false);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  function activeModal(){
+    for (var i = 0; i < STAGES.length; i++) if (!STAGES[i].hidden) return STAGES[i];
+    return null;
+  }
+  function closeModal(){
+    var m = activeModal();
+    if (m === dossier) closeStage(dossier, 460);
+    else if (m) closeStage(m, 320);
+  }
+  scrim.addEventListener("click", closeModal);
+  document.addEventListener("keydown", function(e){
+    var m = activeModal();
+    if (!m) return;
+    if (e.key === "Escape"){ closeModal(); return; }
+    if (e.key === "Tab"){
+      var f = m.querySelectorAll("button:not(:disabled), a[href], input, textarea");
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+      else if (!m.contains(document.activeElement)){ first.focus(); e.preventDefault(); }
+    }
+  });
+
+  /* ---------------- the dossier ---------------- */
+  function openSpot(id, accent){
+    var w = SPOTS[id]; if (!w) return;
+    dossier.style.setProperty("--a", accent);
+    document.getElementById("dKicker").textContent = w.kicker;
+    document.getElementById("dTitle").textContent = w.title;
+    document.getElementById("dStory").textContent = typeof w.story === "function" ? w.story() : w.story;
+    var chips = document.getElementById("dChips");
+    chips.innerHTML = "";
+    (typeof w.chips === "function" ? w.chips() : w.chips).forEach(function(c){
+      var li = document.createElement("li"); li.textContent = c; chips.appendChild(li);
+    });
+    var links = document.getElementById("dLinks");
+    links.innerHTML = "";
+    w.links.forEach(function(l){
+      var a = document.createElement("a");
+      a.textContent = l.label;
+      if (l.act){
+        a.href = "#";
+        a.addEventListener("click", function(ev){
+          ev.preventDefault();
+          closeStage(dossier, 460);
+          if (l.act === "wizard") openWizard();
+        });
+      } else {
+        a.href = l.href; a.target = "_blank"; a.rel = "noopener";
+      }
+      links.appendChild(a);
+    });
+    openStage(dossier, id, document.getElementById("dClose"));
+  }
+  document.getElementById("dClose").addEventListener("click", function(){
+    SOUNDS.hover(); closeStage(dossier, 460);
+  });
+
+  /* ================================================================
+     THE HYPOTHESIS MACHINE — observation → question → fair test
+     → prediction → a hypothesis you can paste into a lab report
+     ================================================================ */
+  var W = { obs:"", change:"", measure:"", same:"", dir:"", why:"" };
+  var wzStep = 0;
+  var wzBody = document.getElementById("wzBody");
+  var wzDots = document.getElementById("wzDots");
+  var wzBack = document.getElementById("wzBack");
+  var wzNext = document.getElementById("wzNext");
+  for (var wd = 0; wd < 5; wd++) wzDots.appendChild(document.createElement("span"));
+  function field(id, label, placeholder, value, tag){
+    return '<label for="' + id + '">' + label + "</label>" +
+      (tag === "ta"
+        ? '<textarea id="' + id + '" rows="2" placeholder="' + placeholder + '">' + esc(value) + "</textarea>"
+        : '<input type="text" id="' + id + '" placeholder="' + placeholder + '" value="' + esc(value) + '">');
+  }
+  var WZ_STEPS = [
+    { need:["obs"], html:function(){
+        return "<h3>Step 1 — Notice something.</h3>" +
+          "<p>Every experiment starts with a <b>you noticed a thing</b>. Cold soda fizzes more. The ball bounces higher on tile. Your phone dies faster in winter. Write yours down, plain words.</p>" +
+          field("wzObs","What did you notice?","e.g. Cold soda seems to fizz way more than warm soda", W.obs, "ta");
+      }},
+    { need:["change","measure"], html:function(){
+        return "<h3>Step 2 — Turn it into a question.</h3>" +
+          "<p>A scientific question has the shape <i>“How does ___ affect ___?”</i> The first blank is the one thing you’ll <b>change</b> (the independent variable). The second is the thing you’ll <b>measure</b> (the dependent variable).</p>" +
+          field("wzChange","The thing I’ll change","e.g. the temperature of the soda", W.change) +
+          field("wzMeasure","The thing I’ll measure","e.g. how much fizz it makes", W.measure);
+      }},
+    { need:["same"], html:function(){
+        return "<h3>Step 3 — Make it a fair test.</h3>" +
+          "<p>If you change the temperature <i>and</i> the brand <i>and</i> the bottle size, you learn nothing — you won’t know which one caused what. Change <b>one</b> thing; hold everything else still. Those held-still things are your <b>controls</b>.</p>" +
+          field("wzSame","Two things you’ll keep the same","e.g. same brand, same bottle size", W.same);
+      }},
+    { need:["dir","why"], html:function(){
+        function ch(v,lab){ return '<button type="button" data-dir="' + v + '" aria-pressed="' + (W.dir === v) + '">' + lab + "</button>"; }
+        return "<h3>Step 4 — Stick your neck out.</h3>" +
+          "<p>A hypothesis is a <b>prediction with a reason</b> — not a guess, and not a fact. Being wrong is allowed; being vague is not. When I change <b>" + esc(W.change || "it") + "</b>, what happens to <b>" + esc(W.measure || "the thing you measure") + "</b>?</p>" +
+          '<div class="wz-choice" id="wzDir">' + ch("increase","increase") + ch("decrease","decrease") + ch("stay about the same","stay the same") + "</div>" +
+          field("wzWhy","Because…","e.g. gases dissolve better in cold liquid, so there’s more CO₂ waiting to escape", W.why, "ta");
+      }},
+    { need:[], html:function(){
+        var h = "If I change <b>" + esc(W.change) + "</b>, then <b>" + esc(W.measure) + "</b> will <b>" + esc(W.dir) + "</b>, because " + esc(W.why) + ".";
+        var plain = "Hypothesis: If I change " + W.change + ", then " + W.measure + " will " + W.dir + ", because " + W.why + ".\n" +
+          "Fair test: keep the same — " + W.same + ".\n" +
+          "Based on observing: " + W.obs;
+        return "<h3>Step 5 — You have a hypothesis.</h3>" +
+          '<div class="wz-out">' + h + "<br><span style='font-size:.85em;color:var(--ink-dim)'>Fair test: keep " + esc(W.same) + " the same.</span></div>" +
+          "<p>That sentence is the spine of your whole lab report — the experiment tests it, the data judges it, the conclusion answers to it. Copy it, paste it into the template, and go find out if you were right.</p>" +
+          '<div class="wz-choice"><button type="button" id="wzCopy" data-copy="' + esc(plain) + '">Copy my hypothesis</button>' +
+          '<button type="button" id="wzTpl">Open the lab report template ↗</button></div>';
+      }}
+  ];
+  function wzValid(){
+    return WZ_STEPS[wzStep].need.every(function(k){ return (W[k] || "").trim(); });
+  }
+  function wzSave(){
+    var m = { wzObs:"obs", wzChange:"change", wzMeasure:"measure", wzSame:"same", wzWhy:"why" };
+    Object.keys(m).forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) W[m[id]] = el.value;
+    });
+  }
+  function wzRender(){
+    wzBody.innerHTML = WZ_STEPS[wzStep].html();
+    for (var i = 0; i < 5; i++) wzDots.children[i].className = i <= wzStep ? "on" : "";
+    wzBack.disabled = wzStep === 0;
+    wzNext.textContent = wzStep === 4 ? "Start over ↺" : "Next →";
+    wzNext.disabled = false;
+    wzBody.querySelectorAll("input, textarea").forEach(function(el){
+      el.addEventListener("input", function(){ wzSave(); wzNext.disabled = wzStep !== 4 && !wzValid(); });
+    });
+    var dir = document.getElementById("wzDir");
+    if (dir) dir.querySelectorAll("button").forEach(function(b){
+      b.addEventListener("click", function(){
+        W.dir = b.dataset.dir;
+        dir.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); });
+        wzNext.disabled = !wzValid();
+        SOUNDS.hover();
+      });
+    });
+    var cp = document.getElementById("wzCopy");
+    if (cp) cp.addEventListener("click", function(){
+      var textToCopy = cp.dataset.copy;
+      function done(){ cp.textContent = "Copied ✓"; SOUNDS.wizard(); }
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(textToCopy).then(done, function(){ cp.textContent = "Select & copy above"; });
+      } else cp.textContent = "Select & copy above";
+    });
+    var tpl = document.getElementById("wzTpl");
+    if (tpl) tpl.addEventListener("click", function(){ window.open(LNK("labReport"), "_blank", "noopener"); });
+    wzNext.disabled = wzStep !== 4 && !wzValid();
+    var firstField = wzBody.querySelector("input, textarea");
+    if (firstField) firstField.focus();
+  }
+  wzBack.addEventListener("click", function(){ wzSave(); if (wzStep > 0){ wzStep--; wzRender(); SOUNDS.hover(); } });
+  wzNext.addEventListener("click", function(){
+    wzSave();
+    if (wzStep === 4){ W = { obs:"", change:"", measure:"", same:"", dir:"", why:"" }; wzStep = 0; }
+    else if (!wzValid()) return;
+    else wzStep++;
+    wzRender();
+    SOUNDS.hover();
+  });
+  function openWizard(){
+    openStage(wizStage, "wizard", null);
+    wzRender();
+  }
+  document.getElementById("wzClose").addEventListener("click", function(){ SOUNDS.hover(); closeStage(wizStage); });
+
+  /* ================================================================
+     THE PERIODIC TABLE — all 118, tap to meet an atom
+     ================================================================ */
+  var ptBuilt = false;
+  function buildPT(){
+    if (ptBuilt) return;
+    ptBuilt = true;
+    var key = document.getElementById("ptKey");
+    Object.keys(CAT_INFO).forEach(function(k){
+      var sp = document.createElement("span");
+      sp.style.setProperty("--k", CAT_INFO[k].c);
+      sp.textContent = CAT_INFO[k].name;
+      key.appendChild(sp);
+    });
+    var grid = document.getElementById("ptGrid");
+    var spacer = document.createElement("div");
+    spacer.style.gridRow = "8"; spacer.style.gridColumn = "1 / -1"; spacer.style.height = "7px";
+    grid.appendChild(spacer);
+    ELEMS.forEach(function(e, i){
+      var parts = e.split("|"), n = i + 1, pos = ptPos(n), cat = CAT_INFO[CATS[i]];
+      var b = document.createElement("button");
+      b.style.setProperty("--e", cat.c);
+      b.style.gridColumn = pos[0]; b.style.gridRow = pos[1];
+      b.innerHTML = "<i>" + n + "</i>" + parts[0];
+      b.setAttribute("aria-label", parts[1] + ", element " + n);
+      b.addEventListener("click", function(){ selectElement(i, b); });
+      grid.appendChild(b);
+    });
+  }
+  function selectElement(i, btn){
+    var parts = ELEMS[i].split("|"), n = i + 1, pos = ptPos(n), cat = CAT_INFO[CATS[i]];
+    document.querySelectorAll("#ptGrid button.sel").forEach(function(x){ x.classList.remove("sel"); });
+    if (btn) btn.classList.add("sel");
+    var det = document.getElementById("ptDetail");
+    det.style.setProperty("--e", cat.c);
+    document.getElementById("ptTile").style.setProperty("--e", cat.c);
+    document.getElementById("ptNum").textContent = n;
+    document.getElementById("ptSym").textContent = parts[0];
+    document.getElementById("ptName").textContent = parts[1];
+    document.getElementById("ptFacts").innerHTML =
+      "<b>" + cat.name + "</b> — " + cat.blurb + ".<br>" +
+      "Atomic number <b>" + n + "</b> (that’s " + n + " proton" + (n > 1 ? "s" : "") + ") · atomic mass <b>" + parts[2] + "</b>" +
+      (pos[1] < 8 ? " · period " + pos[1] + ", group " + pos[0] : "");
+    tone(300 + n * 12, {type:"triangle", dur:0.08, g:0.05});
+  }
+  function openPT(){
+    buildPT();
+    openStage(ptStage, "ptable", document.getElementById("ptClose"));
+  }
+  document.getElementById("ptClose").addEventListener("click", function(){ SOUNDS.hover(); closeStage(ptStage); });
+
+  /* ================================================================
+     THE ORRERY — the solar system over the teacher's desk
+     ================================================================ */
+  var orBuilt = false, orOpen = false, orSel = 2, orT0 = 0;
+  function buildOrrery(){
+    if (orBuilt) return;
+    orBuilt = true;
+    var svg = document.getElementById("orSvg");
+    var s = '<circle cx="0" cy="0" r="26" fill="rgba(255,209,102,.12)"/>' +
+      '<circle cx="0" cy="0" r="17" fill="rgba(255,209,102,.22)"/>' +
+      '<circle cx="0" cy="0" r="10" fill="#ffd166"/>' +
+      '<circle cx="-3" cy="-3" r="3" fill="rgba(255,255,255,.5)"/>';
+    PLANETS.forEach(function(p, i){
+      s += '<circle cx="0" cy="0" r="' + p.r + '" fill="none" stroke="rgba(238,240,233,.12)" stroke-width="1"/>';
+    });
+    PLANETS.forEach(function(p, i){
+      s += '<g id="orb' + i + '"><g transform="translate(' + p.r + ',0)">' +
+        '<circle id="orHalo' + i + '" cx="0" cy="0" r="' + (p.s + 4) + '" fill="none" stroke="' + p.c + '" stroke-width="1.4" opacity="0"/>' +
+        '<circle cx="0" cy="0" r="' + p.s + '" fill="' + p.c + '"/>' +
+        (p.n === "Saturn" ? '<ellipse cx="0" cy="0" rx="' + (p.s + 6) + '" ry="' + ((p.s + 6) / 3.2) + '" fill="none" stroke="#c9b284" stroke-width="1.6" transform="rotate(-18)"/>' : "") +
+        (p.n === "Earth" ? '<circle cx="' + (p.s + 4) + '" cy="0" r="1.4" fill="#c9cfd6"/>' : "") +
+        "</g></g>";
+    });
+    svg.innerHTML = s;
+    var row = document.getElementById("orRow");
+    PLANETS.forEach(function(p, i){
+      var b = document.createElement("button");
+      b.textContent = p.n;
+      b.style.setProperty("--p", p.c);
+      b.setAttribute("aria-pressed", String(i === orSel));
+      b.addEventListener("click", function(){ selectPlanet(i); SOUNDS.hover(); });
+      row.appendChild(b);
+    });
+    orT0 = performance.now();
+  }
+  function selectPlanet(i){
+    orSel = i;
+    document.querySelectorAll("#orRow button").forEach(function(b, j){
+      b.setAttribute("aria-pressed", String(j === i));
+    });
+    PLANETS.forEach(function(p, j){
+      document.getElementById("orHalo" + j).setAttribute("opacity", j === i ? ".8" : "0");
+    });
+    document.getElementById("orFact").innerHTML = PLANETS[i].f;
+  }
+  function orFrame(){
+    if (!orOpen) return;
+    var t = (performance.now() - orT0) / 1000;
+    PLANETS.forEach(function(p, i){
+      // one Earth year = 12 seconds; each planet starts offset so they don't line up
+      var deg = ((t / (p.yr * 12)) * 360 + i * 137) % 360;
+      document.getElementById("orb" + i).setAttribute("transform", "rotate(" + deg.toFixed(2) + ")");
+    });
+    if (!REDUCED) requestAnimationFrame(orFrame);
+  }
+  function openOrrery(){
+    buildOrrery();
+    openStage(orStage, "globe", document.getElementById("orClose"));
+    selectPlanet(orSel);
+    orOpen = true;
+    orFrame();
+  }
+  document.getElementById("orClose").addEventListener("click", function(){
+    SOUNDS.hover(); orOpen = false; closeStage(orStage);
+  });
+
+  /* ================================================================
+     object wiring — SVG groups act as buttons
+     ================================================================ */
+  var tip = document.getElementById("tip");
+  var scene = document.getElementById("scene");
+  function showTip(btn, accent){
+    tip.textContent = btn.getAttribute("aria-label");
+    tip.style.setProperty("--a", accent);
+    var r = btn.getBoundingClientRect(), s = scene.getBoundingClientRect();
+    tip.style.left = (r.left - s.left + r.width / 2) + "px";
+    tip.style.top  = (r.top - s.top - 10) + "px";
+    tip.classList.add("show");
+  }
+  function hideTip(){ tip.classList.remove("show"); }
+  function activate(id, accent){
+    ac(true); hideTip();
+    if (SOUNDS[id]) SOUNDS[id]();
+    if (id === "ptable") openPT();
+    else if (id === "globe") openOrrery();
+    else if (id === "wizard") openWizard();
+    else openSpot(id, accent);
+  }
+  document.querySelectorAll(".iso-obj").forEach(function(btn){
+    var id = btn.dataset.id;
+    var accent = getComputedStyle(btn).getPropertyValue("--a").trim() || "#ffd98a";
+    btn.addEventListener("pointerenter", function(){ SOUNDS.hover(); showTip(btn, accent); });
+    btn.addEventListener("pointerleave", hideTip);
+    btn.addEventListener("focus", function(){ showTip(btn, accent); });
+    btn.addEventListener("blur", hideTip);
+    btn.addEventListener("pointerdown", function(){ buzz(id); });
+    btn.addEventListener("click", function(){ activate(id, accent); });
+    btn.addEventListener("keydown", function(e){
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); btn.click(); }
+    });
+  });
+  document.querySelectorAll(".legend button").forEach(function(btn){
+    var id = btn.dataset.id;
+    var accent = getComputedStyle(btn).getPropertyValue("--a").trim() || "#ffd98a";
+    btn.addEventListener("pointerenter", function(){ SOUNDS.hover(); });
+    btn.addEventListener("pointerdown", function(){ buzz(id); });
+    btn.addEventListener("click", function(){ activate(id, accent); });
+  });
+
+  /* ---------------- the school bell ---------------- */
+  document.getElementById("bellBtn").addEventListener("click", function(){
+    ac(true); SOUNDS.bell(); buzz("bell");
+  });
+
+  /* ---------------- sound toggle ---------------- */
+  var sndBtn = document.getElementById("sndBtn");
+  sndBtn.addEventListener("click", function(){
+    soundOn = !soundOn;
+    sndBtn.setAttribute("aria-pressed", String(soundOn));
+    sndBtn.textContent = soundOn ? "Sound: on" : "Sound: off";
+    if (soundOn){ ac(true); SOUNDS.hover(); }
+  });
+
+  /* ---------------- the wall clock keeps real time ---------------- */
+  function tickClock(){
+    var now = new Date();
+    var hh = document.getElementById("handH"), mm = document.getElementById("handM");
+    if (!hh) return;
+    hh.setAttribute("transform", "rotate(" + ((now.getHours() % 12 + now.getMinutes() / 60) * 30).toFixed(1) + ")");
+    mm.setAttribute("transform", "rotate(" + (now.getMinutes() * 6 + now.getSeconds() * 0.1).toFixed(1) + ")");
+  }
+  tickClock();
+  setInterval(tickClock, 10000);
+
+  /* ---------------- header + footer from CONFIG ---------------- */
+  document.getElementById("eyebrow").textContent =
+    [CONFIG.school, CONFIG.course, CONFIG.room, CONFIG.year].filter(Boolean).join(" · ");
+  var fl = document.getElementById("footLinks");
+  [{label:"Google Classroom", href:CONFIG.links.classroom}]
+    .concat(CONFIG.email ? [{label:"email " + CONFIG.teacher, href:"mailto:" + CONFIG.email}] : [])
+    .forEach(function(l){
+      var a = document.createElement("a");
+      a.href = l.href; a.textContent = l.label;
+      if (l.href.indexOf("mailto:") !== 0){ a.target = "_blank"; a.rel = "noopener"; }
+      fl.appendChild(a);
+    });
+  document.getElementById("footNote").textContent =
+    "© " + new Date().getFullYear() + " " + CONFIG.teacher + " · " + CONFIG.course +
+    " — built with chalk dust, no frameworks, no trackers.";
+
+  /* ---------------- start small screens panned to the room's center ---------------- */
+  if (wrap.scrollWidth > wrap.clientWidth){
+    wrap.scrollLeft = (wrap.scrollWidth - wrap.clientWidth) / 2;
+  }
+
+  /* ---------------- gentle whole-scene parallax ---------------- */
+  var iso = document.getElementById("iso");
+  if (!REDUCED && matchMedia("(pointer: fine)").matches){
+    var raf = null, mx = 0, my = 0;
+    scene.addEventListener("pointermove", function(e){
+      mx = (e.clientX / innerWidth  - 0.5);
+      my = (e.clientY / innerHeight - 0.5);
+      if (!raf) raf = requestAnimationFrame(function(){
+        raf = null;
+        iso.style.setProperty("--px", (mx * -10).toFixed(1) + "px");
+        iso.style.setProperty("--py", (my * -6).toFixed(1) + "px");
+      });
+    });
+  }
+
+  /* ---------------- chalk dust in the lamp light ---------------- */
+  var canvas = document.getElementById("dust");
+  if (canvas.getContext && !REDUCED){
+    var cx2 = canvas.getContext("2d");
+    var motes = [], DW = 0, DH = 0;
+    var resize = function(){
+      DW = canvas.clientWidth; DH = canvas.clientHeight;
+      var dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = DW * dpr; canvas.height = DH * dpr;
+      cx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize(); addEventListener("resize", resize);
+    for (var i = 0; i < 42; i++){
+      motes.push({
+        x: Math.random(), y: Math.random(),
+        r: 0.6 + Math.random() * 1.6,
+        vx: (Math.random() - 0.5) * 0.00012,
+        vy: -0.00006 - Math.random() * 0.00012,
+        a: 0.15 + Math.random() * 0.4,
+        p: Math.random() * Math.PI * 2
+      });
+    }
+    (function frame(){
+      cx2.clearRect(0, 0, DW, DH);
+      motes.forEach(function(m){
+        m.x += m.vx * 16; m.y += m.vy * 16; m.p += 0.01;
+        if (m.y < -0.02){ m.y = 1.02; m.x = Math.random(); }
+        if (m.x < -0.02) m.x = 1.02;
+        if (m.x > 1.02) m.x = -0.02;
+        var dx = m.x - 0.58, dy = m.y - 0.15;
+        var glow = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) * 1.6);
+        var alpha = m.a * glow * (0.7 + 0.3 * Math.sin(m.p));
+        if (alpha > 0.01){
+          cx2.beginPath();
+          cx2.arc(m.x * DW, m.y * DH, m.r, 0, Math.PI * 2);
+          cx2.fillStyle = "rgba(238,240,225," + alpha.toFixed(3) + ")";
+          cx2.fill();
+        }
+      });
+      requestAnimationFrame(frame);
+    })();
+  }
+})();
+</script>
+</body>
+</html>
