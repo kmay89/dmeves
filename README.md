@@ -11,7 +11,7 @@ uses, so students explore the room instead of scrolling a list of links:
 | Periodic table poster | A full interactive periodic table — all 118 elements |
 | Lab bench | Scientific method, lab report template |
 | The thinking flask | A step-by-step **hypothesis builder** students can copy from |
-| Safety corner | Lab safety rules, shower/eyewash, safety contract |
+| Safety corner | Lab safety rules & contract — and the shower and eyewash actually **work**: push the lever / pull the handle for an animated drill with proper-use reminders |
 | The globe | An animated solar system orrery |
 | Wall clock | The bell schedule — live, it knows what period it is |
 | Calendar | Class calendar (the paper one draws the real current month) |
