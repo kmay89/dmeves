@@ -668,13 +668,13 @@ function extractNamesFromText(text){
     var cleaned = line.trim()
       .replace(/^\d+[\.\)\-\s]+/, "")
       .replace(/^[\u2022\-\*\u25E6\u25CB]\s*/, "")
-      .replace(/[^\w\s\'\-\.]/g, "")
+      .replace(/[^\p{L}\p{N}\s'\-.]/gu, "")
       .trim();
     if (!cleaned) return;
     var words = cleaned.split(/\s+/).filter(Boolean);
     if (words.length < 1 || words.length > 4) return;
     var looksLikeName = words.every(function(w){
-      return /^[A-Za-z][a-zA-Z\'\-\.]*$/.test(w);
+      return /^\p{L}[\p{L}'\-.]*$/u.test(w);
     });
     if (!looksLikeName) return;
     var proper = words.map(function(w){
@@ -693,6 +693,10 @@ window.openCameraCapture = function(){
   if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
     showStatus("err", "No camera available here — try the file upload instead.");
     return;
+  }
+  if (cameraStream){ // an earlier stream is still live — release it first
+    cameraStream.getTracks().forEach(function(t){ t.stop(); });
+    cameraStream = null;
   }
   navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream){
     cameraStream = stream;
@@ -713,11 +717,19 @@ window.closeCameraCapture = function(){
 window.capturePhoto = function(){
   var video = document.getElementById("cameraVideo");
   var canvas = document.getElementById("cameraCanvas");
+  if (!video.videoWidth || !video.videoHeight){
+    showStatus("err", "The camera isn’t ready yet — give it a second and try again.");
+    return;
+  }
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   canvas.getContext("2d").drawImage(video, 0, 0);
   closeCameraCapture();
   canvas.toBlob(function(blob){
+    if (!blob){
+      showStatus("err", "Couldn’t capture that frame — try again.");
+      return;
+    }
     processImage(blob).then(function(names){
       hideProcessing();
       if (!names.length){ showStatus("err", "No names detected — try a clearer, closer photo."); return; }
@@ -1214,12 +1226,15 @@ window.downloadSeatingChart = function(format){
         });
         if (conflicts.length){
           y += 10;
-          if (y > ph - 80){ pdf.addPage(); y = 40; }
+          if (y > ph - 60){ pdf.addPage(); y = 40; }
           pdf.setTextColor(224, 73, 47); pdf.setFont("helvetica", "bold");
           pdf.text("Can't sit together:", 40, y);
           pdf.setFont("helvetica", "normal");
-          conflicts.forEach(function(c, i){
-            pdf.text("- " + c.student1 + "  <->  " + c.student2, 50, y + 16 + i * 14);
+          y += 16;
+          conflicts.forEach(function(c){
+            pdf.text("- " + c.student1 + "  <->  " + c.student2, 50, y);
+            y += 14;
+            if (y > ph - 40){ pdf.addPage(); y = 40; }
           });
         }
         pdf.save("seating-chart-" + getDateString() + ".pdf");
