@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#fdf6e7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AA%3C/text%3E%3C/svg%3E">
+<title>Accessibility — The Classroom</title>
+<style>
+  @font-face{font-family:"Fredoka";src:url("/fonts/fredoka.woff2") format("woff2");font-weight:300 700;font-display:swap}
+  @font-face{font-family:"Nunito";src:url("/fonts/nunito.woff2") format("woff2");font-weight:200 1000;font-display:swap}
+  @font-face{font-family:"Caveat";src:url("/fonts/caveat.woff2") format("woff2");font-weight:400 700;font-display:swap}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#fdf6e7;color:#374253;font-family:"Nunito","Segoe UI",system-ui,sans-serif;line-height:1.65;font-weight:600}
+  main{max-width:44rem;margin:0 auto;padding:clamp(2rem,6vw,4rem) 1.5rem 4rem}
+  .eyebrow{font-family:"Caveat","Segoe Print",cursive;font-size:1.25rem;color:#c07d10}
+  h1{font-family:"Fredoka",ui-rounded,system-ui,sans-serif;font-weight:600;font-size:clamp(1.9rem,5vw,2.6rem);margin:.4rem 0 1.2rem}
+  h2{font-family:"Fredoka",ui-rounded,system-ui,sans-serif;font-weight:600;font-size:1.15rem;margin:1.8rem 0 .4rem}
+  p{margin:.6rem 0;color:#5f6b78}
+  p b{color:#374253}
+  a{color:#c07d10}
+  ul{margin:.6rem 0 .6rem 1.4rem;color:#5f6b78}
+  li{margin:.3rem 0}
+  .back{display:inline-block;margin-top:2.4rem;font-family:"Fredoka",system-ui,sans-serif;font-weight:500;
+    color:#fff;background:#f7a823;text-decoration:none;border-radius:999px;padding:.5em 1.2em;
+    box-shadow:0 3px 0 #a86f0e}
+  footer{max-width:44rem;margin:0 auto;padding:0 1.5rem 3rem;font-size:.8rem;color:#93938a}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">The Classroom · dmeves.com</p>
+  <h1>Accessibility</h1>
+  <p>Every student in the class should be able to use this room. Here’s what the
+  site does toward that, and how to tell us when it falls short.</p>
+
+  <h2>Built in</h2>
+  <ul>
+    <li><b>Keyboard everything</b> — every object in the room, the door keypad, the
+    legend, and all dialogs can be reached and operated with Tab, Enter, and Escape.
+    Dialogs trap focus while open and return it when closed.</li>
+    <li><b>Screen reader labels</b> — interactive objects are real buttons with
+    descriptive names (“The chalkboard — syllabus and this week”); purely decorative
+    art is hidden from assistive tech.</li>
+    <li><b>Reduced motion</b> — if your device asks for reduced motion, the
+    animations (flames, bubbles, orbiting planets, floating dust) hold still and
+    dialogs appear without sliding.</li>
+    <li><b>Sound is optional</b> — all audio is decorative, starts only after you
+    interact, and can be switched off with the “Sound” toggle. Nothing on the site
+    is communicated by sound alone.</li>
+    <li><b>The legend duplicates the room</b> — everything you can click in the
+    drawing is also a plainly labeled button beneath it, so nobody has to
+    pixel-hunt.</li>
+    <li><b>Readable text</b> — body text meets WCAG AA contrast on the cream
+    background, and the layout reflows down to small phone screens.</li>
+  </ul>
+
+  <h2>Known limits</h2>
+  <p>The room itself is one large drawing; its decorative details (the bunting, the
+  backpack, the plant) are scenery and intentionally silent to screen readers. All
+  actual class information is available through the labeled buttons and dialogs.</p>
+
+  <h2>If something’s in the way</h2>
+  <p>Tell the teacher — in class, or through the class’s usual channels. Barriers
+  get fixed; that’s the whole policy.</p>
+
+  <a class="back" href="/">← Back to the classroom</a>
+</main>
+<footer>An unofficial class companion — not a school district website.</footer>
+</body>
+</html>

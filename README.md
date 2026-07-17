@@ -50,6 +50,31 @@ empty falls back to your main Classroom link, so nothing ever dead-ends.
 Edit the bell schedule to match your building; the wall clock and its
 dossier use it to tell students what period it is right now.
 
+### The door code
+
+The site opens with a playful keypad gate. The code is shared in class and
+never appears in the source — only its hash does. Students enter it once
+per browser; `https://dmeves.com/?code=XXXX` works as a "magic link" for
+sharing in Classroom. To change the code: unlock the site, open the browser
+console, run `CLASSROOM.hash("yournewcode")`, and paste the printed values
+into `CONFIG.gate` (update the `hint` too). It's a friendly gate for a
+class website — a deterrent, not encryption; nothing sensitive lives here.
+
+### Privacy stance
+
+The site collects **nothing**: no accounts, no cookies, no analytics, no
+third-party requests (fonts are self-hosted). The only thing stored is the
+door-code unlock flag, in the student's own browser. `robots.txt` and
+`noindex` keep it out of search engines. Plain-language `/privacy/`,
+`/terms/`, and `/accessibility/` pages are included and linked in the
+footer.
+
+### Link previews (iMessage etc.)
+
+`og-image.png` plus the Open Graph tags in `index.html` give the site a
+rich preview card when the link is texted or posted. If you redecorate the
+room, regenerate the image by screenshotting the scene at 1200×630.
+
 ## Develop
 
 It's a static file — open `index.html` in a browser, or:
