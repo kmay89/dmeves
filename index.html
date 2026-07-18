@@ -80,6 +80,9 @@
     font-family:var(--body);
     overflow-x:hidden;
     min-height:100vh;
+    /* stop iOS double-tap zoom: fast taps through the intro tour otherwise
+       read as a zoom gesture and make the card jitter (pinch zoom still works) */
+    touch-action:manipulation;
   }
   ::selection{background:var(--sun);color:#fff}
 
