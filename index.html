@@ -683,7 +683,7 @@
   </header>
 
   <div class="room-wrap">
-    <svg id="iso" viewBox="-470 -300 1105 830" role="group"
+    <svg id="iso" viewBox="-470 -300 1105 930" role="group"
          aria-label="An isometric science classroom: chalkboard, smart board, periodic table, lab bench, safety corner, teacher desk, and more — each one opens class materials"></svg>
   </div>
   <div class="tip" id="tip" aria-hidden="true"></div>
@@ -985,8 +985,8 @@
   '</defs>');
 
   /* ---------- walls + floor ---------- */
-  S.push(polyW([[-30,-30,250],[-30,420,250],[-30,420,-40],[-30,-30,-40]], "url(#wallB)", 'stroke="none"'));
-  S.push(polyW([[-30,-30,250],[620,-30,250],[620,-30,-40],[-30,-30,-40]], "url(#wallA)", 'stroke="none"'));
+  S.push(polyW([[-30,-30,250],[-30,420,250],[-30,420,0],[-30,-30,0]], "url(#wallB)", 'stroke="none"'));
+  S.push(polyW([[-30,-30,250],[620,-30,250],[620,-30,0],[-30,-30,0]], "url(#wallA)", 'stroke="none"'));
   S.push(polyW([[-30,-30,0],[620,-30,0],[620,420,0],[-30,420,0]], "url(#floorG)", 'stroke="none"'));
   // vinyl tile seams
   S.push(gTop(-30,-30,0,(function(){
@@ -1018,6 +1018,97 @@
     return s;
   }
   S.push('<g aria-hidden="true">' + gLeft(-20,-30,246, bunting(630, 0)) + gRight(-30,415,246, bunting(415, 3)) + "</g>");
+
+  /* ---------- beneath the floor: a geological cutaway ----------
+     Subfloor, foundation, then the real thing: soil horizons down to
+     bedrock — with residents. Physical science doesn't stop at z=0. */
+  var UG = [ // zTop, zBot, color
+    [0,   -7,  "#8a6a3c"],  // wood subfloor edge
+    [-7,  -18, "#b3ac9d"],  // poured foundation
+    [-18, -40, "#5f4630"],  // topsoil — the living layer
+    [-40, -64, "#96653a"],  // subsoil — minerals & clay
+    [-64, -84, "#a09a8c"]   // bedrock — an old seafloor
+  ];
+  var ug = "";
+  UG.forEach(function(L){
+    ug += polyW([[-30,420,L[0]],[620,420,L[0]],[620,420,L[1]],[-30,420,L[1]]], L[2]);
+    ug += polyW([[620,-30,L[0]],[620,420,L[0]],[620,420,L[1]],[620,-30,L[1]]], shade(L[2],-.14));
+  });
+  // ragged bottom edge, like a museum diorama slice
+  function jagged(points){
+    return '<path d="M' + points.map(function(p,i){
+      return (i ? "L" : "") + p[0].toFixed(1) + " " + p[1].toFixed(1);
+    }).join(" ") + ' Z" fill="#867f70" ' + OUT + "/>";
+  }
+  (function(){
+    var top = [], bot = [];
+    for (var x = -30; x <= 620; x += 50){
+      top.push(P(x,420,-84));
+      bot.push(P(x,420, (((x/50)|0) % 2) ? -95 : -89));
+    }
+    ug += jagged(top.concat(bot.reverse()));
+    var topR = [], botR = [];
+    for (var y = 420; y >= -30; y -= 50){
+      topR.push(P(620,y,-84));
+      botR.push(P(620,y, (((y/50)|0) % 2) ? -89 : -95));
+    }
+    ug += '<g opacity=".92">' + jagged(topR.concat(botR.reverse())).replace("#867f70","#6e6759") + "</g>";
+  })();
+  // ---- left face details (u = x+30 across 0..650, v = depth below the floor) ----
+  ug += gLeft(-30,420,0,(function(){
+    var s = "";
+    for (var u = 24; u < 650; u += 43) s += '<path d="M' + u + ' 1 v5" stroke="#6e5327" stroke-width="1.4"/>';
+    for (var i = 0; i < 30; i++) s += '<circle cx="' + ((i*83+17)%645) + '" cy="' + (9 + (i*37)%8) + '" r="1.1" fill="#8f887a"/>';
+    for (var p = 0; p < 15; p++) s += '<ellipse cx="' + ((p*127+40)%630) + '" cy="' + (23 + (p*53)%14) + '" rx="' + (2+(p%3)) + '" ry="' + (1.4+(p%2)) + '" fill="#4a3624"/>';
+    // roots reaching in from the tree outside
+    s += '<g stroke="#7a5a38" fill="none" stroke-linecap="round">' +
+      '<path d="M14 18 q8 9 4 20 q-3 8 3 14" stroke-width="2.4"/>' +
+      '<path d="M22 18 q4 12 14 16 q8 3 9 10" stroke-width="1.8"/>' +
+      '<path d="M18 27 q-6 5 -5 11" stroke-width="1.3"/></g>';
+    // one worm, employed full-time in the A horizon
+    s += '<path d="M148 31 q5 -4 10 0 q5 4 10 0 q4 -3 8 0" fill="none" stroke="#e08a94" stroke-width="2.6" stroke-linecap="round"/>' +
+      '<circle cx="177" cy="30.4" r=".8" fill="#5c2a30"/>';
+    // time capsule, sealed until 2126
+    s += '<g transform="rotate(-7 253 32)"><rect x="243" y="27" width="20" height="11" rx="2.5" fill="#c23b30" stroke="rgba(60,20,10,.5)"/>' +
+      txt(253,35,"2126",5.2,"#ffe9a8",MONO + ' text-anchor="middle" font-weight="bold"') + "</g>";
+    // clay streaks + stones in the subsoil
+    s += '<g stroke="#b98849" stroke-width="2" fill="none" opacity=".7">' +
+      '<path d="M20 48 q90 5 180 0 t190 3 t180 -2"/><path d="M60 57 q120 4 240 0 t260 2"/></g>' +
+      '<ellipse cx="330" cy="52" rx="7" ry="4.5" fill="#7d6a4e"/><ellipse cx="530" cy="58" rx="5" ry="3.5" fill="#7d6a4e"/>' +
+      '<ellipse cx="120" cy="55" rx="4.5" ry="3" fill="#86735a"/>';
+    // groundwater sheen where subsoil meets rock
+    s += '<rect x="0" y="60" width="650" height="7" fill="rgba(88,150,200,.16)"/>';
+    // bedrock strata + residents
+    s += '<g stroke="#7e786c" stroke-width="1.3" fill="none" opacity=".8">' +
+      '<path d="M0 70 q160 4 320 0 t330 2"/><path d="M0 78 q200 -3 400 1 t250 -1"/></g>';
+    s += '<g transform="translate(468 74)"><path d="M0 0 a6 6 0 1 1 6 6 a4.5 4.5 0 1 1 -4.5 -4.5 a3 3 0 1 1 3 3 a1.6 1.6 0 1 0 -1.6 -1.6" fill="none" stroke="#e8e0cc" stroke-width="1.7" stroke-linecap="round"/></g>';
+    s += '<g stroke="#ddd5c0" stroke-width="2.2" stroke-linecap="round"><path d="M84 79 l14 -3"/><path d="M83 76 q-3 2 -1 5 M99 74 q3 1 2 5"/></g>';
+    return s;
+  })());
+  // ---- right face details (u runs along y from the front corner) ----
+  ug += gRight(620,420,0,(function(){
+    var s = "";
+    for (var u = 20; u < 450; u += 43) s += '<path d="M' + u + ' 1 v5" stroke="#6e5327" stroke-width="1.4" opacity=".8"/>';
+    for (var i = 0; i < 20; i++) s += '<circle cx="' + ((i*97+23)%440) + '" cy="' + (9 + (i*41)%8) + '" r="1.1" fill="#847d70"/>';
+    for (var p = 0; p < 9; p++) s += '<ellipse cx="' + ((p*151+60)%430) + '" cy="' + (24 + (p*67)%12) + '" rx="' + (2+(p%3)) + '" ry="1.6" fill="#40301f"/>';
+    // the water line — geology shares the basement with the plumbing
+    s += '<rect x="45" y="47" width="290" height="8" rx="4" fill="#33689c" stroke="rgba(15,40,70,.5)"/>' +
+      '<rect x="108" y="45.5" width="7" height="11" rx="2" fill="#27527c"/>' +
+      '<rect x="238" y="45.5" width="7" height="11" rx="2" fill="#27527c"/>' +
+      '<circle cx="180" cy="47" r="4.5" fill="none" stroke="#27527c" stroke-width="2"/>' +
+      '<path d="M180 43 v-3 M177 40 h6" stroke="#27527c" stroke-width="2"/>' +
+      txt(300,53.5,"H2O",5.4,"#cfe2f4",MONO + ' letter-spacing="1"') +
+      '<path d="M340 55 q1.5 3 0 5 q-1.5 -2 0 -5" fill="#7cb8d8"/>';
+    s += '<rect x="0" y="60" width="450" height="7" fill="rgba(88,150,200,.13)"/>';
+    s += '<g stroke="#736d61" stroke-width="1.3" fill="none" opacity=".8">' +
+      '<path d="M0 71 q110 3 220 0 t230 2"/><path d="M0 79 q150 -3 300 1 t150 -1"/></g>';
+    // a geode pocket, waiting for a rock hammer
+    s += '<g transform="translate(170 75)"><ellipse cx="0" cy="0" rx="11" ry="7" fill="#40394a"/>' +
+      '<g fill="#a07ad0"><path d="M-6 2 l2.5 -6 l2.5 6 z"/><path d="M-1 3 l2.6 -7 l2.6 7 z"/><path d="M4 2 l2 -5 l2.2 5 z"/></g>' +
+      '<g fill="#cbb2ee"><path d="M-4.5 2 l1.4 -3.4 l1.4 3.4 z"/><path d="M1 3 l1.5 -4 l1.5 4 z"/></g></g>';
+    return s;
+  })());
+  S.push(wrapObj("underground","Beneath the floor — what the school stands on","#8a6a3c",ug));
 
   // warm pool of light in the middle of the floor + cool spill from the smart board
   S.push(gTop(-30,-30,0,'<ellipse cx="330" cy="220" rx="330" ry="240" fill="url(#poolGlow)"/>' +
@@ -1614,6 +1705,13 @@
       chips: ["Online textbook","Assigned readings","The bridge book"],
       links: [{label:"the textbook", href:LNK("textbook")}]
     },
+    underground: {
+      kicker: "Beneath the floor · the cutaway",
+      title: "The school stands on 4.6 billion years of backstory",
+      story: "Slice through any floor and Earth keeps going. First the subfloor and the poured foundation — then the part no builder made: dark topsoil crowded with living things (one worm shown, millions implied), mineral subsoil streaked with clay, and finally bedrock, laid down long before anyone invented homework. The thin blue shimmer is groundwater; the blue pipe above it is just the water line — even geology shares the basement with the plumbing. That spiral shell in the rock is an ammonite, which means this bedrock remembers being a seafloor. And the little red box in the dirt? A time capsule. Sealed until 2126. Be patient.",
+      chips: ["Subfloor & foundation","Topsoil — the living layer","Subsoil — minerals & clay","Groundwater","Bedrock — an old seafloor","One ammonite, showing off","Time capsule: do not open till 2126"],
+      links: []
+    },
     pass: {
       kicker: "The hall pass · by the door",
       title: "Go when you need to — nobody performs their best while holding it",
@@ -1800,6 +1898,12 @@
       noise({filter:"bandpass", freq:500, freqEnd:1200, q:1, dur:0.2, g:0.1});
       noise({filter:"lowpass", freq:200, at:0.22, dur:0.08, g:0.14});
     },
+    underground: function(){ // shovel thuds + rock crunch
+      noise({filter:"lowpass", freq:260, dur:0.09, g:0.16});
+      noise({filter:"lowpass", freq:220, at:0.18, dur:0.1, g:0.14});
+      noise({filter:"bandpass", freq:900, q:1.4, at:0.32, dur:0.14, g:0.08});
+      tone(90, {type:"sine", at:0.18, dur:0.2, g:0.06});
+    },
     pass: function(){ // wooden pass knocking on the door frame
       noise({filter:"lowpass", freq:1400, dur:0.035, g:0.15});
       tone(420, {type:"triangle", dur:0.06, g:0.08});
@@ -1820,7 +1924,7 @@
   var HAPTICS = {
     board:[10,30,10], smart:[15,40,15], ptable:[8,25,8,25,8], lab:[12,30,12],
     wizard:[8,20,8,20,20], safety:[40,60,40], globe:[60], clock:[10,280,10],
-    cal:[12,25,12], teacher:[10,20,10], books:[20,30,10], door:[25,50,15], pass:[15,30,15], bell:[30,40,30,40,30],
+    cal:[12,25,12], teacher:[10,20,10], books:[20,30,10], door:[25,50,15], pass:[15,30,15], underground:[35,50,35], bell:[30,40,30,40,30],
     eyewash:[15,60,80], showerpull:[25,80,140]
   };
   function buzz(id){
