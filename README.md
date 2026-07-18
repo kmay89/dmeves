@@ -19,6 +19,7 @@ uses, so students explore the room instead of scrolling a list of links:
 | Bookshelf | Online textbook & readings |
 | The door | "What did I miss?" → the Classroom stream |
 | 🥚 Clipboard on the teacher's desk | An easter egg: opens **Seat Smart**, the built-in seating chart tool |
+| 🥚 Carbon, knocked 6 times | Deep cut: click carbon in the periodic table six times (six protons!) and the table unwinds into the **Spiral Periodic Table** at `/spiral/` — a reference-grade instrument with quantum views, spectra, and sourced data |
 
 Single `index.html`, no frameworks, no build step, no trackers. Sound is
 synthesized in the browser and off until the first click. Typography is
