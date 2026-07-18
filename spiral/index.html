@@ -1,0 +1,2331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spiral Periodic Table — Periods as Rings, Groups as Rays</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%80%3C/text%3E%3C/svg%3E">
+<style>
+@font-face{font-family:"Space Grotesk";src:url("/fonts/space-grotesk.woff2") format("woff2");font-weight:300 700;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("/fonts/plex-mono-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("/fonts/plex-mono-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("/fonts/plex-mono-600.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+:root{
+  --bg:#0b0e14; --bg2:#0e1219; --panel:#121826; --panel2:#0f141f;
+  --line:#232a38; --line2:#2e3748;
+  --ink:#e8ecf4; --ink2:#9aa3b5; --ink3:#5d6778;
+  --focus:#7cc6ff;
+  --f-display:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--f-display); font-size:14px;
+  overflow:hidden;
+}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+
+/* ── Top bar ─────────────────────────────────────────── */
+.topbar{
+  position:fixed; inset:0 0 auto 0; z-index:30;
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:10px 16px;
+  background:color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;flex-direction:column;line-height:1.15;margin-right:6px}
+.brand b{font-weight:700;font-size:15px;letter-spacing:.02em}
+.brand span{font-size:11px;color:var(--ink2)}
+.search{
+  flex:1 1 180px; max-width:320px; min-width:150px;
+  background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+  padding:7px 11px; color:var(--ink);
+}
+.search::placeholder{color:var(--ink2)}
+.ctl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
+.ctl select{
+  background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+  padding:7px 8px; color:var(--ink); cursor:pointer;
+}
+.iconbtn{
+  background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+  padding:7px 10px; cursor:pointer; color:var(--ink2); font-family:var(--f-mono);
+}
+.iconbtn:hover{color:var(--ink);border-color:var(--line2)}
+.kbdhint{font-size:11px;color:var(--ink2);margin-left:auto;display:none}
+@media(min-width:1100px){.kbdhint{display:block}}
+kbd{font-family:var(--f-mono);font-size:10px;border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:1px 4px;background:var(--panel2)}
+
+/* ── Category chips ──────────────────────────────────── */
+.chips{
+  position:fixed; top:var(--barH,56px); left:0; right:0; z-index:29;
+  display:flex; gap:6px; padding:8px 16px; overflow-x:auto;
+  scrollbar-width:none;
+  background:linear-gradient(color-mix(in srgb, var(--bg) 78%, transparent), transparent);
+  pointer-events:none;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  pointer-events:auto;
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  font-size:11.5px; color:var(--ink2);
+  background:var(--panel2); border:1px solid var(--line); border-radius:999px;
+  padding:5px 11px; cursor:pointer; transition:border-color .15s,color .15s,opacity .15s;
+}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.chip:hover{color:var(--ink);border-color:var(--line2)}
+.chip.on{color:var(--ink);border-color:var(--c);background:color-mix(in srgb,var(--c) 14%, var(--panel2))}
+.chips.filtering .chip:not(.on){opacity:.45}
+
+/* ── Stage / SVG ─────────────────────────────────────── */
+#stage{position:fixed;inset:0;cursor:grab;touch-action:none}
+#stage.panning{cursor:grabbing}
+svg{width:100%;height:100%;display:block}
+svg text{user-select:none}
+
+.blocksector{stroke:none}
+.ringline{fill:none;stroke:var(--line);stroke-width:1}
+.spiralthread{fill:none;stroke:var(--line);stroke-width:1.5;stroke-opacity:.55}
+.zthread{fill:none;stroke:#8b94a7;stroke-opacity:.18;stroke-width:1}
+.rimlabel{fill:#5f6a80;font-family:var(--f-mono);font-size:11px;text-anchor:middle}
+.rimlabel.blk{font-size:10px;letter-spacing:.14em;fill:#4d5770}
+.periodlabel{fill:#4d5770;font-family:var(--f-mono);font-size:10px;text-anchor:middle}
+
+.node{cursor:pointer}
+.node circle.body{stroke:rgba(0,0,0,.55);stroke-width:1;transition:transform .12s ease}
+.node text{fill:#0b0e14;text-anchor:middle;pointer-events:none}
+.node .sym{font-family:var(--f-display);font-weight:700;font-size:13px}
+.node .znum{font-family:var(--f-mono);font-size:6.5px;opacity:.75}
+.node .mass{font-family:var(--f-mono);font-size:5.8px;opacity:.7}
+.node.darktext text{fill:#eef2f8}
+.node:hover circle.body{transform:scale(1.22)}
+.node circle.body{transform-box:fill-box;transform-origin:center}
+.node.kin circle.body{stroke:#e8ecf4;stroke-opacity:.85;stroke-width:1.4}
+.node.sel circle.body{stroke:#fff;stroke-width:2.2}
+.node.dim{opacity:.13;pointer-events:auto}
+.node.nomatch{opacity:.10}
+
+/* ── Tooltip ─────────────────────────────────────────── */
+#tip{
+  position:fixed;z-index:40;pointer-events:none;display:none;
+  background:var(--panel);border:1px solid var(--line2);border-radius:8px;
+  padding:7px 10px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.5);
+  max-width:240px;
+}
+#tip b{font-size:13px}
+#tip .tv{font-family:var(--f-mono);color:var(--ink2);font-size:11px;margin-top:2px}
+
+/* ── Detail panel ────────────────────────────────────── */
+#panel{
+  position:fixed;z-index:35;right:14px;top:calc(var(--barH,56px) + 46px);
+  width:330px;max-height:calc(100vh - var(--barH,56px) - 66px);overflow-y:auto;
+  background:var(--panel);border:1px solid var(--line2);border-radius:14px;
+  padding:18px;box-shadow:0 16px 48px rgba(0,0,0,.55);
+  display:none;
+}
+#panel.show{display:block}
+#panel .close{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--ink2);cursor:pointer;font-size:16px;padding:4px 8px}
+#panel .close:hover{color:var(--ink)}
+.p-head{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.p-sym{
+  width:64px;height:64px;border-radius:12px;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:26px;color:#0b0e14;
+  background:var(--c,#888);
+}
+.p-sym.darktext{color:#eef2f8}
+.p-name{font-size:19px;font-weight:700;line-height:1.1}
+.p-zline{font-family:var(--f-mono);font-size:12px;color:var(--ink2);margin-top:3px}
+.p-tags{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 12px}
+.p-tag{font-size:10.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--ink2)}
+.p-tag.cat{border-color:var(--c);color:var(--ink);background:color-mix(in srgb,var(--c) 15%,transparent)}
+.p-grid{border-top:1px solid var(--line);font-size:12.5px}
+.p-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.p-row .k{color:var(--ink2)}
+.p-row .v{font-family:var(--f-mono);text-align:right}
+.p-note{margin-top:11px;font-size:12.5px;line-height:1.5;color:var(--ink2)}
+.p-note b{color:var(--ink)}
+@media(max-width:720px){
+  #panel{left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:52vh;border-radius:14px}
+}
+
+/* ── Scale legend ────────────────────────────────────── */
+#scalebar{
+  position:fixed;z-index:28;left:50%;transform:translateX(-50%);bottom:34px;
+  display:none;align-items:center;gap:9px;font-family:var(--f-mono);font-size:10.5px;color:var(--ink2);
+  background:color-mix(in srgb,var(--bg) 82%,transparent);border:1px solid var(--line);
+  border-radius:999px;padding:6px 13px;backdrop-filter:blur(8px);
+}
+#scalebar.show{display:flex}
+#scalebar .grad{width:150px;height:8px;border-radius:4px}
+#scalebar .nul{width:9px;height:9px;border-radius:50%;background:#39404f;margin-left:5px}
+
+
+/* ── Quantum view modal ──────────────────────────────── */
+#qv{position:fixed;inset:0;z-index:60;display:none;background:rgba(5,7,11,.78);backdrop-filter:blur(6px)}
+#qv.show{display:flex;align-items:center;justify-content:center;padding:18px}
+.qv-card{
+  width:min(900px,100%);max-height:calc(100vh - 36px);overflow-y:auto;
+  background:var(--panel);border:1px solid var(--line2);border-radius:16px;
+  box-shadow:0 24px 80px rgba(0,0,0,.65);padding:20px 22px;
+}
+.qv-head{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+.qv-sym{width:52px;height:52px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:#0b0e14;background:var(--c,#888)}
+.qv-sym.darktext{color:#eef2f8}
+.qv-title{font-size:17px;font-weight:700}
+.qv-sub{font-size:11.5px;color:var(--ink2);font-family:var(--f-mono);margin-top:2px}
+.qv-badge{font-size:10px;font-family:var(--f-mono);border:1px solid;border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:2px}
+.qv-badge.exact{color:#69db7c;border-color:#69db7c}
+.qv-badge.approx{color:#ffd43b;border-color:#8a7a2c}
+.qv-close{margin-left:auto;background:none;border:none;color:var(--ink2);cursor:pointer;font-size:17px;padding:6px 9px}
+.qv-close:hover{color:var(--ink)}
+.qv-tabs{display:flex;gap:4px;margin:12px 0 14px;border-bottom:1px solid var(--line)}
+.qv-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--ink2);padding:7px 13px;cursor:pointer;font-size:13px}
+.qv-tab:hover{color:var(--ink)}
+.qv-tab.on{color:var(--ink);border-bottom-color:var(--focus)}
+.qv-body{min-height:340px}
+.qv-cols{display:flex;gap:18px;flex-wrap:wrap}
+.qv-cols>div{flex:1 1 300px;min-width:270px}
+.qv-canvaswrap{position:relative;background:#070a10;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.qv-canvaswrap canvas{display:block;width:100%;height:auto}
+.qv-extent{position:absolute;right:8px;bottom:6px;font-family:var(--f-mono);font-size:10px;color:#6a7590;background:rgba(7,10,16,.7);padding:2px 6px;border-radius:5px}
+.qv-covring{position:absolute;left:8px;bottom:6px;font-family:var(--f-mono);font-size:10px;color:#9aa3b5;background:rgba(7,10,16,.7);padding:2px 6px;border-radius:5px}
+.qv-controls{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}
+.qv-ctl{font-size:11px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 11px;color:var(--ink2);cursor:pointer}
+.qv-ctl:hover{color:var(--ink);border-color:var(--line2)}
+.qv-ctl.on{color:var(--ink);border-color:var(--focus);background:color-mix(in srgb,var(--focus) 12%,var(--panel2))}
+.qv-chiprow{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}
+.qv-chip{font-family:var(--f-mono);font-size:11.5px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:4px 9px;color:var(--ink2);cursor:pointer}
+.qv-chip sup{font-size:8.5px}
+.qv-chip:hover{color:var(--ink)}
+.qv-chip.on{color:var(--ink);border-color:var(--c,#7cc6ff);background:color-mix(in srgb,var(--c,#7cc6ff) 12%,var(--panel2))}
+.qv-chip.excited{border-style:dashed}
+.qv-plot{background:#070a10;border:1px solid var(--line);border-radius:12px;width:100%;height:auto;display:block}
+.qv-cap{font-size:12px;color:var(--ink2);line-height:1.55;margin-top:9px}
+.qv-cap b{color:var(--ink)}
+.qv-kv{font-family:var(--f-mono);font-size:11.5px;color:var(--ink2);margin-top:7px;line-height:1.7}
+.qv-kv b{color:var(--ink);font-weight:600}
+.qv-boxes{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0}
+.qv-sub-boxes{display:flex;flex-direction:column;gap:4px;align-items:center}
+.qv-sublabel{font-family:var(--f-mono);font-size:11px;color:var(--ink2)}
+.qv-boxrow{display:flex;gap:3px}
+.qv-box{width:26px;height:26px;border:1px solid var(--line2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink);background:var(--panel2);letter-spacing:-2px}
+.qv-note{font-size:12.5px;line-height:1.6;color:var(--ink2);margin-top:8px}
+.qv-note b{color:var(--ink)}
+.qv-disclaim{margin-top:14px;padding-top:11px;border-top:1px solid var(--line);font-size:10.5px;color:#6a7590;line-height:1.5;font-family:var(--f-mono)}
+.qv-openbtn{
+  margin-top:13px;width:100%;padding:9px 12px;border-radius:9px;cursor:pointer;
+  background:color-mix(in srgb,var(--c,#7cc6ff) 14%,var(--panel2));
+  border:1px solid var(--c,#7cc6ff);color:var(--ink);font-size:12.5px;font-weight:500;
+}
+.qv-openbtn:hover{background:color-mix(in srgb,var(--c,#7cc6ff) 24%,var(--panel2))}
+
+
+/* ── v3: layout segmented control + toggles ─────────────── */
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:var(--panel2);border:none;color:var(--ink2);padding:7px 12px;cursor:pointer;font-size:12px}
+.seg button.on{background:color-mix(in srgb,var(--focus) 14%,var(--panel2));color:var(--ink)}
+.seg button:not(:last-child){border-right:1px solid var(--line)}
+.chk{cursor:pointer;user-select:none}
+.chk input{accent-color:var(--focus)}
+.gridlabel{fill:#5f6a80;font-family:var(--f-mono);font-size:12px;text-anchor:middle}
+.gridlabel.side{text-anchor:end}
+.gridtag{fill:#4d5770;font-family:var(--f-mono);font-size:10px;text-anchor:end}
+
+/* ── v3: intro overlay ──────────────────────────────────── */
+#intro{position:fixed;inset:0;z-index:70;display:none;background:rgba(5,7,11,.88);backdrop-filter:blur(10px);overflow-y:auto}
+#intro.show{display:flex;align-items:center;justify-content:center;padding:22px}
+.intro-card{width:min(680px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:30px 32px;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.intro-eyebrow{font-family:var(--f-mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--focus);opacity:.85}
+.intro-card h2{font-size:26px;font-weight:700;margin:8px 0 4px;letter-spacing:-.01em}
+.intro-tag{color:var(--ink2);font-size:14px;line-height:1.55}
+.intro-block{margin-top:16px;font-size:13.5px;line-height:1.65;color:var(--ink2)}
+.intro-block b{color:var(--ink)}
+.intro-how{margin-top:14px;border-top:1px solid var(--line);padding-top:13px;display:grid;gap:8px;font-size:12.5px;color:var(--ink2)}
+.intro-how span b{color:var(--ink);font-family:var(--f-mono);font-weight:600}
+.intro-btns{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap}
+.intro-btn{flex:1 1 150px;padding:11px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--ink);cursor:pointer;font-size:13px;font-weight:500}
+.intro-btn.primary{background:color-mix(in srgb,var(--focus) 18%,var(--panel2));border-color:var(--focus)}
+.intro-btn:hover{border-color:var(--focus)}
+.intro-fine{margin-top:14px;font-family:var(--f-mono);font-size:10px;color:#5f6a80;line-height:1.5}
+
+/* ── v3: guided tour card ───────────────────────────────── */
+#tour{position:fixed;z-index:65;left:50%;transform:translateX(-50%);bottom:22px;width:min(560px,calc(100vw - 24px));
+  background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:16px 18px;box-shadow:0 18px 60px rgba(0,0,0,.55);display:none}
+#tour.show{display:block}
+.tour-t{font-size:14.5px;font-weight:700;margin-bottom:5px}
+.tour-x{font-size:12.5px;line-height:1.6;color:var(--ink2)}
+.tour-x b{color:var(--ink)}
+.tour-nav{display:flex;align-items:center;gap:10px;margin-top:12px}
+.tour-dots{display:flex;gap:5px;flex:1}
+.tour-dot{width:7px;height:7px;border-radius:50%;background:var(--line2);border:none;cursor:pointer;padding:0}
+.tour-dot.on{background:var(--focus)}
+.tour-b{background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:6px 12px;cursor:pointer;font-size:12px}
+.tour-b:hover{border-color:var(--focus)}
+.tour-quit{background:none;border:none;color:var(--ink2);cursor:pointer;font-size:11px}
+.tour-quit:hover{color:var(--ink)}
+
+/* ── v3: sources modal ──────────────────────────────────── */
+#srcs{position:fixed;inset:0;z-index:72;display:none;background:rgba(5,7,11,.82);backdrop-filter:blur(8px)}
+#srcs.show{display:flex;align-items:center;justify-content:center;padding:20px}
+.srcs-card{width:min(760px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:24px 26px}
+.srcs-card h3{font-size:18px;margin-bottom:4px}
+.srcs-sub{font-size:12px;color:var(--ink2);margin-bottom:14px;line-height:1.5}
+.src-row{border-top:1px solid var(--line);padding:10px 0}
+.src-k{font-weight:600;font-size:13px;margin-bottom:3px}
+.src-v{font-size:12px;color:var(--ink2);line-height:1.55}
+.srcs-close{float:right;background:none;border:none;color:var(--ink2);font-size:16px;cursor:pointer;padding:4px 8px}
+.srcs-close:hover{color:var(--ink)}
+
+/* ── v3: spectrum tab ───────────────────────────────────── */
+.spec-strip{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:10px;background:#000}
+.spec-ladder{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:10px;background:#070a10;margin-top:10px}
+
+
+/* ── v4: living visuals ─────────────────────────────────── */
+#aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;opacity:.6}
+#aurora .blob{position:absolute;width:55vmax;height:55vmax;border-radius:50%}
+#aurora .b1{background:radial-gradient(circle,rgba(56,90,180,.16) 0%,rgba(56,90,180,.07) 40%,transparent 70%);top:-8%;left:-12%;animation:drift1 46s ease-in-out infinite alternate}
+#aurora .b2{background:radial-gradient(circle,rgba(140,60,160,.11) 0%,rgba(140,60,160,.05) 40%,transparent 70%);bottom:-14%;right:-10%;animation:drift2 58s ease-in-out infinite alternate}
+#aurora .b3{background:radial-gradient(circle,rgba(30,140,140,.10) 0%,rgba(30,140,140,.04) 40%,transparent 70%);top:28%;left:42%;animation:drift3 71s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(9vmax,6vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-7vmax,-9vmax) scale(1.2)}}
+@keyframes drift3{to{transform:translate(-10vmax,7vmax) scale(.9)}}
+#stage{z-index:1}
+
+.node circle.glow{pointer-events:none;opacity:.26}
+.node.twk circle.glow{animation:twinkle 2s ease-in-out}
+@keyframes twinkle{0%{opacity:.26}45%{opacity:.85}100%{opacity:.26}}
+.node:hover circle.glow{opacity:.75;animation:none}
+.node.sel circle.glow{opacity:.85;animation:selPulse 1.6s ease-in-out infinite alternate}
+@keyframes selPulse{from{opacity:.5}to{opacity:.95}}
+.node circle.body{transition:transform .18s cubic-bezier(.34,1.56,.64,1)}
+.node:hover circle.body{transform:scale(1.3)}
+
+@media(prefers-reduced-motion:no-preference){
+  .node .inner{opacity:0;transform-box:fill-box;transform-origin:center;animation:arrive .7s cubic-bezier(.34,1.4,.64,1) forwards}
+  @keyframes arrive{0%{opacity:0;transform:scale(.2)}70%{opacity:1;transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}
+  .spiralthread{stroke-dasharray:26000;stroke-dashoffset:26000;animation:threadDraw 2.4s ease-out .15s forwards}
+  @keyframes threadDraw{to{stroke-dashoffset:0}}
+}
+@media(prefers-reduced-motion:reduce){
+  #aurora,.node circle.glow{animation:none!important}
+  #comet{display:none}
+}
+
+.eshell{fill:none;stroke:rgba(232,236,244,.28);stroke-width:.8;stroke-dasharray:2 4}
+.edot{fill:#bfe3ff}
+.flashring{fill:none;stroke-width:2.5;opacity:.9;animation:flash 1s ease-out forwards;pointer-events:none}
+@keyframes flash{from{opacity:.9}to{opacity:0}}
+
+#comet{pointer-events:none}
+#cometHead{fill:#dceaff}
+#cometTail{fill:none;stroke:url(#cometGrad);stroke-width:2.4;stroke-linecap:round}
+
+/* ── v4: temperature dock ───────────────────────────────── */
+#tdock{
+  position:fixed;z-index:31;left:50%;transform:translateX(-50%);bottom:12px;
+  display:flex;align-items:center;gap:11px;flex-wrap:wrap;justify-content:center;
+  background:color-mix(in srgb,var(--bg) 84%,transparent);border:1px solid var(--line);
+  border-radius:999px;padding:8px 16px;backdrop-filter:blur(10px);
+  font-family:var(--f-mono);font-size:11px;color:var(--ink2);
+  max-width:calc(100vw - 20px);
+}
+#tdock input[type=range]{width:min(240px,38vw);accent-color:#ff9f6b}
+#tdock .tK{color:var(--ink);font-weight:600;min-width:52px;text-align:right}
+.tphase{display:inline-flex;align-items:center;gap:5px}
+.tphase .pd{width:8px;height:8px;border-radius:50%}
+#treset{background:var(--panel2);border:1px solid var(--line);border-radius:999px;color:var(--ink2);padding:3px 10px;cursor:pointer;font-size:10.5px}
+#treset:hover{color:var(--ink);border-color:var(--line2)}
+@media(max-width:720px){#tdock{bottom:8px;padding:7px 12px;gap:8px}}
+
+/* ── Footer note ─────────────────────────────────────── */
+.foot{
+  position:fixed;bottom:9px;left:14px;z-index:28;
+  font-size:10.5px;color:#525d74;font-family:var(--f-mono);
+  pointer-events:none;
+}
+@media(max-width:720px){.foot{display:none}}
+</style>
+</head>
+<body>
+<script>
+/* first-line error trap: names any uncaught failure on-page (message · file:line) */
+(function(){var n=0;
+window.__perr=function(msg,src,line,col){
+  if(n>=4)return;n++;
+  var host=document.body||document.documentElement;
+  var d=document.getElementById('errtrap');
+  if(!d){d=document.createElement('div');d.id='errtrap';
+    d.style.cssText='position:fixed;left:10px;right:10px;bottom:10px;z-index:99999;background:#2a1418;border:1px solid #ff6b6b;color:#ffd7d7;font:12px/1.5 ui-monospace,monospace;padding:10px 34px 10px 12px;border-radius:10px;white-space:pre-wrap;word-break:break-word';
+    var x=document.createElement('button');x.textContent='\u2715';
+    x.style.cssText='position:absolute;top:5px;right:7px;background:none;border:none;color:#ffd7d7;cursor:pointer;font-size:13px';
+    x.onclick=function(){d.remove();};d.appendChild(x);host.appendChild(d);}
+  var p=document.createElement('div');
+  p.textContent='\u26a0 '+msg+(src?'\n   at '+String(src).split('/').pop()+':'+line+(col!=null?':'+col:''):'');
+  d.appendChild(p);
+};
+addEventListener('error',function(e){window.__perr(e.message||String(e.error||'unknown error'),e.filename,e.lineno,e.colno);});
+addEventListener('unhandledrejection',function(e){var r=e.reason;window.__perr('unhandled promise rejection: '+((r&&r.message)||r));});
+})();
+</script>
+
+
+<div id="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<header class="topbar" id="topbar">
+  <a class="iconbtn" href="/" aria-label="Back to the classroom" title="Back to the classroom" style="text-decoration:none">🏫</a>
+  <div class="brand">
+    <b>Spiral Periodic Table</b>
+    <span>rings = periods · rays = groups · sectors = blocks</span>
+  </div>
+  <input class="search" id="search" type="search" placeholder="Search name, symbol, or number…" aria-label="Search elements">
+  <label class="ctl">Color by
+    <select id="colorby" aria-label="Color elements by">
+      <option value="cat" selected>Category</option>
+      <option value="blk">Block (s p d f)</option>
+      <option value="en">Electronegativity</option>
+      <option value="ie">Ionization energy</option>
+      <option value="r">Covalent radius</option>
+      <option value="d">Density</option>
+      <option value="mp">Melting point</option>
+      <option value="y">Discovery year</option>
+    </select>
+  </label>
+  <div class="seg" id="layoutseg" role="group" aria-label="Layout">
+    <button data-lay="spiral" class="on">Spiral</button><button data-lay="grid">Classic</button><button data-lay="wide">Long form</button>
+  </div>
+  <label class="ctl chk"><input type="checkbox" id="radenc"> size ∝ radius</label>
+  <button class="iconbtn" id="motionbtn" aria-label="Toggle ambient motion">✨</button>
+  <button class="iconbtn" id="aboutbtn" aria-label="About this table">?</button>
+  <button class="iconbtn" id="zoomout" aria-label="Zoom out">−</button>
+  <button class="iconbtn" id="zoomin" aria-label="Zoom in">+</button>
+  <button class="iconbtn" id="zoomreset" aria-label="Reset view">⤾</button>
+  <div class="kbdhint"><kbd>←</kbd><kbd>→</kbd> step Z · <kbd>Enter</kbd> open · <kbd>/</kbd> search · <kbd>Esc</kbd> close</div>
+</header>
+
+<nav class="chips" id="chips" aria-label="Filter by category"></nav>
+
+<div id="stage">
+  <svg id="svg" viewBox="-1040 -1040 2080 2080" role="img" aria-label="Spiral periodic table of 118 elements">
+    <g id="world"></g>
+  </svg>
+</div>
+
+<div id="tip" role="tooltip"></div>
+
+<aside id="panel" aria-live="polite">
+  <button class="close" id="panelclose" aria-label="Close details">✕</button>
+  <div id="panelbody"></div>
+</aside>
+
+<div id="scalebar"><span id="sb-min"></span><div class="grad" id="sb-grad"></div><span id="sb-max"></span><span class="nul"></span><span>no data</span></div>
+
+<div id="qv" aria-hidden="true"></div>
+<div id="intro" aria-hidden="true">
+  <div class="intro-card" role="dialog" aria-label="About this periodic table">
+    <div class="intro-eyebrow">An open reference instrument · v3</div>
+    <h2>The Spiral Periodic Table</h2>
+    <div class="intro-tag">All 118 elements as what they actually are — one continuous sequence — wound into a spiral where every turn is a period, every spoke is a chemical family, and every number is real.</div>
+    <div class="intro-block"><b>Why this exists.</b> Most periodic tables either simplify the data or decorate it. This one was built for high-school chemistry and everything beyond it: a layout that shows <b>why</b> the table repeats, wrapped around reference-grade data — IUPAC atomic weights, NIST energies and spectra, measured radii — with the source of every value one click away. Where a number is exact, it says so. Where it's an approximation or a prediction, it says that too.</div>
+    <div class="intro-how">
+      <span><b>Click</b> any element for its full data sheet, then open the <b>ψ Quantum view</b> — real solutions of the Schrödinger equation: orbitals, nodes, spectra, and why the atom bonds.</span>
+      <span><b>Color by</b> any measured property to watch the periodic trends emerge as gradients.</span>
+      <span><b>Spiral ⇄ Classic</b> morphs between this layout and the familiar flat table — they're the same object.</span>
+      <span><b>Keys</b>: ← → step through elements · Enter opens · / searches · Esc closes.</span>
+    </div>
+    <div class="intro-btns">
+      <button class="intro-btn primary" id="introExplore">Start exploring</button>
+      <button class="intro-btn" id="introTour">Take the 2-minute tour</button>
+      <button class="intro-btn" id="introSrcs">Data &amp; sources</button>
+    </div>
+    <div class="intro-fine">Layout after Benfey (1964) · Lu &amp; Lr shown in group 3 · wavefunction images are exact for one-electron atoms and Slater-screened otherwise, always labeled · an ERRERlabs education project · you found this by knocking on carbon six times 🌀</div>
+  </div>
+</div>
+
+<div id="tour" role="dialog" aria-label="Guided tour"></div>
+
+<div id="srcs" aria-hidden="true">
+  <div class="srcs-card" role="dialog" aria-label="Data sources">
+    <button class="srcs-close" id="srcsclose" aria-label="Close">✕</button>
+    <h3>Where every number comes from</h3>
+    <div class="srcs-sub">The rule this project is built on: exact where exact, measured where measured, and labeled approximation everywhere else. Blank cells mean "no reliably established value" — a blank is more honest than a guess.</div>
+    <div id="srcslist"></div>
+  </div>
+</div>
+
+
+<div id="tdock" role="group" aria-label="Temperature explorer">
+  🌡 <input type="range" id="tslider" min="0" max="6000" step="10" value="298" aria-label="Temperature in kelvin">
+  <span class="tK" id="tK">298 K</span>
+  <span id="tCounts"></span>
+  <button id="treset">reset</button>
+</div>
+
+<div class="foot">v4 · every value sourced — see ? About · exact where exact, labeled where approximated · ERRERlabs</div>
+
+<script>
+'use strict';
+/* ══════════════════════ REFERENCE DATA ══════════════════════
+   Fields: z, s(ymbol), n(ame), m(ass, u — [x] = most stable isotope),
+   c(ategory), g(roup, null = f-wedge), p(eriod), b(lock),
+   ph(ase at STP), mp/bp (K), d(ensity: g/cm³ solid+liquid, g/L gas),
+   en (Pauling), ie (1st ionization, kJ/mol), r (covalent radius, pm),
+   ec (electron configuration), ox (common oxidation states),
+   y (discovery year), t (application note).  null = no established value.
+*/
+const CAT={
+  'alkali-metal':      {label:'Alkali metal',       color:'#ff6b6b'},
+  'alkaline-earth':    {label:'Alkaline earth',     color:'#ffa94d'},
+  'transition-metal':  {label:'Transition metal',   color:'#5c9dff'},
+  'post-transition':   {label:'Post-transition',    color:'#7fd1c1'},
+  'metalloid':         {label:'Metalloid',          color:'#b197fc'},
+  'nonmetal':          {label:'Nonmetal',           color:'#69db7c'},
+  'halogen':           {label:'Halogen',            color:'#ffd43b'},
+  'noble-gas':         {label:'Noble gas',          color:'#e599f7'},
+  'lanthanide':        {label:'Lanthanide',         color:'#4dd4ac'},
+  'actinide':          {label:'Actinide',           color:'#f783ac'},
+};
+const BLK={s:'#ff8f6b', p:'#69db7c', d:'#5c9dff', f:'#f783ac'};
+/*DATA-START*/
+const ELEMENTS=[
+{z:1,s:'H',n:'Hydrogen',m:1.008,c:'nonmetal',g:1,p:1,b:'s',ph:'gas',mp:13.99,bp:20.27,d:0.0899,en:2.20,ie:1312.0,r:31,ec:'1s1',ox:'+1, −1',y:1766,t:'Fuel, ammonia synthesis, and the most abundant element in the universe.'},
+{z:2,s:'He',n:'Helium',m:4.0026,c:'noble-gas',g:18,p:1,b:'s',ph:'gas',mp:0.95,bp:4.22,d:0.1785,en:null,ie:2372.3,r:28,ec:'1s2',ox:'0',y:1868,t:'Cryogenics, MRI cooling, and leak detection; inert and the second-most abundant element.'},
+{z:3,s:'Li',n:'Lithium',m:6.94,c:'alkali-metal',g:1,p:2,b:'s',ph:'solid',mp:453.65,bp:1603,d:0.534,en:0.98,ie:520.2,r:128,ec:'[He]2s1',ox:'+1',y:1817,t:'Rechargeable batteries, aerospace alloys, and mood-stabilizing medication.'},
+{z:4,s:'Be',n:'Beryllium',m:9.0122,c:'alkaline-earth',g:2,p:2,b:'s',ph:'solid',mp:1560,bp:2742,d:1.85,en:1.57,ie:899.5,r:96,ec:'[He]2s2',ox:'+2',y:1798,t:'X-ray windows and stiff, light aerospace parts; toxic dust.'},
+{z:5,s:'B',n:'Boron',m:10.81,c:'metalloid',g:13,p:2,b:'p',ph:'solid',mp:2349,bp:4200,d:2.34,en:2.04,ie:800.6,r:84,ec:'[He]2s2 2p1',ox:'+3',y:1808,t:'Borosilicate glass, neutron absorbers, and detergents.'},
+{z:6,s:'C',n:'Carbon',m:12.011,c:'nonmetal',g:14,p:2,b:'p',ph:'solid',mp:3823,bp:4098,d:2.267,en:2.55,ie:1086.5,r:76,ec:'[He]2s2 2p2',ox:'+4, +2, −4',y:-3750,t:'Backbone of all organic chemistry; diamond, graphite, and graphene.'},
+{z:7,s:'N',n:'Nitrogen',m:14.007,c:'nonmetal',g:15,p:2,b:'p',ph:'gas',mp:63.15,bp:77.36,d:1.251,en:3.04,ie:1402.3,r:71,ec:'[He]2s2 2p3',ox:'+5, +3, −3',y:1772,t:'78% of air; fertilizers, explosives, and inert atmospheres.'},
+{z:8,s:'O',n:'Oxygen',m:15.999,c:'nonmetal',g:16,p:2,b:'p',ph:'gas',mp:54.36,bp:90.20,d:1.429,en:3.44,ie:1313.9,r:66,ec:'[He]2s2 2p4',ox:'−2',y:1774,t:'Respiration and combustion; steelmaking and the second-most electronegative element.'},
+{z:9,s:'F',n:'Fluorine',m:18.998,c:'halogen',g:17,p:2,b:'p',ph:'gas',mp:53.48,bp:85.03,d:1.696,en:3.98,ie:1681.0,r:57,ec:'[He]2s2 2p5',ox:'−1',y:1886,t:'Most electronegative and reactive element; Teflon, refrigerants, and toothpaste.'},
+{z:10,s:'Ne',n:'Neon',m:20.180,c:'noble-gas',g:18,p:2,b:'p',ph:'gas',mp:24.56,bp:27.07,d:0.9002,en:null,ie:2080.7,r:58,ec:'[He]2s2 2p6',ox:'0',y:1898,t:'Glowing signage and high-voltage indicators; chemically inert.'},
+{z:11,s:'Na',n:'Sodium',m:22.990,c:'alkali-metal',g:1,p:3,b:'s',ph:'solid',mp:370.87,bp:1156,d:0.971,en:0.93,ie:495.8,r:166,ec:'[Ne]3s1',ox:'+1',y:1807,t:'Table salt, street lighting, and the primary cation in nerve signaling.'},
+{z:12,s:'Mg',n:'Magnesium',m:24.305,c:'alkaline-earth',g:2,p:3,b:'s',ph:'solid',mp:923,bp:1363,d:1.738,en:1.31,ie:737.7,r:141,ec:'[Ne]3s2',ox:'+2',y:1755,t:'Lightweight alloys, flares, and the core of chlorophyll.'},
+{z:13,s:'Al',n:'Aluminium',m:26.982,c:'post-transition',g:13,p:3,b:'p',ph:'solid',mp:933.47,bp:2792,d:2.698,en:1.61,ie:577.5,r:121,ec:'[Ne]3s2 3p1',ox:'+3',y:1825,t:'Most abundant metal in the crust; aircraft, packaging, and power lines.'},
+{z:14,s:'Si',n:'Silicon',m:28.085,c:'metalloid',g:14,p:3,b:'p',ph:'solid',mp:1687,bp:3538,d:2.3296,en:1.90,ie:786.5,r:111,ec:'[Ne]3s2 3p2',ox:'+4, −4',y:1854,t:'Semiconductor chips, solar cells, and glass; second-most abundant crustal element.'},
+{z:15,s:'P',n:'Phosphorus',m:30.974,c:'nonmetal',g:15,p:3,b:'p',ph:'solid',mp:317.30,bp:553.65,d:1.82,en:2.19,ie:1011.8,r:107,ec:'[Ne]3s2 3p3',ox:'+5, +3, −3',y:1669,t:'DNA, ATP, and bone; fertilizers and matches.'},
+{z:16,s:'S',n:'Sulfur',m:32.06,c:'nonmetal',g:16,p:3,b:'p',ph:'solid',mp:388.36,bp:717.87,d:2.067,en:2.58,ie:999.6,r:105,ec:'[Ne]3s2 3p4',ox:'+6, +4, −2',y:-2000,t:'Sulfuric acid — the most-produced industrial chemical — plus vulcanized rubber.'},
+{z:17,s:'Cl',n:'Chlorine',m:35.45,c:'halogen',g:17,p:3,b:'p',ph:'gas',mp:171.6,bp:239.11,d:3.214,en:3.16,ie:1251.2,r:102,ec:'[Ne]3s2 3p5',ox:'+7, +1, −1',y:1774,t:'Water disinfection, PVC, and bleach.'},
+{z:18,s:'Ar',n:'Argon',m:39.948,c:'noble-gas',g:18,p:3,b:'p',ph:'gas',mp:83.80,bp:87.30,d:1.784,en:null,ie:1520.6,r:106,ec:'[Ne]3s2 3p6',ox:'0',y:1894,t:'Cheap inert shield for welding and light bulbs; ~1% of air.'},
+{z:19,s:'K',n:'Potassium',m:39.098,c:'alkali-metal',g:1,p:4,b:'s',ph:'solid',mp:336.53,bp:1032,d:0.862,en:0.82,ie:418.8,r:203,ec:'[Ar]4s1',ox:'+1',y:1807,t:'Fertilizer, and the main intracellular cation driving nerve and muscle function.'},
+{z:20,s:'Ca',n:'Calcium',m:40.078,c:'alkaline-earth',g:2,p:4,b:'s',ph:'solid',mp:1115,bp:1757,d:1.54,en:1.00,ie:589.8,r:176,ec:'[Ar]4s2',ox:'+2',y:1808,t:'Bones, teeth, cement, and cell signaling.'},
+{z:21,s:'Sc',n:'Scandium',m:44.956,c:'transition-metal',g:3,p:4,b:'d',ph:'solid',mp:1814,bp:3109,d:2.989,en:1.36,ie:633.1,r:170,ec:'[Ar]3d1 4s2',ox:'+3',y:1879,t:'Aluminium–scandium alloys for aerospace and high-end bike frames.'},
+{z:22,s:'Ti',n:'Titanium',m:47.867,c:'transition-metal',g:4,p:4,b:'d',ph:'solid',mp:1941,bp:3560,d:4.54,en:1.54,ie:658.8,r:160,ec:'[Ar]3d2 4s2',ox:'+4, +3',y:1791,t:'Corrosion-proof strength for implants, aircraft, and TiO₂ white pigment.'},
+{z:23,s:'V',n:'Vanadium',m:50.942,c:'transition-metal',g:5,p:4,b:'d',ph:'solid',mp:2183,bp:3680,d:6.11,en:1.63,ie:650.9,r:153,ec:'[Ar]3d3 4s2',ox:'+5, +4, +3, +2',y:1801,t:'High-strength tool steels and grid-scale flow batteries.'},
+{z:24,s:'Cr',n:'Chromium',m:51.996,c:'transition-metal',g:6,p:4,b:'d',ph:'solid',mp:2180,bp:2944,d:7.15,en:1.66,ie:652.9,r:139,ec:'[Ar]3d5 4s1',ox:'+6, +3, +2',y:1797,t:'Stainless steel, chrome plating, and vivid pigments.'},
+{z:25,s:'Mn',n:'Manganese',m:54.938,c:'transition-metal',g:7,p:4,b:'d',ph:'solid',mp:1519,bp:2334,d:7.44,en:1.55,ie:717.3,r:139,ec:'[Ar]3d5 4s2',ox:'+7, +4, +2',y:1774,t:'Essential in steelmaking and in the enzyme that splits water in photosynthesis.'},
+{z:26,s:'Fe',n:'Iron',m:55.845,c:'transition-metal',g:8,p:4,b:'d',ph:'solid',mp:1811,bp:3134,d:7.874,en:1.83,ie:762.5,r:132,ec:'[Ar]3d6 4s2',ox:'+3, +2',y:-5000,t:'Backbone of civilization: steel, and the oxygen-carrier in hemoglobin.'},
+{z:27,s:'Co',n:'Cobalt',m:58.933,c:'transition-metal',g:9,p:4,b:'d',ph:'solid',mp:1768,bp:3200,d:8.86,en:1.88,ie:760.4,r:126,ec:'[Ar]3d7 4s2',ox:'+3, +2',y:1735,t:'Battery cathodes, superalloys, and vitamin B₁₂.'},
+{z:28,s:'Ni',n:'Nickel',m:58.693,c:'transition-metal',g:10,p:4,b:'d',ph:'solid',mp:1728,bp:3186,d:8.912,en:1.91,ie:737.1,r:124,ec:'[Ar]3d8 4s2',ox:'+3, +2',y:1751,t:'Stainless steel, coins, and rechargeable batteries.'},
+{z:29,s:'Cu',n:'Copper',m:63.546,c:'transition-metal',g:11,p:4,b:'d',ph:'solid',mp:1357.77,bp:2835,d:8.96,en:1.90,ie:745.5,r:132,ec:'[Ar]3d10 4s1',ox:'+2, +1',y:-9000,t:'Wiring and motors — second-best electrical conductor — plus antimicrobial surfaces.'},
+{z:30,s:'Zn',n:'Zinc',m:65.38,c:'transition-metal',g:12,p:4,b:'d',ph:'solid',mp:692.68,bp:1180,d:7.134,en:1.65,ie:906.4,r:122,ec:'[Ar]3d10 4s2',ox:'+2',y:1746,t:'Galvanizing steel against rust; cofactor in hundreds of enzymes.'},
+{z:31,s:'Ga',n:'Gallium',m:69.723,c:'post-transition',g:13,p:4,b:'p',ph:'solid',mp:302.91,bp:2673,d:5.907,en:1.81,ie:578.8,r:122,ec:'[Ar]3d10 4s2 4p1',ox:'+3',y:1875,t:'LEDs, high-speed chips, and solar cells; melts in your hand.'},
+{z:32,s:'Ge',n:'Germanium',m:72.630,c:'metalloid',g:14,p:4,b:'p',ph:'solid',mp:1211.40,bp:3106,d:5.323,en:2.01,ie:762.0,r:120,ec:'[Ar]3d10 4s2 4p2',ox:'+4, +2',y:1886,t:'Fiber-optic and infrared optics; the first transistor material.'},
+{z:33,s:'As',n:'Arsenic',m:74.922,c:'metalloid',g:15,p:4,b:'p',ph:'solid',mp:1090,bp:887,d:5.776,en:2.18,ie:947.0,r:119,ec:'[Ar]3d10 4s2 4p3',ox:'+5, +3, −3',y:1250,t:'Semiconductor doping and wood preservatives; famously poisonous.'},
+{z:34,s:'Se',n:'Selenium',m:78.971,c:'nonmetal',g:16,p:4,b:'p',ph:'solid',mp:494,bp:958,d:4.809,en:2.55,ie:941.0,r:120,ec:'[Ar]3d10 4s2 4p4',ox:'+6, +4, −2',y:1817,t:'Photocopiers, glass decoloring, and a trace nutrient.'},
+{z:35,s:'Br',n:'Bromine',m:79.904,c:'halogen',g:17,p:4,b:'p',ph:'liquid',mp:265.8,bp:332.0,d:3.122,en:2.96,ie:1139.9,r:120,ec:'[Ar]3d10 4s2 4p5',ox:'+5, +1, −1',y:1826,t:'Flame retardants and photographic film; one of two liquid elements.'},
+{z:36,s:'Kr',n:'Krypton',m:83.798,c:'noble-gas',g:18,p:4,b:'p',ph:'gas',mp:115.79,bp:119.93,d:3.749,en:3.00,ie:1350.8,r:116,ec:'[Ar]3d10 4s2 4p6',ox:'0',y:1898,t:'High-performance lighting and window insulation.'},
+{z:37,s:'Rb',n:'Rubidium',m:85.468,c:'alkali-metal',g:1,p:5,b:'s',ph:'solid',mp:312.46,bp:961,d:1.532,en:0.82,ie:403.0,r:220,ec:'[Kr]5s1',ox:'+1',y:1861,t:'Atomic clocks and specialty glass.'},
+{z:38,s:'Sr',n:'Strontium',m:87.62,c:'alkaline-earth',g:2,p:5,b:'s',ph:'solid',mp:1050,bp:1655,d:2.64,en:0.95,ie:549.5,r:195,ec:'[Kr]5s2',ox:'+2',y:1790,t:'Red fireworks and radioisotope power sources.'},
+{z:39,s:'Y',n:'Yttrium',m:88.906,c:'transition-metal',g:3,p:5,b:'d',ph:'solid',mp:1799,bp:3609,d:4.469,en:1.22,ie:600.0,r:190,ec:'[Kr]4d1 5s2',ox:'+3',y:1794,t:'YBCO superconductors, LED phosphors, and laser crystals.'},
+{z:40,s:'Zr',n:'Zirconium',m:91.224,c:'transition-metal',g:4,p:5,b:'d',ph:'solid',mp:2128,bp:4682,d:6.506,en:1.33,ie:640.1,r:175,ec:'[Kr]4d2 5s2',ox:'+4',y:1789,t:'Nuclear fuel cladding — nearly transparent to neutrons — and cubic-zirconia gems.'},
+{z:41,s:'Nb',n:'Niobium',m:92.906,c:'transition-metal',g:5,p:5,b:'d',ph:'solid',mp:2750,bp:5017,d:8.57,en:1.6,ie:652.1,r:164,ec:'[Kr]4d4 5s1',ox:'+5, +3',y:1801,t:'Superconducting magnets for MRI and particle accelerators.'},
+{z:42,s:'Mo',n:'Molybdenum',m:95.95,c:'transition-metal',g:6,p:5,b:'d',ph:'solid',mp:2896,bp:4912,d:10.22,en:2.16,ie:684.3,r:154,ec:'[Kr]4d5 5s1',ox:'+6, +4',y:1778,t:'High-temperature steels and nitrogen-fixing enzymes.'},
+{z:43,s:'Tc',n:'Technetium',m:98,c:'transition-metal',g:7,p:5,b:'d',ph:'solid',mp:2430,bp:4538,d:11.5,en:1.9,ie:702.0,r:147,ec:'[Kr]4d5 5s2',ox:'+7, +4',y:1937,t:'First synthetic element; Tc-99m is the workhorse of medical imaging.'},
+{z:44,s:'Ru',n:'Ruthenium',m:101.07,c:'transition-metal',g:8,p:5,b:'d',ph:'solid',mp:2607,bp:4423,d:12.37,en:2.2,ie:710.2,r:146,ec:'[Kr]4d7 5s1',ox:'+4, +3',y:1844,t:'Wear-resistant electrical contacts and catalysis.'},
+{z:45,s:'Rh',n:'Rhodium',m:102.91,c:'transition-metal',g:9,p:5,b:'d',ph:'solid',mp:2237,bp:3968,d:12.41,en:2.28,ie:719.7,r:142,ec:'[Kr]4d8 5s1',ox:'+3',y:1803,t:'Catalytic converters; among the rarest and most valuable metals.'},
+{z:46,s:'Pd',n:'Palladium',m:106.42,c:'transition-metal',g:10,p:5,b:'d',ph:'solid',mp:1828.05,bp:3236,d:12.02,en:2.20,ie:804.4,r:139,ec:'[Kr]4d10',ox:'+2, +4',y:1803,t:'Catalytic converters, hydrogen purification, and electronics.'},
+{z:47,s:'Ag',n:'Silver',m:107.87,c:'transition-metal',g:11,p:5,b:'d',ph:'solid',mp:1234.93,bp:2435,d:10.501,en:1.93,ie:731.0,r:145,ec:'[Kr]4d10 5s1',ox:'+1',y:-3000,t:'Best electrical and thermal conductor; antimicrobial and photographic.'},
+{z:48,s:'Cd',n:'Cadmium',m:112.41,c:'transition-metal',g:12,p:5,b:'d',ph:'solid',mp:594.22,bp:1040,d:8.69,en:1.69,ie:867.8,r:144,ec:'[Kr]4d10 5s2',ox:'+2',y:1817,t:'NiCd batteries and pigments; toxic and being phased out.'},
+{z:49,s:'In',n:'Indium',m:114.82,c:'post-transition',g:13,p:5,b:'p',ph:'solid',mp:429.75,bp:2345,d:7.31,en:1.78,ie:558.3,r:142,ec:'[Kr]4d10 5s2 5p1',ox:'+3',y:1863,t:'Indium tin oxide — the transparent conductor in every touchscreen.'},
+{z:50,s:'Sn',n:'Tin',m:118.71,c:'post-transition',g:14,p:5,b:'p',ph:'solid',mp:505.08,bp:2875,d:7.287,en:1.96,ie:708.6,r:139,ec:'[Kr]4d10 5s2 5p2',ox:'+4, +2',y:-3500,t:'Solder, bronze, and food-can coatings.'},
+{z:51,s:'Sb',n:'Antimony',m:121.76,c:'metalloid',g:15,p:5,b:'p',ph:'solid',mp:903.78,bp:1860,d:6.685,en:2.05,ie:834.0,r:139,ec:'[Kr]4d10 5s2 5p3',ox:'+5, +3, −3',y:-3000,t:'Flame retardants and lead-acid battery alloys.'},
+{z:52,s:'Te',n:'Tellurium',m:127.60,c:'metalloid',g:16,p:5,b:'p',ph:'solid',mp:722.66,bp:1261,d:6.232,en:2.1,ie:869.3,r:138,ec:'[Kr]4d10 5s2 5p4',ox:'+6, +4, −2',y:1782,t:'Thin-film CdTe solar panels and thermoelectrics.'},
+{z:53,s:'I',n:'Iodine',m:126.90,c:'halogen',g:17,p:5,b:'p',ph:'solid',mp:386.85,bp:457.4,d:4.93,en:2.66,ie:1008.4,r:139,ec:'[Kr]4d10 5s2 5p5',ox:'+7, +1, −1',y:1811,t:'Antiseptics, contrast dyes, and thyroid-hormone synthesis.'},
+{z:54,s:'Xe',n:'Xenon',m:131.29,c:'noble-gas',g:18,p:5,b:'p',ph:'gas',mp:161.4,bp:165.03,d:5.894,en:2.6,ie:1170.4,r:140,ec:'[Kr]4d10 5s2 5p6',ox:'0',y:1898,t:'Ion-thruster propellant, high-intensity lamps, and anesthesia.'},
+{z:55,s:'Cs',n:'Cesium',m:132.91,c:'alkali-metal',g:1,p:6,b:'s',ph:'solid',mp:301.59,bp:944,d:1.873,en:0.79,ie:375.7,r:244,ec:'[Xe]6s1',ox:'+1',y:1860,t:'Defines the second: the cesium atomic clock. Most electropositive stable element.'},
+{z:56,s:'Ba',n:'Barium',m:137.33,c:'alkaline-earth',g:2,p:6,b:'s',ph:'solid',mp:1000,bp:2170,d:3.594,en:0.89,ie:502.9,r:215,ec:'[Xe]6s2',ox:'+2',y:1808,t:'Drilling fluids and the "barium meal" X-ray contrast agent.'},
+{z:57,s:'La',n:'Lanthanum',m:138.91,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1193,bp:3737,d:6.145,en:1.10,ie:538.1,r:207,ec:'[Xe]5d1 6s2',ox:'+3',y:1839,t:'Camera-lens glass, catalysts, and nickel-metal-hydride batteries.'},
+{z:58,s:'Ce',n:'Cerium',m:140.12,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1068,bp:3716,d:6.77,en:1.12,ie:534.4,r:204,ec:'[Xe]4f1 5d1 6s2',ox:'+4, +3',y:1803,t:'Most abundant rare earth; glass polishing and catalytic converters.'},
+{z:59,s:'Pr',n:'Praseodymium',m:140.91,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1208,bp:3793,d:6.773,en:1.13,ie:527.0,r:203,ec:'[Xe]4f3 6s2',ox:'+3',y:1885,t:'Strong permanent magnets and welder-goggle glass.'},
+{z:60,s:'Nd',n:'Neodymium',m:144.24,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1297,bp:3347,d:7.007,en:1.14,ie:533.1,r:201,ec:'[Xe]4f4 6s2',ox:'+3',y:1885,t:'Neodymium magnets — the strongest available — for motors, wind turbines, and speakers.'},
+{z:61,s:'Pm',n:'Promethium',m:145,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1315,bp:3273,d:7.26,en:1.13,ie:540.0,r:199,ec:'[Xe]4f5 6s2',ox:'+3',y:1945,t:'Only radioactive lanthanide; used in luminous paint and nuclear batteries.'},
+{z:62,s:'Sm',n:'Samarium',m:150.36,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1345,bp:2067,d:7.52,en:1.17,ie:544.5,r:198,ec:'[Xe]4f6 6s2',ox:'+3, +2',y:1879,t:'High-temperature samarium-cobalt magnets and neutron absorbers.'},
+{z:63,s:'Eu',n:'Europium',m:151.96,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1099,bp:1802,d:5.243,en:1.2,ie:547.1,r:198,ec:'[Xe]4f7 6s2',ox:'+3, +2',y:1901,t:'Red and blue phosphors in displays and euro-banknote anti-counterfeiting.'},
+{z:64,s:'Gd',n:'Gadolinium',m:157.25,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1585,bp:3546,d:7.895,en:1.2,ie:593.4,r:196,ec:'[Xe]4f7 5d1 6s2',ox:'+3',y:1880,t:'MRI contrast agent and neutron-capture shielding.'},
+{z:65,s:'Tb',n:'Terbium',m:158.93,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1629,bp:3503,d:8.229,en:1.2,ie:565.8,r:194,ec:'[Xe]4f9 6s2',ox:'+3',y:1843,t:'Green phosphors and magnetostrictive alloys for sensors.'},
+{z:66,s:'Dy',n:'Dysprosium',m:162.50,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1680,bp:2840,d:8.55,en:1.22,ie:573.0,r:192,ec:'[Xe]4f10 6s2',ox:'+3',y:1886,t:'Additive that keeps high-temperature magnets working in EV and turbine motors.'},
+{z:67,s:'Ho',n:'Holmium',m:164.93,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1734,bp:2993,d:8.795,en:1.23,ie:581.0,r:192,ec:'[Xe]4f11 6s2',ox:'+3',y:1878,t:'Highest magnetic moment of any element; surgical lasers.'},
+{z:68,s:'Er',n:'Erbium',m:167.26,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1802,bp:3141,d:9.066,en:1.24,ie:589.3,r:189,ec:'[Xe]4f12 6s2',ox:'+3',y:1843,t:'Optical-fiber amplifiers that carry the internet, plus pink glass.'},
+{z:69,s:'Tm',n:'Thulium',m:168.93,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1818,bp:2223,d:9.321,en:1.25,ie:596.7,r:190,ec:'[Xe]4f13 6s2',ox:'+3',y:1879,t:'Rarest stable rare earth; portable X-ray sources and lasers.'},
+{z:70,s:'Yb',n:'Ytterbium',m:173.05,c:'lanthanide',g:null,p:6,b:'f',ph:'solid',mp:1097,bp:1469,d:6.965,en:1.1,ie:603.4,r:187,ec:'[Xe]4f14 6s2',ox:'+3, +2',y:1878,t:'Ultra-precise optical atomic clocks and stress gauges.'},
+{z:71,s:'Lu',n:'Lutetium',m:174.97,c:'lanthanide',g:3,p:6,b:'d',ph:'solid',mp:1925,bp:3675,d:9.84,en:1.27,ie:523.5,r:187,ec:'[Xe]4f14 5d1 6s2',ox:'+3',y:1907,t:'PET-scan detector crystals and petroleum-cracking catalysts.'},
+{z:72,s:'Hf',n:'Hafnium',m:178.49,c:'transition-metal',g:4,p:6,b:'d',ph:'solid',mp:2506,bp:4876,d:13.31,en:1.3,ie:658.5,r:175,ec:'[Xe]4f14 5d2 6s2',ox:'+4',y:1923,t:'Nuclear control rods and the gate insulator in modern microchips.'},
+{z:73,s:'Ta',n:'Tantalum',m:180.95,c:'transition-metal',g:5,p:6,b:'d',ph:'solid',mp:3290,bp:5731,d:16.654,en:1.5,ie:761.0,r:170,ec:'[Xe]4f14 5d3 6s2',ox:'+5',y:1802,t:'Compact capacitors in every phone; biocompatible surgical implants.'},
+{z:74,s:'W',n:'Tungsten',m:183.84,c:'transition-metal',g:6,p:6,b:'d',ph:'solid',mp:3695,bp:5828,d:19.25,en:2.36,ie:770.0,r:162,ec:'[Xe]4f14 5d4 6s2',ox:'+6, +4',y:1783,t:'Highest melting point of any metal; lamp filaments, cutting tools, and armor.'},
+{z:75,s:'Re',n:'Rhenium',m:186.21,c:'transition-metal',g:7,p:6,b:'d',ph:'solid',mp:3459,bp:5869,d:21.02,en:1.9,ie:760.0,r:151,ec:'[Xe]4f14 5d5 6s2',ox:'+7, +4',y:1925,t:'Jet-engine superalloys; one of the rarest elements in the crust.'},
+{z:76,s:'Os',n:'Osmium',m:190.23,c:'transition-metal',g:8,p:6,b:'d',ph:'solid',mp:3306,bp:5285,d:22.59,en:2.2,ie:840.0,r:144,ec:'[Xe]4f14 5d6 6s2',ox:'+4, +3',y:1803,t:'Densest naturally occurring element; hard-wearing instrument pivots.'},
+{z:77,s:'Ir',n:'Iridium',m:192.22,c:'transition-metal',g:9,p:6,b:'d',ph:'solid',mp:2719,bp:4701,d:22.56,en:2.20,ie:880.0,r:141,ec:'[Xe]4f14 5d7 6s2',ox:'+4, +3',y:1803,t:'Most corrosion-resistant metal; spark plugs and the iridium layer marking the dinosaur extinction.'},
+{z:78,s:'Pt',n:'Platinum',m:195.08,c:'transition-metal',g:10,p:6,b:'d',ph:'solid',mp:2041.4,bp:4098,d:21.46,en:2.28,ie:870.0,r:136,ec:'[Xe]4f14 5d9 6s1',ox:'+4, +2',y:1735,t:'Catalytic converters, fuel cells, chemotherapy drugs, and fine jewelry.'},
+{z:79,s:'Au',n:'Gold',m:196.97,c:'transition-metal',g:11,p:6,b:'d',ph:'solid',mp:1337.33,bp:3129,d:19.282,en:2.54,ie:890.1,r:136,ec:'[Xe]4f14 5d10 6s1',ox:'+3, +1',y:-6000,t:'Store of value, corrosion-proof electrical contacts, and bond wires in chips.'},
+{z:80,s:'Hg',n:'Mercury',m:200.59,c:'transition-metal',g:12,p:6,b:'d',ph:'liquid',mp:234.32,bp:629.88,d:13.5336,en:2.00,ie:1007.1,r:132,ec:'[Xe]4f14 5d10 6s2',ox:'+2, +1',y:-1500,t:'Only metal liquid at room temperature; historically in thermometers, now restricted.'},
+{z:81,s:'Tl',n:'Thallium',m:204.38,c:'post-transition',g:13,p:6,b:'p',ph:'solid',mp:577,bp:1746,d:11.85,en:1.62,ie:589.4,r:145,ec:'[Xe]4f14 5d10 6s2 6p1',ox:'+3, +1',y:1861,t:'Infrared optics and cardiac-imaging tracers; highly toxic.'},
+{z:82,s:'Pb',n:'Lead',m:207.2,c:'post-transition',g:14,p:6,b:'p',ph:'solid',mp:600.61,bp:2022,d:11.342,en:2.33,ie:715.6,r:146,ec:'[Xe]4f14 5d10 6s2 6p2',ox:'+4, +2',y:-7000,t:'Radiation shielding and car batteries; neurotoxic, so being designed out.'},
+{z:83,s:'Bi',n:'Bismuth',m:208.98,c:'post-transition',g:15,p:6,b:'p',ph:'solid',mp:544.7,bp:1837,d:9.807,en:2.02,ie:703.0,r:148,ec:'[Xe]4f14 5d10 6s2 6p3',ox:'+3, +5',y:1753,t:'Low-toxicity lead substitute; stomach medicine and fusible alloys.'},
+{z:84,s:'Po',n:'Polonium',m:209,c:'post-transition',g:16,p:6,b:'p',ph:'solid',mp:527,bp:1235,d:9.32,en:2.0,ie:812.1,r:140,ec:'[Xe]4f14 5d10 6s2 6p4',ox:'+4, +2',y:1898,t:'Intensely radioactive; antistatic brushes and a notorious poison.'},
+{z:85,s:'At',n:'Astatine',m:210,c:'halogen',g:17,p:6,b:'p',ph:'solid',mp:575,bp:610,d:7,en:2.2,ie:899.0,r:150,ec:'[Xe]4f14 5d10 6s2 6p5',ox:'+1, −1',y:1940,t:'Rarest naturally occurring element; At-211 is studied for targeted cancer therapy.'},
+{z:86,s:'Rn',n:'Radon',m:222,c:'noble-gas',g:18,p:6,b:'p',ph:'gas',mp:202,bp:211.3,d:9.73,en:2.2,ie:1037.0,r:150,ec:'[Xe]4f14 5d10 6s2 6p6',ox:'0',y:1899,t:'Radioactive gas that seeps from soil; a leading cause of lung cancer indoors.'},
+{z:87,s:'Fr',n:'Francium',m:223,c:'alkali-metal',g:1,p:7,b:'s',ph:'solid',mp:300,bp:950,d:1.87,en:0.7,ie:380.0,r:260,ec:'[Rn]7s1',ox:'+1',y:1939,t:'Most unstable of the first 101 elements; exists only in trace, fleeting amounts.'},
+{z:88,s:'Ra',n:'Radium',m:226,c:'alkaline-earth',g:2,p:7,b:'s',ph:'solid',mp:973,bp:2010,d:5.5,en:0.9,ie:509.3,r:221,ec:'[Rn]7s2',ox:'+2',y:1898,t:'Once used in glow-in-the-dark paint; intensely radioactive.'},
+{z:89,s:'Ac',n:'Actinium',m:227,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1323,bp:3471,d:10.07,en:1.1,ie:499.0,r:215,ec:'[Rn]6d1 7s2',ox:'+3',y:1899,t:'Ac-225 shows promise for targeted alpha-particle cancer therapy.'},
+{z:90,s:'Th',n:'Thorium',m:232.04,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:2115,bp:5061,d:11.72,en:1.3,ie:587.0,r:206,ec:'[Rn]6d2 7s2',ox:'+4',y:1829,t:'Potential nuclear fuel — more abundant than uranium — and gas-lantern mantles.'},
+{z:91,s:'Pa',n:'Protactinium',m:231.04,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1841,bp:4300,d:15.37,en:1.5,ie:568.0,r:200,ec:'[Rn]5f2 6d1 7s2',ox:'+5, +4',y:1913,t:'Rare and radioactive; mainly of research interest in decay chains.'},
+{z:92,s:'U',n:'Uranium',m:238.03,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1405.3,bp:4404,d:18.95,en:1.38,ie:597.6,r:196,ec:'[Rn]5f3 6d1 7s2',ox:'+6, +4',y:1789,t:'Fuel for nuclear reactors and weapons; heaviest primordial element.'},
+{z:93,s:'Np',n:'Neptunium',m:237,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:917,bp:4273,d:20.45,en:1.36,ie:604.5,r:190,ec:'[Rn]5f4 6d1 7s2',ox:'+5, +4',y:1940,t:'First transuranium element; a byproduct of reactor plutonium production.'},
+{z:94,s:'Pu',n:'Plutonium',m:244,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:912.5,bp:3501,d:19.84,en:1.28,ie:584.7,r:187,ec:'[Rn]5f6 7s2',ox:'+4, +6',y:1940,t:'Nuclear weapons and reactor fuel; Pu-238 powers deep-space probes.'},
+{z:95,s:'Am',n:'Americium',m:243,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1449,bp:2880,d:13.69,en:1.3,ie:578.0,r:180,ec:'[Rn]5f7 7s2',ox:'+3',y:1944,t:'The alpha source inside household smoke detectors.'},
+{z:96,s:'Cm',n:'Curium',m:247,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1613,bp:3383,d:13.51,en:1.3,ie:581.0,r:169,ec:'[Rn]5f7 6d1 7s2',ox:'+3',y:1944,t:'Powers radioisotope generators and X-ray spectrometers on Mars rovers.'},
+{z:97,s:'Bk',n:'Berkelium',m:247,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1259,bp:2900,d:14.79,en:1.3,ie:601.0,r:null,ec:'[Rn]5f9 7s2',ox:'+3',y:1949,t:'Used to synthesize heavier elements, including tennessine.'},
+{z:98,s:'Cf',n:'Californium',m:251,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1173,bp:1743,d:15.1,en:1.3,ie:608.0,r:null,ec:'[Rn]5f10 7s2',ox:'+3',y:1950,t:'A potent neutron source for reactor startup and oil-well logging.'},
+{z:99,s:'Es',n:'Einsteinium',m:252,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1133,bp:1269,d:8.84,en:1.3,ie:619.0,r:null,ec:'[Rn]5f11 7s2',ox:'+3',y:1952,t:'Discovered in the debris of the first hydrogen bomb; research only.'},
+{z:100,s:'Fm',n:'Fermium',m:257,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1800,bp:null,d:null,en:1.3,ie:627.0,r:null,ec:'[Rn]5f12 7s2',ox:'+3',y:1952,t:'Heaviest element made only in trace, atom-scale amounts; research only.'},
+{z:101,s:'Md',n:'Mendelevium',m:258,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1100,bp:null,d:null,en:1.3,ie:635.0,r:null,ec:'[Rn]5f13 7s2',ox:'+3, +2',y:1955,t:'Made one atom at a time; named for the periodic table\u2019s creator.'},
+{z:102,s:'No',n:'Nobelium',m:259,c:'actinide',g:null,p:7,b:'f',ph:'solid',mp:1100,bp:null,d:null,en:1.3,ie:642.0,r:null,ec:'[Rn]5f14 7s2',ox:'+2, +3',y:1966,t:'Unusually stable +2 state; pure research.'},
+{z:103,s:'Lr',n:'Lawrencium',m:266,c:'actinide',g:3,p:7,b:'d',ph:'solid',mp:1900,bp:null,d:null,en:1.3,ie:478.6,r:null,ec:'[Rn]5f14 7s2 7p1',ox:'+3',y:1961,t:'Closes the actinide series; a few atoms ever made.'},
+{z:104,s:'Rf',n:'Rutherfordium',m:267,c:'transition-metal',g:4,p:7,b:'d',ph:'solid',mp:2400,bp:5800,d:23.2,en:null,ie:579.0,r:null,ec:'[Rn]5f14 6d2 7s2',ox:'+4',y:1964,t:'First transactinide; chemistry resembles hafnium.'},
+{z:105,s:'Db',n:'Dubnium',m:268,c:'transition-metal',g:5,p:7,b:'d',ph:'solid',mp:null,bp:null,d:29.3,en:null,ie:657.0,r:null,ec:'[Rn]5f14 6d3 7s2',ox:'+5',y:1967,t:'Superheavy synthetic element; studied atom by atom.'},
+{z:106,s:'Sg',n:'Seaborgium',m:269,c:'transition-metal',g:6,p:7,b:'d',ph:'solid',mp:null,bp:null,d:35.0,en:null,ie:757.0,r:null,ec:'[Rn]5f14 6d4 7s2',ox:'+6',y:1974,t:'Named for Glenn Seaborg while he was still living.'},
+{z:107,s:'Bh',n:'Bohrium',m:270,c:'transition-metal',g:7,p:7,b:'d',ph:'solid',mp:null,bp:null,d:37.1,en:null,ie:740.0,r:null,ec:'[Rn]5f14 6d5 7s2',ox:'+7',y:1981,t:'Behaves like rhenium in the few atoms studied.'},
+{z:108,s:'Hs',n:'Hassium',m:269,c:'transition-metal',g:8,p:7,b:'d',ph:'solid',mp:null,bp:null,d:40.7,en:null,ie:730.0,r:null,ec:'[Rn]5f14 6d6 7s2',ox:'+8',y:1984,t:'Forms a volatile oxide like osmium, confirming its group.'},
+{z:109,s:'Mt',n:'Meitnerium',m:278,c:'transition-metal',g:9,p:7,b:'d',ph:'solid',mp:null,bp:null,d:37.4,en:null,ie:800.0,r:null,ec:'[Rn]5f14 6d7 7s2',ox:null,y:1982,t:'Named for Lise Meitner; only a handful of atoms ever detected.'},
+{z:110,s:'Ds',n:'Darmstadtium',m:281,c:'transition-metal',g:10,p:7,b:'d',ph:'solid',mp:null,bp:null,d:34.8,en:null,ie:955.0,r:null,ec:'[Rn]5f14 6d8 7s2',ox:null,y:1994,t:'Superheavy element existing for only seconds.'},
+{z:111,s:'Rg',n:'Roentgenium',m:282,c:'transition-metal',g:11,p:7,b:'d',ph:'solid',mp:null,bp:null,d:28.7,en:null,ie:1020.0,r:null,ec:'[Rn]5f14 6d9 7s2',ox:null,y:1994,t:'Predicted to sit below gold; named for the discoverer of X-rays.'},
+{z:112,s:'Cn',n:'Copernicium',m:285,c:'transition-metal',g:12,p:7,b:'d',ph:'gas',mp:null,bp:357,d:14.0,en:null,ie:1155.0,r:null,ec:'[Rn]5f14 6d10 7s2',ox:'+2',y:1996,t:'May behave like a volatile, mercury-like gas.'},
+{z:113,s:'Nh',n:'Nihonium',m:286,c:'post-transition',g:13,p:7,b:'p',ph:'solid',mp:700,bp:1430,d:16,en:null,ie:707.0,r:null,ec:'[Rn]5f14 6d10 7s2 7p1',ox:null,y:2004,t:'First element discovered in Asia; named for Japan.'},
+{z:114,s:'Fl',n:'Flerovium',m:289,c:'post-transition',g:14,p:7,b:'p',ph:'solid',mp:284,bp:420,d:14,en:null,ie:832.0,r:null,ec:'[Rn]5f14 6d10 7s2 7p2',ox:null,y:1998,t:'Near a predicted "island of stability" of longer-lived superheavies.'},
+{z:115,s:'Mc',n:'Moscovium',m:290,c:'post-transition',g:15,p:7,b:'p',ph:'solid',mp:700,bp:1400,d:13.5,en:null,ie:538.0,r:null,ec:'[Rn]5f14 6d10 7s2 7p3',ox:null,y:2003,t:'Decays quickly to nihonium; named for the Moscow region.'},
+{z:116,s:'Lv',n:'Livermorium',m:293,c:'post-transition',g:16,p:7,b:'p',ph:'solid',mp:709,bp:1085,d:12.9,en:null,ie:663.0,r:null,ec:'[Rn]5f14 6d10 7s2 7p4',ox:null,y:2000,t:'Named for Lawrence Livermore National Laboratory.'},
+{z:117,s:'Ts',n:'Tennessine',m:294,c:'halogen',g:17,p:7,b:'p',ph:'solid',mp:723,bp:883,d:7.2,en:null,ie:743.0,r:null,ec:'[Rn]5f14 6d10 7s2 7p5',ox:null,y:2010,t:'Second-heaviest known element; named for Tennessee.'},
+{z:118,s:'Og',n:'Oganesson',m:294,c:'noble-gas',g:18,p:7,b:'p',ph:'solid',mp:325,bp:450,d:7,en:null,ie:860.0,r:null,ec:'[Rn]5f14 6d10 7s2 7p6',ox:null,y:2002,t:'Heaviest element yet made; predicted to be a solid, not a typical noble gas.'}
+];
+/*DATA-END*/
+
+/* ══════════════════════ GEOMETRY ══════════════════════
+   A continuous Archimedean spiral. Position along the spiral is set by
+   a single running coordinate `u` that increases with atomic number,
+   so elements are always evenly spaced and no ring is ever crowded.
+   Each period is one full turn; f-block elements (14 per series) are
+   woven into the turn between groups 2 and 3, keeping lanthanides and
+   actinides attached to their period instead of exiled to a footnote.
+   Radius grows with u, so same-group elements fall on a smooth radial
+   curve you can trace outward — the spiral analogue of a PT column. */
+
+// Column order around one turn: groups 1,2, then the 14 f-slots, then 3..18.
+// That's 2 + 14 + 16 = 32 columns — the width of the longest period.
+const TURN_COLS=32;
+const colIndex=(function(){
+  const idx={}; let i=0;
+  idx['g1']=i++; idx['g2']=i++;
+  for(let k=0;k<14;k++) idx['f'+k]=i++;
+  for(let g=3;g<=18;g++) idx['g'+g]=i++;
+  return idx;
+})();
+
+// Each element gets a running position u (in "columns"). Period p starts
+// its turn at u = (p-1)*TURN_COLS, then adds its column offset.
+const laSlot={}, acSlot={};
+{let li=0,ai=0; for(const e of ELEMENTS){
+  if(e.c==='lanthanide'&&e.b==='f') laSlot[e.z]=li++;
+  if(e.c==='actinide'  &&e.b==='f') acSlot[e.z]=ai++;
+}}
+function columnOf(e){
+  if(e.g===null){ const s=(e.p===6?laSlot:acSlot)[e.z]; return colIndex['f'+s]; }
+  return colIndex['g'+e.g];
+}
+for(const e of ELEMENTS){ e._u=(e.p-1)*TURN_COLS + columnOf(e); }
+
+// Map u → (radius, angle). Radius grows linearly with turns so the arc
+// length per column stays roughly constant; angle wraps every TURN_COLS.
+const R_INNER=150;         // radius at u=0
+const R_PER_TURN=118;      // how much the spiral steps outward each full turn
+const ANG_OFFSET=-90;      // put group 1 near the top-left so the sweep reads L→R
+function uToPolar(u){
+  const turn=u/TURN_COLS;                 // 0..~7
+  const r=R_INNER + turn*R_PER_TURN;
+  const deg=ANG_OFFSET + (u/TURN_COLS)*360;
+  return polarDeg(r,deg);
+}
+function polarDeg(r,deg){const a=deg*Math.PI/180;return[r*Math.cos(a),r*Math.sin(a)];}
+
+// Node radius scales gently with turn so inner elements aren't giant.
+function nodeR(u){ const turn=u/TURN_COLS; return 17 + turn*1.7; }
+
+for(const e of ELEMENTS){
+  const[x,y]=uToPolar(e._u);
+  e._x=x; e._y=y; e._r=nodeR(e._u);
+}
+// expose for scaffold drawing
+function periodRadius(p){ return R_INNER + ((p-1)+0.0)*R_PER_TURN + (0/TURN_COLS); }
+function groupSpokeU(g,p){ return (p-1)*TURN_COLS + colIndex['g'+g]; }
+
+/* ══════════════════════ COLOR SCALES ══════════════════════ */
+function lerp(a,b,t){return a+(b-a)*t;}
+function hex2rgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function rgb2css(r){return `rgb(${r.map(v=>Math.round(v)).join(',')})`;}
+// perceptual-ish blue→cyan→yellow→red ramp for continuous data
+const RAMP=['#2b3a67','#2c7fb8','#41b6c4','#7fcdbb','#c7e9b4','#fecc5c','#fd8d3c','#e31a1c'];
+function ramp(t){
+  t=Math.max(0,Math.min(1,t));
+  const seg=t*(RAMP.length-1); const i=Math.floor(seg); const f=seg-i;
+  if(i>=RAMP.length-1)return RAMP[RAMP.length-1];
+  const a=hex2rgb(RAMP[i]), b=hex2rgb(RAMP[i+1]);
+  return rgb2css([lerp(a[0],b[0],f),lerp(a[1],b[1],f),lerp(a[2],b[2],f)]);
+}
+const NODATA='#39404f';
+const FIELD={
+  en:{k:'en', log:false}, ie:{k:'ie', log:false}, r:{k:'r', log:false},
+  d:{k:'d', log:true}, mp:{k:'mp', log:false}, y:{k:'y', log:false}
+};
+function fieldRange(key,log){
+  let lo=Infinity,hi=-Infinity;
+  for(const e of ELEMENTS){let v=e[key]; if(v==null)continue; if(log)v=Math.log10(v); if(v<lo)lo=v; if(v>hi)hi=v;}
+  return[lo,hi];
+}
+const RANGES={};
+for(const f in FIELD){RANGES[f]=fieldRange(FIELD[f].k,FIELD[f].log);}
+
+function nodeColor(e,mode){
+  if(mode==='cat')return CAT[e.c].color;
+  if(mode==='blk')return BLK[e.b];
+  const f=FIELD[mode]; if(!f)return CAT[e.c].color;
+  let v=e[f.k]; if(v==null)return NODATA;
+  if(f.log)v=Math.log10(v);
+  const[lo,hi]=RANGES[mode];
+  return ramp((v-lo)/(hi-lo));
+}
+// choose light text on dark fills
+function needsDarkText(cssColor){
+  const m=cssColor.match(/\d+/g); if(!m)return false;
+  const[r,g,b]=m.map(Number);
+  const L=(0.299*r+0.587*g+0.114*b);
+  return L<130;
+}
+
+/* ══════════════════════ RENDER ══════════════════════ */
+const NS='http://www.w3.org/2000/svg';
+const world=document.getElementById('world');
+function el(tag,attrs){const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);return n;}
+
+// ── background: spiral thread, group spokes, period markers ──
+function spiralPath(u0,u1,step){
+  step=step||0.4; let d='';
+  for(let u=u0;u<=u1+1e-6;u+=step){
+    const[x,y]=uToPolar(u);
+    d+=(d?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' ';
+  }
+  return d.trim();
+}
+function drawScaffold(){
+  const scaff=el('g',{id:'spiralScaffold'});
+
+  // The spiral thread itself — one continuous line the elements ride on.
+  const uMax=(7-1)*TURN_COLS + TURN_COLS-1;
+  scaff.appendChild(el('path',{class:'spiralthread',d:spiralPath(-0.5,uMax+0.5)}));
+
+  // Group spokes: same group across periods traces a radial curve outward.
+  // Draw a faint thread through each group's elements so columns stay legible.
+  for(let g=1;g<=18;g++){
+    let d='';
+    for(let p=1;p<=7;p++){
+      const has=ELEMENTS.some(e=>e.g===g&&e.p===p);
+      if(!has)continue;
+      const[x,y]=uToPolar(groupSpokeU(g,p));
+      d+=(d?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' ';
+    }
+    if(d) scaff.appendChild(el('path',{class:'zthread',d:d.trim()}));
+  }
+  // f-block spokes (two: lanthanide + actinide column families)
+  for(let k=0;k<14;k++){
+    let d='';
+    [6,7].forEach(p=>{
+      const u=(p-1)*TURN_COLS+colIndex['f'+k];
+      const[x,y]=uToPolar(u);
+      d+=(d?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' ';
+    });
+    scaff.appendChild(el('path',{class:'zthread',d:d.trim()}));
+  }
+
+  // Period start markers — small labels at the beginning of each turn.
+  const plabels=el('g',{});
+  for(let p=1;p<=7;p++){
+    const uStart=(p-1)*TURN_COLS + colIndex['g1'];
+    const[x,y]=uToPolar(uStart);
+    // nudge inward toward center for the label
+    const ang=Math.atan2(y,x);
+    const lr=Math.hypot(x,y)-nodeR(uStart)-10;
+    const lx=lr*Math.cos(ang), ly=lr*Math.sin(ang);
+    const t=el('text',{class:'periodlabel',x:lx.toFixed(1),y:(ly+3).toFixed(1)});
+    t.textContent='P'+p;
+    plabels.appendChild(t);
+  }
+  scaff.appendChild(plabels);
+
+  // Block arcs around the outer rim — show where s/p/d/f live in a turn.
+  const rimU0=(7-1)*TURN_COLS;
+  const rimBands=[
+    {t:'s',c0:colIndex['g1'],c1:colIndex['g2']},
+    {t:'f',c0:colIndex['f0'],c1:colIndex['f13']},
+    {t:'d',c0:colIndex['g3'],c1:colIndex['g12']},
+    {t:'p',c0:colIndex['g13'],c1:colIndex['g18']},
+  ];
+  for(const bd of rimBands){
+    const uMid=rimU0+(bd.c0+bd.c1)/2;
+    const[x,y]=uToPolar(uMid);
+    const ang=Math.atan2(y,x);
+    const rr=Math.hypot(x,y)+40;
+    const lx=rr*Math.cos(ang), ly=rr*Math.sin(ang);
+    const tx=el('text',{class:'rimlabel blk',x:lx.toFixed(1),y:(ly+3).toFixed(1)});
+    tx.textContent=bd.t+'-block';
+    scaff.appendChild(tx);
+  }
+  world.appendChild(scaff);
+}
+
+// ── nodes (origin-relative; positioned by transform so layouts can morph) ──
+const nodeByZ={};
+function drawNodes(){
+  const layer=el('g',{});
+  ELEMENTS.forEach((e,i)=>{
+    const g=el('g',{class:'node','data-z':e.z,tabindex:'-1',role:'button',
+      'aria-label':`${e.n}, atomic number ${e.z}`,
+      transform:`translate(${e._x.toFixed(1)} ${e._y.toFixed(1)})`});
+    const inner=el('g',{class:'inner'});
+    inner.style.animationDelay=(i*6)+'ms';
+    g.appendChild(inner);
+    const col=CAT[e.c].color;
+    const c=el('circle',{class:'body',cx:0,cy:0,r:e._r,fill:col});
+    inner.appendChild(c);
+    const sym=el('text',{class:'sym',x:0,y:1});
+    sym.textContent=e.s; inner.appendChild(sym);
+    const zn=el('text',{class:'znum',x:0,y:-e._r+8});
+    zn.textContent=e.z; inner.appendChild(zn);
+    let ms=null;
+    if(e._r>=24){
+      ms=el('text',{class:'mass',x:0,y:e._r-4});
+      ms.textContent=(typeof e.m==='number'? (Number.isInteger(e.m)?`[${e.m}]`:e.m.toFixed(e.m<100?2:1)) : e.m);
+      inner.appendChild(ms);
+    }
+    e._inner=inner;
+    layer.appendChild(g);
+    nodeByZ[e.z]=g;
+    e._el=g; e._circle=c; e._zn=zn; e._ms=ms; e._sym=sym;
+    e._curX=e._x; e._curY=e._y;
+  });
+  world.appendChild(layer);
+}
+
+drawScaffold();
+drawNodes();
+applyColor('cat');
+
+/* ══════════════════════ COLOR APPLY ══════════════════════ */
+function applyColor(mode){
+  for(const e of ELEMENTS){
+    const col=nodeColor(e,mode);
+    e._circle.setAttribute('fill',col);
+    e._el.classList.toggle('darktext', needsDarkText(col));
+  }
+  const continuous=!!FIELD[mode];
+  const sb=document.getElementById('scalebar');
+  if(continuous){
+    sb.classList.add('show');
+    const grad=`linear-gradient(90deg, ${RAMP.join(',')})`;
+    document.getElementById('sb-grad').style.background=grad;
+    const[lo,hi]=RANGES[mode]; const f=FIELD[mode];
+    const unfmt=v=> f.log? Math.pow(10,v):v;
+    const fmt={en:v=>v.toFixed(2), ie:v=>Math.round(v)+' kJ/mol',
+      r:v=>Math.round(v)+' pm', d:v=>unfmt(v).toFixed(unfmt(v)<1?3:1)+' g/cm³',
+      mp:v=>Math.round(v)+' K', y:v=>Math.round(v)}[mode];
+    document.getElementById('sb-min').textContent=fmt(lo);
+    document.getElementById('sb-max').textContent=fmt(hi);
+  }else{
+    sb.classList.remove('show');
+  }
+}
+
+/* ══════════════════════ TOOLTIP ══════════════════════ */
+const tip=document.getElementById('tip');
+function showTip(e,evt){
+  tip.innerHTML=`<b>${e.n}</b> · ${e.s} · ${e.z}
+    <div class="tv">${CAT[e.c].label} · period ${e.p}, ${e.g?('group '+e.g):'f-block'}</div>
+    <div class="tv">${e.m}${typeof e.m==='number'&&!Number.isInteger(e.m)?' u':' u (most stable)'}</div>`;
+  tip.style.display='block';
+  positionTip(evt);
+}
+function positionTip(evt){
+  const pad=14, w=tip.offsetWidth, h=tip.offsetHeight;
+  let x=evt.clientX+pad, y=evt.clientY+pad;
+  if(x+w>innerWidth-8)x=evt.clientX-w-pad;
+  if(y+h>innerHeight-8)y=evt.clientY-h-pad;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+function hideTip(){tip.style.display='none';}
+
+/* ══════════════════════ DETAIL PANEL ══════════════════════ */
+const panel=document.getElementById('panel');
+const panelbody=document.getElementById('panelbody');
+function K(v,unit){return v==null?'<span style="color:var(--ink3)">—</span>':(v+(unit||''));}
+function fmtTemp(k){return k==null?null:`${k} K <span style="color:var(--ink3)">/ ${(k-273.15).toFixed(0)} °C</span>`;}
+function fmtMass(m){return typeof m==='number'&&Number.isInteger(m)?`${m} <span style="color:var(--ink3)">(most stable)</span>`:`${m} u`;}
+function openPanel(e){
+  const col=CAT[e.c].color;
+  const dark=needsDarkText(col)?' darktext':'';
+  panelbody.innerHTML=`
+    <div class="p-head">
+      <div class="p-sym${dark}" style="--c:${col}">${e.s}</div>
+      <div>
+        <div class="p-name">${e.n}</div>
+        <div class="p-zline">Z ${e.z} · ${e.ec}</div>
+      </div>
+    </div>
+    <div class="p-tags">
+      <span class="p-tag cat" style="--c:${col}">${CAT[e.c].label}</span>
+      <span class="p-tag">${e.b}-block</span>
+      <span class="p-tag">Period ${e.p}</span>
+      <span class="p-tag">${e.g?('Group '+e.g):'f-block'}</span>
+      <span class="p-tag">${e.ph}</span>
+    </div>
+    <div class="p-grid">
+      <div class="p-row"><span class="k">Atomic weight</span><span class="v">${fmtMass(e.m)}</span></div>
+      <div class="p-row"><span class="k">Electron config.</span><span class="v">${e.ec}</span></div>
+      <div class="p-row"><span class="k">Oxidation states</span><span class="v">${K(e.ox)}</span></div>
+      <div class="p-row"><span class="k">Electronegativity</span><span class="v">${K(e.en)}${e.en!=null?' <span style="color:var(--ink3)">Pauling</span>':''}</span></div>
+      <div class="p-row"><span class="k">Ionization energy</span><span class="v">${K(e.ie,' kJ/mol')}</span></div>
+      <div class="p-row"><span class="k">Electron affinity</span><span class="v">${e.ea==='x'?'unbound':K(e.ea,' kJ/mol')}</span></div>
+      <div class="p-row"><span class="k">Ground term</span><span class="v">${groundTerm(e)}</span></div>
+      <div class="p-row"><span class="k">Covalent radius</span><span class="v">${K(e.r,' pm')}</span></div>
+      <div class="p-row"><span class="k">Density</span><span class="v">${K(e.d, e.ph==='gas'?' g/L':' g/cm³')}</span></div>
+      <div class="p-row"><span class="k">Melting point</span><span class="v">${fmtTemp(e.mp)||'—'}</span></div>
+      <div class="p-row"><span class="k">Boiling point</span><span class="v">${fmtTemp(e.bp)||'—'}</span></div>
+      <div class="p-row"><span class="k">Discovered</span><span class="v">${e.y<0?(Math.abs(e.y)+' BCE'):e.y}</span></div>
+    </div>
+    <div class="p-note"><b>Why it matters.</b> ${e.t}</div>
+    <button class="qv-openbtn" data-z="${e.z}" style="--c:${col}">ψ Quantum view — waves, states &amp; bonding</button>`;
+  panel.classList.add('show');
+  selectZ(e.z);
+  if(typeof flashLines==='function')flashLines(e);
+}
+function closePanel(){panel.classList.remove('show');clearSelect();}
+document.getElementById('panelclose').addEventListener('click',closePanel);
+
+/* ══════════════════════ SELECTION & KIN HIGHLIGHT ══════════════════════ */
+let selZ=null;
+function selectZ(z){
+  clearSelect();
+  selZ=z;
+  const e=ELEMENTS.find(x=>x.z===z);
+  nodeByZ[z].classList.add('sel');
+  if(typeof spawnShells==='function')spawnShells(z);
+  // highlight group-mates (same column) and period-mates lightly
+  for(const o of ELEMENTS){
+    if(o.z===z)continue;
+    if(e.g!==null && o.g===e.g){o._el.classList.add('kin');}
+  }
+}
+function clearSelect(){
+  if(selZ==null)return;
+  for(const o of ELEMENTS){o._el.classList.remove('kin');o._el.classList.remove('sel');}
+  if(typeof removeShells==='function')removeShells();
+  selZ=null;
+}
+
+/* ══════════════════════ NODE EVENTS ══════════════════════ */
+for(const e of ELEMENTS){
+  const g=e._el;
+  g.addEventListener('mouseenter',ev=>{ if(!g.classList.contains('dim')) showTip(e,ev); });
+  g.addEventListener('mousemove',ev=>{ if(tip.style.display==='block') positionTip(ev); });
+  g.addEventListener('mouseleave',hideTip);
+  g.addEventListener('click',ev=>{ev.stopPropagation();openPanel(e);hideTip();});
+}
+document.getElementById('stage').addEventListener('click',()=>{ if(panel.classList.contains('show'))closePanel(); });
+
+/* ══════════════════════ PAN & ZOOM ══════════════════════ */
+const svg=document.getElementById('svg');
+const stage=document.getElementById('stage');
+let view={x:-1040,y:-1040,w:2080,h:2080};
+const BASE={...view};
+function applyView(){svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);}
+function zoomAt(cx,cy,factor){
+  const nw=Math.max(300,Math.min(3200,view.w*factor));
+  const nh=nw*(view.h/view.w);
+  // keep the point under cursor stable
+  const px=view.x+ (cx/innerWidth)*view.w;
+  const py=view.y+ (cy/innerHeight)*view.h;
+  view.x=px-(cx/innerWidth)*nw;
+  view.y=py-(cy/innerHeight)*nh;
+  view.w=nw; view.h=nh; applyView();
+}
+stage.addEventListener('wheel',ev=>{
+  ev.preventDefault();
+  zoomAt(ev.clientX,ev.clientY, ev.deltaY>0?1.12:0.89);
+},{passive:false});
+let dragging=false,last=null;
+stage.addEventListener('pointerdown',ev=>{
+  if(ev.target.closest('.node'))return;
+  dragging=true;last={x:ev.clientX,y:ev.clientY};
+  stage.classList.add('panning');stage.setPointerCapture(ev.pointerId);
+});
+stage.addEventListener('pointermove',ev=>{
+  if(!dragging)return;
+  const dx=(ev.clientX-last.x)*(view.w/innerWidth);
+  const dy=(ev.clientY-last.y)*(view.h/innerHeight);
+  view.x-=dx;view.y-=dy;last={x:ev.clientX,y:ev.clientY};applyView();
+});
+stage.addEventListener('pointerup',ev=>{dragging=false;stage.classList.remove('panning');});
+stage.addEventListener('pointercancel',()=>{dragging=false;stage.classList.remove('panning');});
+// pinch zoom
+let pinch=null;
+stage.addEventListener('touchstart',ev=>{
+  if(ev.touches.length===2){
+    pinch=dist(ev.touches);
+  }
+},{passive:true});
+stage.addEventListener('touchmove',ev=>{
+  if(ev.touches.length===2&&pinch){
+    const d=dist(ev.touches);
+    const mx=(ev.touches[0].clientX+ev.touches[1].clientX)/2;
+    const my=(ev.touches[0].clientY+ev.touches[1].clientY)/2;
+    zoomAt(mx,my, pinch/d);
+    pinch=d;
+  }
+},{passive:true});
+stage.addEventListener('touchend',()=>{pinch=null;});
+function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);}
+
+document.getElementById('zoomin').addEventListener('click',()=>zoomAt(innerWidth/2,innerHeight/2,0.8));
+document.getElementById('zoomout').addEventListener('click',()=>zoomAt(innerWidth/2,innerHeight/2,1.25));
+document.getElementById('zoomreset').addEventListener('click',()=>{view={...BASE};applyView();});
+
+/* ══════════════════════ COLOR-BY DROPDOWN ══════════════════════ */
+document.getElementById('colorby').addEventListener('change',ev=>applyColor(ev.target.value));
+
+/* ══════════════════════ CATEGORY CHIPS ══════════════════════ */
+const chipsEl=document.getElementById('chips');
+const activeCats=new Set();
+for(const key in CAT){
+  const b=document.createElement('button');
+  b.className='chip'; b.dataset.cat=key;
+  b.style.setProperty('--c',CAT[key].color);
+  b.innerHTML=`<span class="dot"></span>${CAT[key].label}`;
+  b.addEventListener('click',()=>{
+    if(activeCats.has(key))activeCats.delete(key); else activeCats.add(key);
+    b.classList.toggle('on');
+    chipsEl.classList.toggle('filtering',activeCats.size>0);
+    applyFilter();
+  });
+  chipsEl.appendChild(b);
+}
+
+/* ══════════════════════ SEARCH + FILTER ══════════════════════ */
+const searchEl=document.getElementById('search');
+let query='';
+searchEl.addEventListener('input',ev=>{query=ev.target.value.trim().toLowerCase();applyFilter();});
+function matchesQuery(e){
+  if(!query)return true;
+  return e.n.toLowerCase().includes(query)
+      || e.s.toLowerCase()===query
+      || e.s.toLowerCase().startsWith(query)
+      || String(e.z)===query
+      || CAT[e.c].label.toLowerCase().includes(query)
+      || (e.t&&e.t.toLowerCase().includes(query));
+}
+function applyFilter(){
+  const catOn=activeCats.size>0;
+  for(const e of ELEMENTS){
+    const q=matchesQuery(e);
+    const c=!catOn || activeCats.has(e.c);
+    const show=q&&c;
+    e._el.classList.toggle('dim', !(c) && (!query||q));
+    e._el.classList.toggle('nomatch', query&&!q);
+    // combined: if it fails either, fade it
+    e._el.classList.toggle('dim', !show);
+  }
+}
+
+/* ══════════════════════ KEYBOARD NAV ══════════════════════ */
+let kbZ=null;
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='/'){ev.preventDefault();searchEl.focus();return;}
+  if(ev.key==='Escape'){
+    if(document.activeElement===searchEl){searchEl.blur();return;}
+    closePanel();hideTip();return;
+  }
+  if(document.activeElement===searchEl)return;
+  const idx = kbZ==null? -1 : ELEMENTS.findIndex(e=>e.z===kbZ);
+  if(ev.key==='ArrowRight'||ev.key==='ArrowDown'){
+    ev.preventDefault();
+    const ni=Math.min(ELEMENTS.length-1, idx+1);
+    focusZ(ELEMENTS[ni].z);
+  }else if(ev.key==='ArrowLeft'||ev.key==='ArrowUp'){
+    ev.preventDefault();
+    const ni=Math.max(0, idx<=0?0:idx-1);
+    focusZ(ELEMENTS[ni].z);
+  }else if(ev.key==='Enter'||ev.key===' '){
+    if(kbZ!=null){ev.preventDefault();openPanel(ELEMENTS.find(e=>e.z===kbZ));}
+  }
+});
+function focusZ(z){
+  kbZ=z;
+  const e=ELEMENTS.find(x=>x.z===z);
+  selectZ(z);
+  // ensure node is comfortably in view
+  const margin=140;
+  const nx=e._curX, ny=e._curY;
+  if(nx<view.x+margin||nx>view.x+view.w-margin||ny<view.y+margin||ny>view.y+view.h-margin){
+    view.x=nx-view.w/2; view.y=ny-view.h/2; applyView();
+  }
+  nodeByZ[z].focus({preventScroll:true});
+}
+
+
+/* ══════════════════════ QUANTUM VIEW ══════════════════════
+   One-electron (hydrogen-like) wavefunctions, computed exactly:
+     ψ_nlm(r,θ,φ) = R_nl(r) · Y_lm(θ,φ)
+   Exact for hydrogen. For multi-electron atoms the same functions are
+   used with a Slater-screened effective nuclear charge Z_eff — the
+   standard teaching approximation — and labeled as such on screen.
+   All lengths in Bohr radii internally (a₀ = 52.9177 pm).            */
+const A0_PM=52.9177;
+
+// ── math primitives ──
+function fact(n){let f=1;for(let i=2;i<=n;i++)f*=i;return f;}
+// generalized Laguerre L_k^a(x) by recurrence
+function laguerre(k,a,x){
+  if(k===0)return 1;
+  let Lm2=1, Lm1=1+a-x;
+  if(k===1)return Lm1;
+  for(let i=2;i<=k;i++){
+    const L=((2*i-1+a-x)*Lm1-(i-1+a)*Lm2)/i;
+    Lm2=Lm1;Lm1=L;
+  }
+  return Lm1;
+}
+// associated Legendre P_l^m(x), m>=0, with Condon–Shortley phase
+function assocLegendre(l,m,x){
+  let pmm=1;
+  if(m>0){
+    const somx2=Math.sqrt(Math.max(0,1-x*x));
+    let f=1;
+    for(let i=1;i<=m;i++){pmm*=-f*somx2;f+=2;}
+  }
+  if(l===m)return pmm;
+  let pmmp1=x*(2*m+1)*pmm;
+  if(l===m+1)return pmmp1;
+  let pll=0;
+  for(let ll=m+2;ll<=l;ll++){
+    pll=((2*ll-1)*x*pmmp1-(ll+m-1)*pmm)/(ll-m);
+    pmm=pmmp1;pmmp1=pll;
+  }
+  return pll;
+}
+// real spherical harmonic: tri='c' cos(mφ), 's' sin(mφ), m=0 plain
+function realY(l,m,tri,theta,phi){
+  const am=Math.abs(m);
+  const K=Math.sqrt((2*l+1)/(4*Math.PI)*fact(l-am)/fact(l+am));
+  const P=assocLegendre(l,am,Math.cos(theta));
+  if(am===0)return K*P;
+  const f=(tri==='c')?Math.cos(am*phi):Math.sin(am*phi);
+  return Math.SQRT2*K*P*f;
+}
+// normalized radial function R_nl(r) for charge Z (atomic units)
+function radialR(n,l,Z,r){
+  const rho=2*Z*r/n;
+  const norm=Math.sqrt(Math.pow(2*Z/n,3)*fact(n-l-1)/(2*n*fact(n+l)));
+  return norm*Math.pow(rho,l)*Math.exp(-rho/2)*laguerre(n-l-1,2*l+1,rho);
+}
+
+// ── real-orbital catalogue: label, |m|, cos/sin, viewing plane basis ──
+const SQ2=Math.SQRT1_2;
+const ORBSETS={
+  0:[{lab:'s',   m:0,tri:'0',e1:[1,0,0],e2:[0,0,1]}],
+  1:[{lab:'p_z', m:0,tri:'0',e1:[1,0,0],e2:[0,0,1]},
+     {lab:'p_x', m:1,tri:'c',e1:[1,0,0],e2:[0,0,1]},
+     {lab:'p_y', m:1,tri:'s',e1:[0,1,0],e2:[0,0,1]}],
+  2:[{lab:'d_z²',   m:0,tri:'0',e1:[1,0,0],e2:[0,0,1]},
+     {lab:'d_xz',   m:1,tri:'c',e1:[1,0,0],e2:[0,0,1]},
+     {lab:'d_yz',   m:1,tri:'s',e1:[0,1,0],e2:[0,0,1]},
+     {lab:'d_x²−y²',m:2,tri:'c',e1:[1,0,0],e2:[0,1,0]},
+     {lab:'d_xy',   m:2,tri:'s',e1:[1,0,0],e2:[0,1,0]}],
+  3:[{lab:'f_z³',      m:0,tri:'0',e1:[1,0,0],e2:[0,0,1]},
+     {lab:'f_xz²',     m:1,tri:'c',e1:[1,0,0],e2:[0,0,1]},
+     {lab:'f_yz²',     m:1,tri:'s',e1:[0,1,0],e2:[0,0,1]},
+     {lab:'f_z(x²−y²)',m:2,tri:'c',e1:[1,0,0],e2:[0,0,1]},
+     {lab:'f_xyz',     m:2,tri:'s',e1:[SQ2,SQ2,0],e2:[0,0,1]},
+     {lab:'f_x(x²−3y²)',m:3,tri:'c',e1:[1,0,0],e2:[0,1,0]},
+     {lab:'f_y(3x²−y²)',m:3,tri:'s',e1:[1,0,0],e2:[0,1,0]}]
+};
+const LNAME=['s','p','d','f'];
+const LOFNAME={s:0,p:1,d:2,f:3};
+
+// ── electron configuration parsing ──
+const CORES={'[He]':'1s2','[Ne]':'[He] 2s2 2p6','[Ar]':'[Ne] 3s2 3p6',
+  '[Kr]':'[Ar] 3d10 4s2 4p6','[Xe]':'[Kr] 4d10 5s2 5p6','[Rn]':'[Xe] 4f14 5d10 6s2 6p6'};
+function expandConfig(ec){
+  let s=ec;
+  for(let i=0;i<8;i++){
+    const m=s.match(/\[(He|Ne|Ar|Kr|Xe|Rn)\]/);
+    if(!m)break;
+    s=s.replace(m[0],CORES[m[0]]+' ');
+  }
+  const out=[];
+  for(const tok of s.trim().split(/\s+/)){
+    const mm=tok.match(/^(\d)([spdf])(\d+)$/);
+    if(mm)out.push({n:+mm[1],l:LOFNAME[mm[2]],occ:+mm[3],key:mm[1]+mm[2]});
+  }
+  // merge duplicates, sort by (n,l)
+  const map={};
+  for(const o of out){const k=o.key;if(map[k])map[k].occ+=o.occ;else map[k]={...o};}
+  return Object.values(map).sort((a,b)=>a.n-b.n||a.l-b.l);
+}
+
+// ── Slater effective nuclear charge for a target subshell ──
+// Groups in Slater order: (1s)(2s2p)(3s3p)(3d)(4s4p)(4d)(4f)(5s5p)(5d)(5f)(6s6p)(6d)(7s7p)...
+const SLATER_SEQ=[[1,'sp'],[2,'sp'],[3,'sp'],[3,'d'],[4,'sp'],[4,'d'],[4,'f'],
+  [5,'sp'],[5,'d'],[5,'f'],[6,'sp'],[6,'d'],[6,'f'],[7,'sp'],[7,'d'],[7,'f']];
+function slaterGroupIdx(o){
+  const kind=o.l<=1?'sp':LNAME[o.l];
+  for(let i=0;i<SLATER_SEQ.length;i++)
+    if(SLATER_SEQ[i][0]===o.n&&SLATER_SEQ[i][1]===kind)return i;
+  return 99;
+}
+function slaterZeff(Z,subs,target){
+  const ti=slaterGroupIdx(target), tIsSP=target.l<=1;
+  let s=0;
+  for(const o of subs){
+    const oi=slaterGroupIdx(o);
+    if(oi>ti)continue;                                  // later groups: no screening
+    if(oi===ti){ s+=(ti===0?0.30:0.35)*o.occ; continue; } // same group (self removed below)
+    if(tIsSP) s+=(o.n===target.n-1?0.85:1.00)*o.occ;    // s/p target: n-1 shell 0.85, deeper 1.0
+    else      s+=1.00*o.occ;                            // d/f target: all inner screen fully
+  }
+  s-=(ti===0?0.30:0.35);                                // remove the test electron itself
+  return Math.max(1,Z-s);
+}
+
+
+/* ══════════════════════ SUPPLEMENTAL MEASURED DATA ══════════════════════
+   ea  — electron affinity, kJ/mol (NIST / Hotop–Lineberger compilation).
+         'x' = anion unbound (a real measured fact); null = not reliably
+         established. Values omitted where literature conflicts.
+   ie2 — second ionization energy, kJ/mol (NIST ASD), Z ≤ 20: enough to
+         show the shell-jump evidence (e.g. Na: 496 → 4562).
+   lines — signature visible emission lines, nm (NIST ASD persistent
+         lines). Hydrogen's are computed exactly instead.               */
+const EXTRA={
+  1:{ea:72.8},                    2:{ea:'x',ie2:5250.5,lines:[447.1,501.6,587.6,667.8]},
+  3:{ea:59.6,ie2:7298.1,lines:[610.4,670.8]}, 4:{ea:'x',ie2:1757.1},
+  5:{ea:26.7,ie2:2427.1},         6:{ea:121.8,ie2:2352.6},
+  7:{ea:'x',ie2:2856.0},          8:{ea:141.0,ie2:3388.3},
+  9:{ea:328.2,ie2:3374.2},        10:{ea:'x',ie2:3952.3,lines:[585.2,640.2,703.2]},
+  11:{ea:52.9,ie2:4562.4,lines:[589.0,589.6]}, 12:{ea:'x',ie2:1450.7},
+  13:{ea:41.8,ie2:1816.7},        14:{ea:134.1,ie2:1577.1},
+  15:{ea:72.0,ie2:1907.5},        16:{ea:200.4,ie2:2252.0},
+  17:{ea:348.6,ie2:2298.0},       18:{ea:'x',ie2:2665.9,lines:[696.5,750.4,763.5]},
+  19:{ea:48.4,ie2:3052.0,lines:[766.5,769.9]}, 20:{ea:2.4,ie2:1145.4,lines:[422.7]},
+  21:{ea:18.1},22:{ea:7.6},23:{ea:50.7},24:{ea:64.3},25:{ea:'x'},
+  26:{ea:15.7},27:{ea:63.7},28:{ea:112.0},29:{ea:118.4},30:{ea:'x',lines:[468.0,472.2,481.1]},
+  32:{ea:119.0},33:{ea:78.0},34:{ea:195.0},35:{ea:324.6},36:{ea:'x'},
+  37:{ea:46.9,lines:[780.0,794.8]},38:{ea:5.0,lines:[460.7]},39:{ea:29.6},40:{ea:41.1},
+  41:{ea:86.1},42:{ea:71.9},43:{ea:53.1},44:{ea:101.3},45:{ea:109.7},
+  46:{ea:53.7},47:{ea:125.6},48:{ea:'x',lines:[467.8,508.6,643.8]},
+  50:{ea:107.3},51:{ea:101.1},52:{ea:190.2},53:{ea:295.2},54:{ea:'x'},
+  55:{ea:45.5,lines:[852.1,894.3]},56:{ea:14.0,lines:[553.5]},57:{ea:45.3},
+  73:{ea:31.1},74:{ea:78.6},76:{ea:106.1},77:{ea:150.9},78:{ea:205.3},
+  79:{ea:222.7},80:{ea:'x',lines:[404.7,435.8,546.1,577.0,579.1]},
+  82:{ea:35.1},83:{ea:90.9},85:{ea:233.0},86:{ea:'x'}
+};
+for(const e of ELEMENTS){const x=EXTRA[e.z]||{};e.ea=x.ea??null;e.ie2=x.ie2??null;e.lines=x.lines??null;}
+
+/* ══════════════════════ SOURCE-OF-TRUTH REGISTRY ══════════════════════ */
+const SOURCES=[
+  {k:'Atomic weights',v:'IUPAC/CIAAW Standard Atomic Weights, 2021 revision. Bracketed values = mass number of the most stable isotope (no stable isotopes exist).'},
+  {k:'Electron configurations',v:'NIST Atomic Spectra Database ground-state configurations. For Z ≥ 104 configurations are theoretical predictions.'},
+  {k:'Ionization energies (IE₁, IE₂)',v:'NIST Atomic Spectra Database, CODATA-consistent values in kJ/mol. IE₂ included for Z ≤ 20.'},
+  {k:'Electron affinities',v:'NIST / Hotop–Lineberger critical compilations. "Unbound" = the negative ion is not stable (a measured fact). Blank = no reliably established value; conflicting literature values were omitted rather than guessed.'},
+  {k:'Electronegativity',v:'Pauling scale, revised values (Allred 1961 tabulation as commonly reproduced).'},
+  {k:'Covalent radii',v:'Cordero et al., Dalton Trans. 2008 — single-bond covalent radii from ~228,000 crystallographic structures.'},
+  {k:'Melting/boiling points, densities',v:'CRC Handbook of Chemistry & Physics values. Gas densities at 0 °C, 1 atm in g/L. ~ marks estimates; superheavy values are theoretical predictions.'},
+  {k:'Ground-state term symbols',v:'Computed here from the configuration via Hund\u2019s rules (max S, then max L, J by shell filling) and verified against NIST ASD; cerium\u2019s ¹G₄ — the one case Hund\u2019s rules miss — is taken from NIST directly.'},
+  {k:'Hydrogen spectrum',v:'Computed exactly from Eₙ = −R_H/n² with the reduced-mass Rydberg constant R_H = 1.096776×10⁷ m⁻¹; agrees with NIST ASD to <0.05%.'},
+  {k:'Signature emission lines',v:'NIST Atomic Spectra Database strong/persistent visible lines, for elements where a short vetted list exists. Not exhaustive — iron alone has thousands of lines.'},
+  {k:'Wavefunctions & orbital images',v:'Analytic hydrogen-like solutions ψ = R_nl·Y_lm of the Schrödinger equation, exact for one-electron atoms; multi-electron shapes use Slater-screened Z_eff (Slater, Phys. Rev. 1930) and are labeled as approximations wherever shown.'},
+  {k:'Oxidation states, applications',v:'Common states and uses per standard references (CRC, Greenwood & Earnshaw). Descriptive text is editorial but factual.'},
+];
+
+/* ══════════════════════ GROUND-STATE TERM SYMBOLS ══════════════════════
+   Hund's rules on the actual configuration: maximize S, then L; J=|L−S|
+   for a less-than-half open shell, L+S for more, S alone if half-filled.
+   Open subshells combine additively (verified against NIST for the d+s
+   anomalies and the f+d actinides). Cerium is the lone failure — NIST's
+   ¹G₄ is hardcoded. Predicted configs (Z≥104) get terms too, flagged.  */
+const TERM_EXCEPTIONS={58:'¹G₄'};
+const LLETTER='SPDFGHIKLMNOQ';
+const SUP={0:'⁰',1:'¹',2:'²',3:'³',4:'⁴',5:'⁵',6:'⁶',7:'⁷',8:'⁸',9:'⁹'};
+function supNum(n){return String(n).split('').map(c=>SUP[c]).join('');}
+function fracJ(J2){ // J2 = 2J
+  return J2%2===0 ? String(J2/2) : (J2)+'\u2044'+'2';
+}
+function groundTerm(e){
+  if(TERM_EXCEPTIONS[e.z])return TERM_EXCEPTIONS[e.z];
+  const subs=expandConfig(e.ec);
+  const open=subs.filter(s=>s.occ<4*s.l+2);
+  if(open.length===0)return '¹S₀';
+  let S2=0,L=0;           // S2 = 2S (avoid fractions)
+  let jShell=null;        // the open l>0 shell that sets the J rule
+  for(const s of open){
+    const cap=2*s.l+1;
+    const k=s.occ, useHoles=k>cap, m=useHoles?4*s.l+2-k:k;
+    S2+=m;
+    let Lsub=0;for(let i=0;i<m;i++)Lsub+=(s.l-i);
+    L+=Lsub;
+    if(s.l>0)jShell=s;
+  }
+  let J2;
+  if(L===0)J2=S2;
+  else{
+    const ref=jShell||open[open.length-1];
+    const more=ref.occ>2*ref.l+1;
+    J2=more?2*L+S2:Math.abs(2*L-S2);
+  }
+  const sub={'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','/':'\u2044'};
+  const Jstr=(J2%2===0?String(J2/2):J2+'/2').split('').map(c=>sub[c]||c).join('');
+  return supNum(S2+1)+LLETTER[L]+Jstr;
+}
+
+/* ══════════════════════ HYDROGEN-LIKE SPECTRUM (exact) ══════════════════ */
+const RYD_H=1.0967758e7; // m⁻¹, hydrogen (reduced mass)
+function hSeries(nLow,nMax){
+  const out=[];
+  for(let n=nLow+1;n<=nMax;n++){
+    const inv=RYD_H*(1/(nLow*nLow)-1/(n*n));
+    const nmv=1e9/inv; out.push({from:n,to:nLow,nm:nmv>200?nmv/1.000293:nmv}); // standard-air above 200nm, as NIST tabulates
+  }
+  return out;
+}
+function wl2rgb(nm){ // approximate visible-wavelength → RGB
+  let r=0,g=0,b=0,t=nm;
+  if(t>=380&&t<440){r=-(t-440)/60;b=1;}
+  else if(t<490){g=(t-440)/50;b=1;}
+  else if(t<510){g=1;b=-(t-510)/20;}
+  else if(t<580){r=(t-510)/70;g=1;}
+  else if(t<645){r=1;g=-(t-645)/65;}
+  else if(t<=780){r=1;}
+  let f=1;
+  if(t>=380&&t<420)f=0.3+0.7*(t-380)/40;
+  else if(t>700&&t<=780)f=0.3+0.7*(780-t)/80;
+  else if(t>780)return[120,40,40];
+  else if(t<380)return[70,40,120];
+  const gam=0.85;
+  return[r,g,b].map(v=>Math.round(255*Math.pow(v*f,gam)));
+}
+
+/* ── extent: radius enclosing ~99.5% of probability ── */
+function extent99(subshells,Z){
+  // subshells: [{n,l,occ,zeff}] — use the largest orbital
+  let rmax=0;
+  for(const s of subshells){rmax=Math.max(rmax,(3*s.n*s.n/s.zeff)*2.4+3);}
+  const N=1600,dr=rmax/N;let tot=0;const cum=new Float64Array(N);
+  for(let i=0;i<N;i++){
+    const r=(i+.5)*dr;let p=0;
+    for(const s of subshells){const R=radialR(s.n,s.l,s.zeff,r);p+=s.occ*r*r*R*R;}
+    tot+=p*dr;cum[i]=tot;
+  }
+  for(let i=0;i<N;i++)if(cum[i]>=0.995*tot)return (i+1)*dr;
+  return rmax;
+}
+
+/* ── colormaps ── */
+function cmapDensity(t){ // 0..1 → dark → teal → white (γ=0.35 lifts faint outer shells)
+  t=Math.max(0,Math.min(1,Math.pow(t,0.35)));
+  const r=Math.round(10+t*t*235), g=Math.round(16+t*225), b=Math.round(28+t*210);
+  return [Math.min(r,255),Math.min(g,255),Math.min(b,255)];
+}
+function cmapPhase(v){ // -1..1 → blue ↔ dark ↔ red
+  const a=Math.min(1,Math.abs(v)); const g=Math.pow(a,0.55);
+  if(v>=0)return [Math.round(30+g*225),Math.round(24+g*60),Math.round(40+g*40)];
+  return [Math.round(30+g*40),Math.round(30+g*110),Math.round(45+g*210)];
+}
+
+/* ── render one orbital cross-section into a canvas ── */
+function renderOrbital(canvas,orb,mode,phase){
+  // orb: {n,l,zeff,variant:{m,tri,e1,e2}, ext}
+  const W=canvas.width,H=canvas.height;
+  const ctx=canvas.getContext('2d');
+  const img=ctx.createImageData(W,H);
+  const ext=orb.ext;
+  if(!orb._amp||orb._amp.length!==W*H||orb._ampKey!==orb.key+mode){
+    const amp=new Float32Array(W*H);
+    const v=orb.variant;
+    let maxA=0;
+    for(let j=0;j<H;j++){
+      const vv=(j/(H-1)*2-1)*ext;
+      for(let i=0;i<W;i++){
+        const uu=(i/(W-1)*2-1)*ext;
+        const x=uu*v.e1[0]+vv*v.e2[0], y=uu*v.e1[1]+vv*v.e2[1], z=uu*v.e1[2]+vv*v.e2[2];
+        const r=Math.hypot(x,y,z);
+        const th=r<1e-9?0:Math.acos(Math.max(-1,Math.min(1,z/r)));
+        const ph=Math.atan2(y,x);
+        const psi=radialR(orb.n,orb.l,orb.zeff,r)*realY(orb.l,v.m,v.tri,th,ph);
+        amp[j*W+i]=psi;
+        const a=Math.abs(psi); if(a>maxA)maxA=a;
+      }
+    }
+    orb._amp=amp; orb._maxA=maxA||1; orb._ampKey=orb.key+mode;
+  }
+  const amp=orb._amp, maxA=orb._maxA;
+  const cph=Math.cos(phase||0);
+  for(let k=0;k<W*H;k++){
+    let rgb;
+    if(mode==='density'){
+      const t=(amp[k]*amp[k])/(maxA*maxA);
+      rgb=cmapDensity(t);
+    }else{
+      rgb=cmapPhase((amp[k]/maxA)*cph);
+    }
+    const o=k*4; img.data[o]=rgb[0];img.data[o+1]=rgb[1];img.data[o+2]=rgb[2];img.data[o+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+}
+
+/* ── whole-atom composite: spherically symmetric shell cloud ── */
+function renderAtom(canvas,subshells,ext,covRadiusPm){
+  const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
+  const img=ctx.createImageData(W,H);
+  // precompute radial density lookup 4πr²ρ ∝ Σ occ·R² (per volume: Σ occ·R²/4π)
+  const NR=900, lut=new Float32Array(NR);
+  let maxv=0;
+  for(let i=0;i<NR;i++){
+    const r=(i+0.5)/NR*ext;let d=0;
+    for(const s of subshells){const R=radialR(s.n,s.l,s.zeff,r);d+=s.occ*R*R;}
+    // gentle compression so inner shells don't blow out the display
+    lut[i]=Math.pow(d,0.32);
+    if(lut[i]>maxv)maxv=lut[i];
+  }
+  for(let j=0;j<H;j++){
+    const vv=(j/(H-1)*2-1)*ext;
+    for(let i=0;i<W;i++){
+      const uu=(i/(W-1)*2-1)*ext;
+      const r=Math.hypot(uu,vv);
+      const idx=Math.min(NR-1,Math.floor(r/ext*NR));
+      const t=r>ext?0:lut[idx]/maxv;
+      const rgb=cmapDensity(t);
+      const o=(j*W+i)*4;
+      img.data[o]=rgb[0];img.data[o+1]=rgb[1];img.data[o+2]=rgb[2];img.data[o+3]=255;
+    }
+  }
+  ctx.putImageData(img,0,0);
+  // covalent-radius ring (measured) overlaid on the computed cloud
+  if(covRadiusPm){
+    const rAU=covRadiusPm/A0_PM;
+    if(rAU<ext*0.98){
+      const pr=rAU/ext*(W/2);
+      ctx.strokeStyle='rgba(255,212,59,.85)';ctx.setLineDash([5,4]);ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.arc(W/2,H/2,pr,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+}
+
+/* ── radial probability plot P(r)=r²R² (orbital) or Σocc·r²R² (atom) ── */
+function renderRadialPlot(canvas,series,ext,marks){
+  const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
+  ctx.fillStyle='#070a10';ctx.fillRect(0,0,W,H);
+  const pad={l:10,r:10,t:12,b:22};
+  const N=W-pad.l-pad.r;
+  let maxy=0;const ys=[];
+  for(let i=0;i<N;i++){
+    const r=(i+0.5)/N*ext;let y=0;
+    for(const s of series){const R=radialR(s.n,s.l,s.zeff,r);y+=(s.occ||1)*r*r*R*R;}
+    ys.push(y);if(y>maxy)maxy=y;
+  }
+  // axis
+  ctx.strokeStyle='#232a38';ctx.beginPath();
+  ctx.moveTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
+  // curve + fill
+  ctx.beginPath();
+  ctx.moveTo(pad.l,H-pad.b);
+  for(let i=0;i<N;i++){
+    ctx.lineTo(pad.l+i,H-pad.b-(ys[i]/maxy)*(H-pad.t-pad.b));
+  }
+  ctx.lineTo(pad.l+N-1,H-pad.b);ctx.closePath();
+  ctx.fillStyle='rgba(124,198,255,.14)';ctx.fill();
+  ctx.beginPath();
+  for(let i=0;i<N;i++){
+    const y=H-pad.b-(ys[i]/maxy)*(H-pad.t-pad.b);
+    i?ctx.lineTo(pad.l+i,y):ctx.moveTo(pad.l+i,y);
+  }
+  ctx.strokeStyle='#7cc6ff';ctx.lineWidth=1.6;ctx.stroke();
+  // x labels
+  ctx.fillStyle='#5f6a80';ctx.font='10px IBM Plex Mono, monospace';
+  ctx.fillText('0',pad.l,H-8);
+  const pmMax=(ext*A0_PM).toFixed(0);
+  ctx.textAlign='right';ctx.fillText(pmMax+' pm',W-pad.r,H-8);ctx.textAlign='left';
+  ctx.fillText('P(r)',pad.l,pad.t);
+  // optional vertical marks (e.g., covalent radius)
+  if(marks)for(const m of marks){
+    const x=pad.l+(m.r/ext)*N;
+    if(x<W-pad.r){
+      ctx.strokeStyle=m.color;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,H-pad.b);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+}
+
+/* ── bonding narrative from real structure + measured data ── */
+function valenceInfo(subs){
+  const nmax=Math.max(...subs.map(s=>s.n));
+  const val=subs.filter(s=>s.n===nmax&&s.l<=1);
+  const vcount=val.reduce((a,s)=>a+s.occ,0);
+  const dSub=subs.find(s=>s.n===nmax-1&&s.l===2&&s.occ<10);
+  const fSub=subs.find(s=>s.l===3&&s.occ<14);
+  return {nmax,val,vcount,dSub,fSub};
+}
+function bondingText(e,vi){
+  const en=e.en!=null?`${e.en}`:'—';
+  const ie=e.ie!=null?`${e.ie} kJ/mol`:'—';
+  const ions=e.ox?` Its common oxidation states, from measured chemistry: <b>${e.ox}</b>.`:'';
+  if(e.z===1)return `Hydrogen has a single electron in a half-filled 1s orbital — the most versatile starting point in chemistry. It can <b>share</b> that electron (H₂, every C–H bond), <b>lose</b> it to become a bare proton H⁺ (all acid–base chemistry), or <b>gain</b> one to complete 1s² as the hydride ion H⁻. Electronegativity ${en}, ionization energy ${ie}.`+ions;
+  if(e.z===2)return `Helium's 1s² shell is complete — the smallest closed shell in nature. Removing an electron costs ${ie}, the highest of any element, and there is no vacancy to accept one. Result: <b>no stable neutral compounds are known</b>. This inertness is the duet rule made visible.`;
+  if(e.c==='noble-gas')return `A complete ${vi.nmax}s²${vi.nmax}p⁶ octet: no vacancy to fill, and ${ie} to remove an electron. ${e.z>=36?'The heavier noble gases are not perfectly inert — their outer electrons are far enough from the nucleus that strong oxidizers (mostly fluorine) can pry them loose, giving compounds like XeF₄.':'Essentially no drive to bond.'}`+ions;
+  if(e.c==='alkali-metal')return `One lone electron in ${vi.nmax}s sits far outside a closed core, screened from the nucleus — so it takes only ${ie} to remove, among the lowest of all elements. Losing it exposes a noble-gas core: the <b>${e.s}⁺</b> ion. That is the whole story of group 1: give the electron away, form ionic bonds.`+ions;
+  if(e.c==='alkaline-earth')return `Two electrons in ${vi.nmax}s² beyond a noble-gas core. Both are given up readily (first ionization ${ie}), producing the stable <b>${e.s}²⁺</b> ion that dominates this element's chemistry.`+ions;
+  if(e.c==='halogen')return `One electron short of a complete octet (${vi.nmax}s²${vi.nmax}p⁵). With electronegativity ${en}${e.z===9?' — the highest of any element':''}, it pulls electrons hard: <b>gain one → ${e.s}⁻</b>${typeof e.ea==='number'?`, releasing ${e.ea} kJ/mol (its measured electron affinity)`:''} — or share one in a single covalent bond. The near-complete shell is why halogens are so reactive.`+ions;
+  if(e.c==='lanthanide'||e.c==='actinide')return `The partially filled ${e.c==='lanthanide'?'4f':'5f'} electrons are buried inside filled outer shells, so they barely participate in bonding — which is why the ${e.c}s are chemically so alike. The atom typically gives up its outer s (and one d/f) electron${vi.vcount>1?'s':''} to form the characteristic <b>+3</b> ion.`+ions;
+  if(e.c==='transition-metal')return `The outer ${vi.nmax}s electrons are lost first; the partially filled ${vi.dSub?((vi.nmax-1)+'d'):'d'} shell beneath can then surrender a variable number more. That flexibility — several stable oxidation states, empty d orbitals to accept electron pairs — is what makes transition metals catalysts and color-makers. First ionization ${ie}, electronegativity ${en}.`+ions;
+  if(e.c==='metalloid')return `${vi.vcount} valence electrons with electronegativity ${en} — poised between metal and nonmetal. It mostly <b>shares</b> electrons in covalent networks (the reason ${e.s===('Si')?'silicon crystallizes like diamond and semiconducts':'metalloids semiconduct'}) rather than forming simple ions.`+ions;
+  // nonmetals & post-transition, by octet distance
+  const need=8-vi.vcount;
+  if(e.c==='nonmetal')return `${vi.vcount} valence electrons: ${need} short of an octet. With electronegativity ${en} it <b>shares ${Math.min(need,4)} electron pair${need>1?'s':''}</b> in covalent bonds — or gains electrons outright from metals (→ ${e.s}${need>1?'²⁻⁄³⁻':'⁻'}-type ions). Ionization energy ${ie}.`+ions;
+  return `${vi.vcount} valence electrons in ${vi.nmax}s/${vi.nmax}p. Metallic character: it loses electrons (${ie} for the first), but the filled d¹⁰ core below makes the heavier members keep their s² pair — the "inert-pair effect" behind states like +1/+2 alongside +3/+4.`+ions;
+}
+
+/* ── electron-box (Hund) diagram for valence subshells ── */
+function boxDiagram(container,subs,vi){
+  container.innerHTML='';
+  const show=subs.filter(s=> s.n===vi.nmax || (s.n===vi.nmax-1&&s.l===2&&s.occ<10) || (s.l===3&&s.occ<14&&s.n>=vi.nmax-2));
+  for(const s of show){
+    const nb=2*s.l+1;
+    const wrap=document.createElement('div');wrap.className='qv-sub-boxes';
+    const row=document.createElement('div');row.className='qv-boxrow';
+    // Hund filling: singles first, then pairs
+    for(let i=0;i<nb;i++){
+      const box=document.createElement('div');box.className='qv-box';
+      const first=Math.min(s.occ,nb), second=Math.max(0,s.occ-nb);
+      let t='';
+      if(i<first)t='↿';
+      if(i<second)t='↿⇂';
+      box.textContent=t;
+      row.appendChild(box);
+    }
+    const lab=document.createElement('div');lab.className='qv-sublabel';
+    lab.innerHTML=`${s.n}${LNAME[s.l]}<sup>${s.occ}</sup>`;
+    wrap.appendChild(row);wrap.appendChild(lab);
+    container.appendChild(wrap);
+  }
+}
+
+/* ── quantum view controller ── */
+const qvEl=document.getElementById('qv');
+const qvState={e:null,subs:null,tab:'atom',orb:null,mode:'density',playing:true,raf:null,oneE:false};
+
+function qvSubshells(e){
+  const subs=expandConfig(e.ec);
+  for(const s of subs)s.zeff=slaterZeff(e.z,subs,s);
+  return subs;
+}
+function qvOpen(e){
+  qvState.e=e;
+  qvState.subs=qvSubshells(e);
+  qvState.oneE=qvState.subs.reduce((a,s)=>a+s.occ,0)===1;
+  qvState.tab='atom';
+  qvState.mode='density';
+  qvState.playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // default orbital = outermost occupied subshell, first variant
+  const last=qvState.subs[qvState.subs.length-1];
+  qvSetOrb(last.n,last.l,0);
+  qvRender();
+  qvEl.classList.add('show');
+}
+function qvClose(){
+  qvEl.classList.remove('show');
+  if(qvState.raf)cancelAnimationFrame(qvState.raf);
+  qvState.raf=null;
+}
+function qvSetOrb(n,l,vi){
+  const e=qvState.e;
+  const subs=qvState.subs;
+  const occ=subs.find(s=>s.n===n&&s.l===l);
+  const zeff=occ?occ.zeff:(qvState.oneE?e.z:slaterZeff(e.z,subs,{n,l,key:n+LNAME[l],occ:0}));
+  const variant=ORBSETS[l][vi];
+  const orb={n,l,zeff,variant,vi,occ:occ?occ.occ:0,key:`${e.z}|${n}${LNAME[l]}|${vi}`};
+  orb.ext=extent99([{n,l,occ:1,zeff}],zeff);
+  qvState.orb=orb;
+}
+
+function qvRender(){
+  const e=qvState.e, subs=qvState.subs, col=CAT[e.c].color;
+  const dark=needsDarkText(col)?' darktext':'';
+  const badge=qvState.oneE
+    ?'<span class="qv-badge exact">exact solution</span>'
+    :'<span class="qv-badge approx">hydrogen-like · Slater Z<sub>eff</sub></span>';
+  const tabs=[['atom','The atom alone'],['orb','Orbitals · ψ']];
+  if(qvState.oneE||e.lines)tabs.push(['spec','Spectrum']);
+  tabs.push(['bond','Why it bonds']);
+  const term=groundTerm(e);
+  qvEl.innerHTML=`
+  <div class="qv-card" role="dialog" aria-label="Quantum states of ${e.n}">
+    <div class="qv-head">
+      <div class="qv-sym${dark}" style="--c:${col}">${e.s}</div>
+      <div>
+        <div class="qv-title">${e.n} — quantum states${badge}</div>
+        <div class="qv-sub">${e.ec} · ground term ${term}</div>
+      </div>
+      <button class="qv-close" aria-label="Close">✕</button>
+    </div>
+    <div class="qv-tabs">${tabs.map(([k,l])=>`<button class="qv-tab ${qvState.tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('')}</div>
+    <div class="qv-body" id="qvbody"></div>
+    <div class="qv-disclaim">One-electron wavefunctions ψ<sub>nlm</sub> = R<sub>nl</sub>(r)·Y<sub>lm</sub>(θ,φ), computed from the Schrödinger equation for a Coulomb potential. Exact for hydrogen${qvState.oneE?'':' — for this multi-electron atom, orbital shapes use Slater-screened Z<sub>eff</sub> (the standard teaching approximation); electron–electron repulsion, correlation, and relativistic effects are not included'}. Measured quantities (ionization energies, electron affinity, covalent radius, emission lines) are shown for comparison — sources in About → Data &amp; sources.</div>
+  </div>`;
+  qvEl.querySelector('.qv-close').addEventListener('click',qvClose);
+  qvEl.querySelectorAll('.qv-tab').forEach(t=>t.addEventListener('click',()=>{qvState.tab=t.dataset.tab;qvRender();}));
+  const body=qvEl.querySelector('#qvbody');
+  if(qvState.tab==='atom')qvRenderAtom(body);
+  else if(qvState.tab==='orb')qvRenderOrb(body);
+  else if(qvState.tab==='spec')qvRenderSpectrum(body);
+  else qvRenderBond(body);
+}
+
+function qvRenderAtom(body){
+  const e=qvState.e, subs=qvState.subs;
+  const ext=extent99(subs.map(s=>({...s})),1);
+  // shell summary K L M N...
+  const shells={};
+  for(const s of subs)shells[s.n]=(shells[s.n]||0)+s.occ;
+  const shellNames=['','K','L','M','N','O','P','Q'];
+  const shellStr=Object.keys(shells).sort((a,b)=>a-b).map(n=>`${shellNames[n]}(n=${n}): <b>${shells[n]}</b>`).join(' · ');
+  body.innerHTML=`
+    <div class="qv-cols">
+      <div>
+        <div class="qv-canvaswrap">
+          <canvas id="qvAtomCv" width="320" height="320"></canvas>
+          <span class="qv-extent">field of view ±${(ext*A0_PM).toFixed(0)} pm</span>
+          ${e.r?'<span class="qv-covring">◌ measured covalent radius '+e.r+' pm</span>':''}
+        </div>
+        <div class="qv-cap">Electron probability density of the whole atom — every occupied orbital summed (filled subshells are perfectly spherical: Unsöld's theorem). Brighter = more likely to find an electron there.</div>
+      </div>
+      <div>
+        <canvas class="qv-plot" id="qvAtomRad" width="330" height="140"></canvas>
+        <div class="qv-cap">Radial distribution P(r): the humps are the electron <b>shells</b>. ${e.r?'The dashed line marks the measured covalent radius — note how it sits at the outer edge of the outermost shell.':''}</div>
+        <div class="qv-kv">Shell occupancy — ${shellStr}<br>Configuration: <b>${e.ec}</b> · ground term <b>${groundTerm(e)}</b><br>${e.ea!=null?('Electron affinity: <b>'+(e.ea==='x'?'unbound (the anion is not stable)':e.ea+' kJ/mol released capturing an e⁻')+'</b><br>'):''}${e.ie2?('IE₁ '+e.ie+' → IE₂ <b>'+e.ie2+' kJ/mol</b>'+(e.ie2/e.ie>2.8?' — a ×'+Math.round(e.ie2/e.ie)+' jump: the second electron comes from a closed shell':'')+'<br>'):''}${qvState.oneE?'Exact one-electron atom.':'Z<sub>eff</sub> per subshell (Slater): '+subs.map(s=>`${s.n}${LNAME[s.l]} ${s.zeff.toFixed(2)}`).join(' · ')}</div>
+      </div>
+    </div>`;
+  const cv=body.querySelector('#qvAtomCv');
+  renderAtom(cv,subs,ext,e.r);
+  renderRadialPlot(body.querySelector('#qvAtomRad'),subs,ext,
+    e.r?[{r:e.r/A0_PM,color:'rgba(255,212,59,.8)'}]:null);
+}
+
+function qvRenderOrb(body){
+  const e=qvState.e, subs=qvState.subs, orb=qvState.orb;
+  // chips: occupied subshells; for one-electron atoms, add excited states to n=5
+  let chipsHtml='';
+  const seen=new Set();
+  for(const s of subs){
+    seen.add(s.n+'-'+s.l);
+    chipsHtml+=`<button class="qv-chip ${orb.n===s.n&&orb.l===s.l?'on':''}" data-n="${s.n}" data-l="${s.l}" style="--c:${CAT[e.c].color}">${s.n}${LNAME[s.l]}<sup>${s.occ}</sup></button>`;
+  }
+  if(qvState.oneE){
+    for(let n=1;n<=5;n++)for(let l=0;l<n&&l<=3;l++){
+      if(seen.has(n+'-'+l))continue;
+      chipsHtml+=`<button class="qv-chip excited ${orb.n===n&&orb.l===l?'on':''}" data-n="${n}" data-l="${l}">${n}${LNAME[l]}<sup>*</sup></button>`;
+    }
+  }
+  let varHtml='';
+  ORBSETS[orb.l].forEach((v,i)=>{
+    varHtml+=`<button class="qv-ctl ${i===orb.vi?'on':''}" data-vi="${i}">${v.lab}</button>`;
+  });
+  const nodesR=orb.n-orb.l-1, nodesA=orb.l;
+  let energyLine;
+  if(qvState.oneE){
+    const En=-13.6057*e.z*e.z/(orb.n*orb.n);
+    energyLine=`Energy (exact): <b>E<sub>${orb.n}</sub> = −13.61/${orb.n}² = ${En.toFixed(2)} eV</b>`;
+  }else{
+    energyLine=`Z<sub>eff</sub> for this subshell (Slater): <b>${orb.zeff.toFixed(2)}</b>${e.ie?` · measured energy to remove the outermost electron: <b>${e.ie} kJ/mol</b>`:''}`;
+  }
+  body.innerHTML=`
+    <div class="qv-chiprow">${chipsHtml}</div>
+    <div class="qv-cols">
+      <div>
+        <div class="qv-canvaswrap">
+          <canvas id="qvOrbCv" width="320" height="320"></canvas>
+          <span class="qv-extent">±${(orb.ext*A0_PM).toFixed(0)} pm</span>
+        </div>
+        <div class="qv-controls">
+          <button class="qv-ctl ${qvState.mode==='density'?'on':''}" data-mode="density">|ψ|² probability</button>
+          <button class="qv-ctl ${qvState.mode==='phase'?'on':''}" data-mode="phase">ψ wave (± phase)</button>
+          <button class="qv-ctl" id="qvPlay" ${qvState.mode!=='phase'?'style="display:none"':''}>${qvState.playing?'⏸ pause':'▶ animate'}</button>
+        </div>
+        <div class="qv-controls">${varHtml}</div>
+      </div>
+      <div>
+        <canvas class="qv-plot" id="qvOrbRad" width="330" height="140"></canvas>
+        <div class="qv-cap"><b>${orb.n}${LNAME[orb.l]} — ${ORBSETS[orb.l][orb.vi].lab}</b> · quantum numbers n=${orb.n}, ℓ=${orb.l}${orb.occ?` · holds ${orb.occ} of ${4*orb.l+2} electrons`:' · unoccupied (excited state)'}<br>
+        Nodes: <b>${nodesR} radial</b> (spherical shells where ψ=0) + <b>${nodesA} angular</b> (planes/cones) = ${orb.n-1} total — more nodes, higher energy.<br>
+        ${energyLine}</div>
+        <div class="qv-cap">${qvState.mode==='phase'?'Red and blue are the two <b>signs of the wavefunction</b>. A stationary state\u2019s phase rotates in time (shown vastly slowed, faster for deeper states) while |ψ|² stays perfectly still. Bonds form where same-sign lobes of neighboring atoms overlap constructively.':'Probability density |ψ|²: where the electron is likely to be found. Switch to the ψ view to see the wave\u2019s sign — the thing that decides bonding.'}</div>
+      </div>
+    </div>`;
+  body.querySelectorAll('.qv-chip').forEach(c=>c.addEventListener('click',()=>{
+    qvSetOrb(+c.dataset.n,+c.dataset.l,0);qvRender();
+  }));
+  body.querySelectorAll('[data-vi]').forEach(b=>b.addEventListener('click',()=>{
+    qvSetOrb(orb.n,orb.l,+b.dataset.vi);qvRender();
+  }));
+  body.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{
+    qvState.mode=b.dataset.mode;qvRender();
+  }));
+  const cv=body.querySelector('#qvOrbCv');
+  renderOrbital(cv,orb,qvState.mode,0);
+  renderRadialPlot(body.querySelector('#qvOrbRad'),[{n:orb.n,l:orb.l,zeff:orb.zeff,occ:1}],orb.ext,null);
+  // phase animation
+  if(qvState.raf)cancelAnimationFrame(qvState.raf);qvState.raf=null;
+  const playBtn=body.querySelector('#qvPlay');
+  if(playBtn)playBtn.addEventListener('click',()=>{qvState.playing=!qvState.playing;qvRender();});
+  if(qvState.mode==='phase'&&qvState.playing){
+    const T=Math.min(9,Math.max(1.8,4*Math.pow(orb.n/orb.zeff,2)))*1000;
+    const t0=performance.now();
+    const tick=t=>{
+      if(!qvEl.classList.contains('show')||qvState.mode!=='phase'){qvState.raf=null;return;}
+      renderOrbital(cv,orb,'phase',(t-t0)/T*2*Math.PI);
+      qvState.raf=requestAnimationFrame(tick);
+    };
+    qvState.raf=requestAnimationFrame(tick);
+  }
+}
+
+function qvRenderBond(body){
+  const e=qvState.e, subs=qvState.subs;
+  const vi=valenceInfo(subs);
+  body.innerHTML=`
+    <div class="qv-kv">Valence shell n=${vi.nmax}: <b>${vi.vcount} electron${vi.vcount!==1?'s':''}</b>${vi.dSub?` · plus a partially filled ${vi.nmax-1}d<sup>${vi.dSub.occ}</sup>`:''}${e.en!=null?` · electronegativity <b>${e.en}</b>`:''}${e.ie!=null?` · IE₁ <b>${e.ie} kJ/mol</b> (measured)`:''}</div>
+    <div class="qv-boxes" id="qvBoxes"></div>
+    <div class="qv-note" id="qvBondText"></div>`;
+  boxDiagram(body.querySelector('#qvBoxes'),subs,vi);
+  body.querySelector('#qvBondText').innerHTML=bondingText(e,vi);
+}
+
+// close on backdrop click / Escape (capture, so it wins over panel Esc)
+qvEl.addEventListener('click',ev=>{if(ev.target===qvEl)qvClose();});
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&qvEl.classList.contains('show')){ev.stopPropagation();qvClose();}
+},true);
+// delegate the panel button
+document.getElementById('panelbody').addEventListener('click',ev=>{
+  const b=ev.target.closest('.qv-openbtn');
+  if(b){const e=ELEMENTS.find(x=>x.z===+b.dataset.z);if(e)qvOpen(e);}
+});
+// expose for testing
+window._qv={expandConfig,slaterZeff,radialR,realY,open:qvOpen,state:qvState};
+
+
+/* ══════════════════════ V3: SPECTRUM TAB ══════════════════════ */
+function qvRenderSpectrum(body){
+  const e=qvState.e;
+  if(qvState.oneE){
+    if(!qvState.series)qvState.series={to:2,name:'Balmer'};
+    const SER=[{to:1,name:'Lyman',range:'ultraviolet',lo:88,hi:135},
+               {to:2,name:'Balmer',range:'visible',lo:380,hi:780},
+               {to:3,name:'Paschen',range:'infrared',lo:900,hi:2000}];
+    const cur=SER.find(s=>s.to===qvState.series.to);
+    const lines=hSeries(cur.to,cur.to+6);
+    const chips=SER.map(s=>`<button class="qv-ctl ${s.to===cur.to?'on':''}" data-ser="${s.to}">${s.name} → n=${s.to}</button>`).join('');
+    const lineList=lines.map(l=>`${l.from}→${l.to}: <b>${l.nm.toFixed(1)} nm</b>`).join(' · ');
+    body.innerHTML=`
+      <div class="qv-controls">${chips}</div>
+      <canvas class="spec-strip" id="qvStrip" width="660" height="86"></canvas>
+      <canvas class="spec-ladder" id="qvLadder" width="660" height="230"></canvas>
+      <div class="qv-cap">The ${cur.name} series (${cur.range}): every electron that falls to n=${cur.to} emits a photon whose wavelength follows <b>exactly</b> from E<sub>n</sub> = −13.61/n² eV. ${cur.to===2?'These four visible lines are the fingerprint of hydrogen across the universe — the same lines in a discharge tube and in the spectrum of a galaxy.':''}</div>
+      <div class="qv-kv">${lineList}</div>
+      <div class="qv-cap">Computed from the reduced-mass Rydberg constant; converted to standard-air wavelengths above 200 nm, exactly as NIST tabulates them (agreement &lt;0.005%). ${cur.range!=='visible'?'Colors here are false color — these lines lie outside the visible band.':''}</div>`;
+    body.querySelectorAll('[data-ser]').forEach(b=>b.addEventListener('click',()=>{qvState.series={to:+b.dataset.ser};qvRender();}));
+    renderStrip(body.querySelector('#qvStrip'),lines.map(l=>l.nm),{lo:cur.lo,hi:cur.hi});
+    renderLadder(body.querySelector('#qvLadder'),e.z,{to:cur.to});
+  }else{
+    body.innerHTML=`
+      <canvas class="spec-strip" id="qvStrip" width="660" height="86"></canvas>
+      <div class="qv-cap"><b>Signature visible emission lines</b> — the wavelengths this element announces itself with in a flame, a discharge tube, or a star: ${e.lines.map(n=>n+' nm').join(', ')}.</div>
+      <div class="qv-cap">Source: NIST Atomic Spectra Database persistent lines. This is a vetted signature set, not the full spectrum — many elements emit hundreds or thousands of lines. Multi-electron spectra cannot be computed from the one-electron model shown in the Orbitals tab; they are measured.</div>`;
+    renderStrip(body.querySelector('#qvStrip'),e.lines,{lo:380,hi:900});
+  }
+}
+
+
+/* ══════════════════════ V3: CLASSIC GRID LAYOUT + MORPH ══════════════════════
+   Ported from Karl's periodic-sphere / combined prototypes: elements morph
+   between the spiral and the standard 18-column table so the familiar map
+   and the continuous sequence are visibly the same object.               */
+const GRID_CELL=58, GRID_R=25;
+function gridPos(e){
+  let row,col;
+  if(e.g!==null){row=e.p;col=e.g;}
+  else if(e.p===6){col=3+laSlot[e.z];row=8.7;}
+  else{col=3+acSlot[e.z];row=9.7;}
+  return{ x:(col-9.5)*GRID_CELL, y:(row-4.6)*GRID_CELL, row, col };
+}
+for(const e of ELEMENTS){const g=gridPos(e);e._gx=g.x;e._gy=g.y;e._grow=g.row;e._gcol=g.col;}
+/* long-form (32-column) positions: f-block seated in its true place */
+function wideCol(e){ return columnOf(e)+1; }   // colIndex is 0-based: g1,g2,f0..f13,g3..g18
+for(const e of ELEMENTS){
+  const col=wideCol(e);
+  e._wx=(col-16.5)*GRID_CELL;
+  e._wy=(e.p-4)*GRID_CELL;
+  e._wcol=col;
+}
+
+let LAYOUT='spiral';      // 'spiral' | 'grid'
+let MORPH=0;              // 0 = spiral, 1 = grid
+let RADENC=false;         // node size ∝ covalent radius
+/* applyPositions/setLayout: owned by the v4 animation module below */
+function radFactor(e){
+  if(!RADENC||e.r==null)return 1;
+  return 0.55+((e.r-28)/(260-28))*0.95;
+}
+function drawGridScaffold(){
+  const g=el('g',{id:'gridScaffold',opacity:'0'});
+  for(let c=1;c<=18;c++){
+    const t=el('text',{class:'gridlabel',x:(c-9.5)*GRID_CELL,y:(1-4.6)*GRID_CELL-42});
+    t.textContent=c;g.appendChild(t);
+  }
+  for(let p=1;p<=7;p++){
+    const t=el('text',{class:'gridlabel side',x:(1-9.5)*GRID_CELL-40,y:(p-4.6)*GRID_CELL+4});
+    t.textContent=p;g.appendChild(t);
+  }
+  const la=el('text',{class:'gridtag',x:(3-9.5)*GRID_CELL-38,y:(8.7-4.6)*GRID_CELL+4});la.textContent='La–Yb';g.appendChild(la);
+  const ac=el('text',{class:'gridtag',x:(3-9.5)*GRID_CELL-38,y:(9.7-4.6)*GRID_CELL+4});ac.textContent='Ac–No';g.appendChild(ac);
+  world.appendChild(g);
+}
+function drawWideScaffold(){
+  const g=el('g',{id:'wideScaffold',opacity:'0'});
+  const colX=c=>(c-16.5)*GRID_CELL;
+  // group labels: 1,2 then a gap, then 3..18
+  const groups=[[1,1],[2,2]];for(let gg=3;gg<=18;gg++)groups.push([gg,gg+14]);
+  for(const[lab,c]of groups){
+    const t=el('text',{class:'gridlabel',x:colX(c),y:(1-4)*GRID_CELL-42});
+    t.textContent=lab;g.appendChild(t);
+  }
+  for(let p=1;p<=7;p++){
+    const t=el('text',{class:'gridlabel side',x:colX(1)-40,y:(p-4)*GRID_CELL+4});
+    t.textContent=p;g.appendChild(t);
+  }
+  // faint band behind the f-block columns, periods 6–7
+  const bx0=colX(3)-GRID_CELL/2, bx1=colX(16)+GRID_CELL/2;
+  const by0=(6-4)*GRID_CELL-GRID_CELL/2, by1=(7-4)*GRID_CELL+GRID_CELL/2;
+  g.insertBefore(el('rect',{x:bx0,y:by0,width:bx1-bx0,height:by1-by0,rx:12,
+    fill:'rgba(77,212,172,.05)',stroke:'rgba(77,212,172,.25)','stroke-dasharray':'5 5'}),g.firstChild);
+  const cap1=el('text',{class:'gridtag',x:(bx0+bx1)/2,y:by1+22,style:'text-anchor:middle'});
+  cap1.textContent='the 28 elements printed tables cut out — purely so the page fits';
+  g.appendChild(cap1);
+  const cap2=el('text',{class:'gridtag',x:(bx0+bx1)/2,y:by1+38,style:'text-anchor:middle;fill:#4dd4ac'});
+  cap2.textContent='turn on “size ∝ radius” and watch the lanthanide contraction: the row quietly shrinks left → right';
+  g.appendChild(cap2);
+  world.appendChild(g);
+}
+
+/* ══════════════════════ V3: SPECTRUM RENDERERS ══════════════════════ */
+function renderStrip(canvas,linesNm,opts){
+  const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
+  const LO=(opts&&opts.lo)||380,HI=(opts&&opts.hi)||900;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  // faint continuum backdrop so line positions read as colors
+  for(let x=0;x<W;x++){
+    const nm=LO+(x/W)*(HI-LO);
+    const[r,g,b]=wl2rgb(nm);
+    ctx.fillStyle=`rgba(${r},${g},${b},${nm>780?0.05:0.13})`;
+    ctx.fillRect(x,0,1,H);
+  }
+  // emission lines
+  ctx.font='9px IBM Plex Mono, monospace';ctx.textAlign='center';
+  linesNm.forEach((nm,i)=>{
+    if(nm<LO||nm>HI)return;
+    const x=(nm-LO)/(HI-LO)*W;
+    const[r,g,b]=wl2rgb(nm);
+    ctx.fillStyle=`rgb(${r},${g},${b})`;
+    ctx.fillRect(x-1,14,2.4,H-24);
+    ctx.fillStyle='#c9d1e2';
+    ctx.fillText(nm.toFixed(nm<1000?1:0),Math.min(W-16,Math.max(16,x)),(i%2?10:H-3));
+  });
+  // IR boundary
+  const xIR=(780-LO)/(HI-LO)*W;
+  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.setLineDash([3,4]);
+  ctx.beginPath();ctx.moveTo(xIR,0);ctx.lineTo(xIR,H);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#5f6a80';ctx.textAlign='left';ctx.fillText('IR →',xIR+4,H-3);
+}
+function renderLadder(canvas,Z,series){
+  const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
+  ctx.fillStyle='#070a10';ctx.fillRect(0,0,W,H);
+  const NMAX=8,pad={l:46,r:14,t:12,b:16};
+  const E=n=>-13.6057*Z*Z/(n*n);
+  const y=en=>pad.t+(en-E(1))/(0-E(1))*(H-pad.t-pad.b);
+  ctx.font='10px IBM Plex Mono, monospace';
+  for(let n=1;n<=NMAX;n++){
+    const yy=y(E(n));
+    ctx.strokeStyle=n===series.to?'#7cc6ff':'#39445c';
+    ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(W-pad.r,yy);ctx.stroke();
+    if(n<=5||n===NMAX){
+      ctx.fillStyle='#8b94a7';ctx.textAlign='right';
+      ctx.fillText('n='+n,pad.l-6,yy+3);
+      if(n<=4){ctx.fillStyle='#5f6a80';ctx.fillText(E(n).toFixed(2)+' eV',pad.l-6,yy+13);}
+    }
+  }
+  // transition arrows
+  const trans=hSeries(series.to,Math.min(series.to+5,NMAX));
+  const n1=series.to;
+  trans.forEach((t,i)=>{
+    const x=pad.l+30+i*((W-pad.l-pad.r-46)/trans.length);
+    const[r,g,b]=wl2rgb(t.nm);
+    ctx.strokeStyle=`rgb(${r},${g},${b})`;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(x,y(E(t.from)));ctx.lineTo(x,y(E(n1))-5);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x-3.5,y(E(n1))-8);ctx.lineTo(x+3.5,y(E(n1))-8);ctx.lineTo(x,y(E(n1))-1);ctx.closePath();
+    ctx.fillStyle=ctx.strokeStyle;ctx.fill();
+  });
+  ctx.lineWidth=1;
+  ctx.fillStyle='#5f6a80';ctx.textAlign='left';
+  ctx.fillText('E = −13.61·Z²/n² eV (exact)',pad.l,H-4);
+}
+
+/* ══════════════════════ V3: INTRO / TOUR / SOURCES ══════════════════════ */
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(_){return null;}}
+function openIntro(){document.getElementById('intro').classList.add('show');}
+function closeIntro(){document.getElementById('intro').classList.remove('show');store('ps-intro-seen','1');}
+function openSrcs(){
+  const list=document.getElementById('srcslist');
+  list.innerHTML=SOURCES.map(s=>`<div class="src-row"><div class="src-k">${s.k}</div><div class="src-v">${s.v}</div></div>`).join('');
+  document.getElementById('srcs').classList.add('show');
+}
+function closeSrcs(){document.getElementById('srcs').classList.remove('show');}
+
+const TOUR=[
+ {t:'One continuous sequence',x:'This is the periodic table with nothing removed and nothing broken apart: all 118 elements in order, hydrogen at the center, each element one step along a single thread. The thread is atomic number — protons counting up, one at a time.',
+  go(){setLayout('spiral');document.getElementById('colorby').value='cat';applyColor('cat');clearSelect();closePanel();view={...BASE};applyView();}},
+ {t:'Each turn is a period',x:'Every lap of the spiral is one <b>period</b> — one principal shell filling up. The turns get no shortcuts: periods really are 2, 8, 8, 18, 18, 32, 32 elements long, and you can count them here.',
+  go(){view={x:-620,y:-620,w:1240,h:1240};applyView();}},
+ {t:'Spokes are chemical families',x:'Elements that line up along a spoke share their outer electron count — that\u2019s a <b>group</b>. Chlorine is selected: the highlighted spoke is the halogens. Same valence shape, same chemical personality, period after period.',
+  go(){selectZ(17);const e=ELEMENTS.find(x=>x.z===17);view={x:e._curX-560,y:e._curY-560,w:1120,h:1120};applyView();}},
+ {t:'The f-block, woven in',x:'Lanthanides and actinides usually live in a footnote. Here they occupy their real place in the sequence — a wedge inside turns 6 and 7. (Lu and Lr are shown in group 3, the convention IUPAC has been converging on.)',
+  go(){clearSelect();const g=ELEMENTS.find(x=>x.z===64);view={x:g._curX-620,y:g._curY-620,w:1240,h:1240};applyView();}},
+ {t:'It\u2019s still the table you know',x:'Watch: the spiral unrolls into the classic 18-column map. Same elements, same order, same groups — the flat table is just this sequence cut into rows. And try <b>Long form</b>: the 32-column table with nothing cut out — the footnote rows fly home, and you see exactly what printed tables amputate to fit the page.',
+  go(){view={...BASE};applyView();setLayout('grid');}},
+ {t:'Color is data',x:'Every color mode is a measured quantity. This is <b>electronegativity</b> — watch it climb toward fluorine and vanish on the noble gases. Try ionization energy or density; the periodic law appears as gradients.',
+  go(){setLayout('spiral');document.getElementById('colorby').value='en';applyColor('en');}},
+ {t:'ψ — the real quantum states',x:'Click any element, then <b>Quantum view</b>: actual solutions of the Schrödinger equation, exact for hydrogen (shown here), Slater-screened for the rest — waves, nodes, spectra, and why each atom bonds. Every number\u2019s source is in <b>About → Data &amp; sources</b>.',
+  go(){document.getElementById('colorby').value='cat';applyColor('cat');qvOpen(ELEMENTS.find(x=>x.z===1));}},
+];
+let tourStep=-1;
+function startTour(){closeIntro();tourStep=0;showTourStep();}
+function endTour(){tourStep=-1;document.getElementById('tour').classList.remove('show');qvClose();}
+function showTourStep(){
+  const s=TOUR[tourStep];
+  if(!s){endTour();return;}
+  if(tourStep!==6)qvClose();
+  s.go();
+  const t=document.getElementById('tour');
+  t.classList.add('show');
+  t.innerHTML=`
+    <div class="tour-t">${tourStep+1}. ${s.t}</div>
+    <div class="tour-x">${s.x}</div>
+    <div class="tour-nav">
+      <div class="tour-dots">${TOUR.map((_,i)=>`<button class="tour-dot ${i===tourStep?'on':''}" data-i="${i}" aria-label="Step ${i+1}"></button>`).join('')}</div>
+      <button class="tour-quit">Exit tour</button>
+      ${tourStep>0?'<button class="tour-b" data-nav="-1">← Back</button>':''}
+      <button class="tour-b" data-nav="1">${tourStep<TOUR.length-1?'Next →':'Finish'}</button>
+    </div>`;
+  t.querySelectorAll('.tour-dot').forEach(d=>d.addEventListener('click',()=>{tourStep=+d.dataset.i;showTourStep();}));
+  t.querySelectorAll('.tour-b').forEach(b=>b.addEventListener('click',()=>{tourStep+=+b.dataset.nav;showTourStep();}));
+  t.querySelector('.tour-quit').addEventListener('click',endTour);
+}
+
+/* ══════════════════════ V3: SELF-TEST (runs on load, console only) ══════ */
+function selfTest(){
+  const T=[];
+  const add=(name,ok,note)=>T.push({check:name,pass:ok?'✓':'✗ FAIL',note:note||''});
+  add('118 elements',ELEMENTS.length===118);
+  let cfgOK=true,badZ=null;
+  for(const e of ELEMENTS){const n=expandConfig(e.ec).reduce((a,s)=>a+s.occ,0);if(n!==e.z){cfgOK=false;badZ=e.z;break;}}
+  add('electron count = Z for all configs',cfgOK,badZ?('fails at Z='+badZ):'');
+  let termOK=true;try{for(const e of ELEMENTS)groundTerm(e);}catch(err){termOK=false;}
+  add('ground term computes for all',termOK);
+  const nrm=(s=>{ // normalize for compare
+    return s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g,c=>'⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)).replace(/[₀₁₂₃₄₅₆₇₈₉]/g,c=>'₀₁₂₃₄₅₆₇₈₉'.indexOf(c)).replace(/\u2044/g,'/');
+  });
+  add('term H = ²S½',nrm(groundTerm(ELEMENTS[0]))==='2S1/2');
+  add('term Fe = ⁵D₄',nrm(groundTerm(ELEMENTS.find(e=>e.z===26)))==='5D4');
+  const bal=hSeries(2,3)[0].nm;
+  add('Balmer-α = 656.28 nm (air)',Math.abs(bal-656.28)<0.05,bal.toFixed(2));
+  let s=0;const N=4000,rm=30;for(let i=1;i<=N;i++){const r=i*rm/N;const R=radialR(2,1,1,r);s+=r*r*R*R*rm/N;}
+  add('∫r²R²dr(2p,H) = 1',Math.abs(s-1)<1e-3,s.toFixed(5));
+  const su=new Set(),sg=new Set();let coll=false;
+  for(const e of ELEMENTS){if(su.has(e._u))coll=true;su.add(e._u);const k=e._grow+'|'+e._gcol;if(sg.has(k))coll=true;sg.add(k);}
+  add('no position collisions (both layouts)',!coll);
+  const sw=new Set();let wcoll=false;
+  for(const e of ELEMENTS){const k=e.p+'|'+e._wcol;if(sw.has(k))wcoll=true;sw.add(k);}
+  add('no collisions in long form (32-col)',!wcoll);
+  const fails=T.filter(r=>r.pass!=='✓').length;
+  (console.table||console.log).call(console,T);
+  console.log(fails===0?'SELF-TEST: all checks passed':'SELF-TEST: '+fails+' FAILURES');
+  window._selftest={results:T,fails};
+}
+
+/* ══════════════════════ V3: WIRING ══════════════════════ */
+try{
+drawGridScaffold();
+drawWideScaffold();
+document.querySelectorAll('#layoutseg button').forEach(b=>b.addEventListener('click',()=>setLayout(b.dataset.lay)));
+document.getElementById('radenc').addEventListener('change',ev=>{RADENC=ev.target.checked;applyPositions();});
+document.getElementById('aboutbtn').addEventListener('click',openIntro);
+document.getElementById('introExplore').addEventListener('click',closeIntro);
+document.getElementById('introTour').addEventListener('click',startTour);
+document.getElementById('introSrcs').addEventListener('click',()=>{openSrcs();});
+document.getElementById('srcsclose').addEventListener('click',closeSrcs);
+document.getElementById('srcs').addEventListener('click',ev=>{if(ev.target.id==='srcs')closeSrcs();});
+if(!store('ps-intro-seen'))openIntro();
+}catch(err){window.__perr&&window.__perr('v3 init: '+err.message);console.error(err);}
+try{
+document.addEventListener('keydown',ev=>{
+  if(ev.key!=='Escape')return;
+  const srcs=document.getElementById('srcs'), intro=document.getElementById('intro');
+  if(srcs.classList.contains('show')){closeSrcs();ev.stopPropagation();}
+  else if(intro.classList.contains('show')){closeIntro();ev.stopPropagation();}
+  else if(tourStep>=0){endTour();ev.stopPropagation();}
+},true);
+selfTest();
+}catch(err){window.__perr&&window.__perr('v3 selftest/keys: '+err.message);console.error(err);}
+
+
+/* ══════════════════════ V4: LIVING VISUALS ══════════════════════
+   One master animation loop. Motion is physical wherever possible:
+   thermal jitter follows the actual phase at the chosen temperature
+   (kinetic theory, using measured mp/bp), electron shells orbit with
+   real occupancies, the comet traces atomic-number order. Ambient
+   cost is small — at rest only gases and liquids move. Everything
+   honors prefers-reduced-motion and pauses when the tab is hidden. */
+
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let MOTION=!REDUCED && store('ps-motion')!=='0';
+
+/* ── phase at temperature (measured mp/bp; He never solid at 1 atm) ── */
+function phaseAt(e,T){
+  if(e.z===2)return T>=4.22?'gas':'liquid';
+  if(e.bp!=null&&T>=e.bp)return 'gas';
+  if(e.mp!=null){return T>=e.mp?'liquid':'solid';}
+  return 'unknown';
+}
+const PHASE_COL={solid:'#6c7a93',liquid:'#3fc9d9',gas:'#c77dff',unknown:'#39404f'};
+let TMODE=false, TEMP=298;
+
+/* ── master loop state ── */
+let morphFrom=0, morphTarget=0, morphT0=0, morphing=false;
+let GRIDFORM=0, gfFrom=0, gfTarget=0, gfT0=0, gfIng=false;   // 0 = compact (footnotes), 1 = long form
+const MORPH_DUR=850, STAG=0.22; // stagger fraction of the morph
+function setLayout(lay,instant){
+  LAYOUT=lay;
+  document.querySelectorAll('#layoutseg button').forEach(b=>b.classList.toggle('on',b.dataset.lay===lay));
+  morphTarget=lay==='spiral'?0:1;
+  gfTarget=lay==='wide'?1:0;
+  if(instant||REDUCED){MORPH=morphTarget;GRIDFORM=gfTarget;morphing=false;gfIng=false;globalDirty=true;return;}
+  const now=performance.now();
+  if(MORPH!==morphTarget){morphFrom=MORPH;morphT0=now;morphing=true;}
+  if(GRIDFORM!==gfTarget){gfFrom=GRIDFORM;gfT0=now;gfIng=true;}
+}
+let globalDirty=true;
+function baseOf(e,mNode){
+  const t=mNode,u=1-t,g=GRIDFORM;
+  const gx=e._gx*(1-g)+e._wx*g, gy=e._gy*(1-g)+e._wy*g;
+  const x=e._x*u+gx*t, y=e._y*u+gy*t;
+  const r=(e._r*u+GRID_R*t)*radFactor(e);
+  return[x,y,r];
+}
+function writeNode(e,x,y,r,jx,jy){
+  e._el.setAttribute('transform',`translate(${(x+jx).toFixed(1)} ${(y+jy).toFixed(1)})`);
+  if(Math.abs(r-e._lastR)>0.15){
+    e._circle.setAttribute('r',r.toFixed(1));
+    if(e._glow)e._glow.setAttribute('r',(r*2.25).toFixed(1));
+    e._zn.setAttribute('y',(-r+8).toFixed(1));
+    if(e._ms)e._ms.setAttribute('y',(r-4).toFixed(1));
+    e._lastR=r;
+  }
+  e._curX=x;e._curY=y;
+}
+function applyPositions(){globalDirty=true;} // legacy hook: next frame rewrites all
+
+/* thermal jitter parameters by phase */
+function jitterAmp(ph,e){
+  if(ph==='gas')return 5.5;
+  if(ph==='liquid')return 2.6;
+  if(ph==='solid'){ // vibration grows toward the melting point
+    if(e.mp==null)return 0.3;
+    return 0.25+1.1*Math.max(0,Math.min(1,TEMP/e.mp));
+  }
+  return 0;
+}
+const seeds=new Float32Array(119);for(let i=0;i<119;i++)seeds[i]=Math.random()*1000;
+
+/* ── selected-atom electron shells ── */
+let shellG=null, shellRings=[];
+function spawnShells(z){
+  removeShells();
+  const e=ELEMENTS.find(x=>x.z===z);if(!e)return;
+  const subs=expandConfig(e.ec), occ={};
+  for(const s of subs)occ[s.n]=(occ[s.n]||0)+s.occ;
+  shellG=el('g',{id:'eshells',pointerEvents:'none'});
+  shellRings=[];
+  const ns=Object.keys(occ).map(Number).sort((a,b)=>a-b);
+  ns.forEach((n,k)=>{
+    const rr=e._lastR+8+9*(k+1);
+    shellG.appendChild(el('circle',{class:'eshell',cx:0,cy:0,r:rr}));
+    const ring=el('g',{});
+    const cnt=occ[n];
+    for(let i=0;i<cnt;i++){
+      const a=i/cnt*2*Math.PI;
+      ring.appendChild(el('circle',{class:'edot',cx:(rr*Math.cos(a)).toFixed(1),cy:(rr*Math.sin(a)).toFixed(1),r:cnt>18?1.3:1.8}));
+    }
+    shellG.appendChild(ring);
+    shellRings.push({g:ring,speed:(k%2?-1:1)*(0.9/(k+1)),phase:seeds[k]});
+  });
+  world.appendChild(shellG);
+  shellG._host=e;
+}
+function removeShells(){if(shellG){shellG.remove();shellG=null;shellRings=[];}}
+
+/* ── spectrum flash on opening a line-emitting element ── */
+function flashLines(e){
+  if(REDUCED||!e.lines)return;
+  e.lines.slice(0,4).forEach((nm,i)=>{
+    const[r,g,b]=wl2rgb(nm);
+    const c=el('circle',{class:'flashring',cx:0,cy:0,r:e._lastR+6+i*7,stroke:`rgb(${r},${g},${b})`});
+    e._el.appendChild(c);
+    setTimeout(()=>c.remove(),1050);
+  });
+}
+
+/* ── comet on the Z-thread (spiral layout only) ── */
+let comet=null;
+function makeComet(){
+  const defs=el('defs',{});
+  defs.innerHTML=`<linearGradient id="cometGrad"><stop offset="0" stop-color="rgba(190,220,255,0)"/><stop offset="1" stop-color="rgba(190,220,255,.7)"/></linearGradient>`;
+  svg.insertBefore(defs,svg.firstChild);
+  comet=el('g',{id:'comet',opacity:'0'});
+  comet.appendChild(el('path',{id:'cometTail',d:''}));
+  comet.appendChild(el('circle',{id:'cometHead',r:'3.2',cx:0,cy:0}));
+  world.appendChild(comet);
+}
+
+/* ── the one loop ── */
+const U_MAX=(7-1)*TURN_COLS+TURN_COLS-1;
+let lastJitter=0,lastTwinkle=0;const twinkleSet=[];
+function animLoop(t){
+  requestAnimationFrame(animLoop);
+  if(document.hidden)return;
+  // morph progress
+  const easeIO=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+  if(morphing){
+    const p=Math.min(1,(t-morphT0)/MORPH_DUR);
+    MORPH=morphFrom+(morphTarget-morphFrom)*easeIO(p);
+    if(p>=1){morphing=false;MORPH=morphTarget;globalDirty=true;}
+  }
+  if(gfIng){
+    const p=Math.min(1,(t-gfT0)/MORPH_DUR);
+    GRIDFORM=gfFrom+(gfTarget-gfFrom)*easeIO(p);
+    if(p>=1){gfIng=false;GRIDFORM=gfTarget;globalDirty=true;}
+  }
+  const doJitter=MOTION&&(t-lastJitter>33);        // 30 fps for thermal motion
+  if(doJitter)lastJitter=t;
+  const anyWork=morphing||gfIng||globalDirty||doJitter;
+  if(anyWork){
+    const ts=t*0.001;
+    for(const e of ELEMENTS){
+      // staggered morph: each element's own progress, ordered by Z
+      let mNode=MORPH;
+      if(morphing){
+        const lead=(e.z-1)/117*STAG;
+        const raw=(MORPH-morphFrom)/((morphTarget-morphFrom)||1);
+        const pe=Math.max(0,Math.min(1,(raw-lead)/(1-STAG)));
+        mNode=morphFrom+(morphTarget-morphFrom)*pe;
+      }
+      const[x,y,r]=baseOf(e,mNode);
+      let jx=0,jy=0;
+      if(MOTION&&!morphing){
+        const ph=TMODE?phaseAt(e,TEMP):e.ph;
+        const amp=jitterAmp(ph==='unknown'&&!TMODE?'solid':ph,e)*(TMODE||ph==='gas'||ph==='liquid'?1:0);
+        if(amp>0.01){
+          const s=seeds[e.z];
+          jx=Math.sin(ts*(2.1+s%1.7)+s)*amp;
+          jy=Math.cos(ts*(1.7+s%2.3)+s*1.3)*amp;
+        }else if(!globalDirty&&!morphing){continue;} // static & clean: skip write
+      }
+      writeNode(e,x,y,r,jx,jy);
+    }
+    globalDirty=false;
+    const sp=document.getElementById('spiralScaffold');
+    const gr=document.getElementById('gridScaffold');
+    const gw=document.getElementById('wideScaffold');
+    if(sp)sp.setAttribute('opacity',(1-MORPH).toFixed(2));
+    if(gr)gr.setAttribute('opacity',(MORPH*(1-GRIDFORM)).toFixed(2));
+    if(gw)gw.setAttribute('opacity',(MORPH*GRIDFORM).toFixed(2));
+  }
+  // twinkle: a rotating handful of nodes shimmer
+  if(MOTION&&t-lastTwinkle>820){
+    lastTwinkle=t;
+    for(const e of twinkleSet)e._el.classList.remove('twk');
+    twinkleSet.length=0;
+    for(let k=0;k<9;k++){
+      const e=ELEMENTS[(Math.random()*118)|0];
+      e._el.classList.add('twk');twinkleSet.push(e);
+    }
+  }
+  // electron shells ride their host + rotate
+  if(shellG){
+    const h=shellG._host;
+    shellG.setAttribute('transform',h._el.getAttribute('transform'));
+    if(MOTION)for(const r of shellRings){
+      r.g.setAttribute('transform',`rotate(${((t*0.02*r.speed+r.phase)%360).toFixed(1)})`);
+    }
+  }
+  // comet
+  if(comet){
+    const on=MOTION&&MORPH<0.05;
+    comet.setAttribute('opacity',on?'0.8':'0');
+    if(on){
+      const u=(t*0.006)%U_MAX;
+      const[x,y]=uToPolar(u);
+      comet.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+      const tail=[];
+      for(let k=1;k<=7;k++){const[tx2,ty2]=uToPolar(Math.max(0,u-k*0.22));tail.push((tx2-x).toFixed(1)+' '+(ty2-y).toFixed(1));}
+      document.getElementById('cometTail').setAttribute('d','M0 0 L'+tail.join(' L'));
+    }
+  }
+}
+
+/* ── temperature dock ── */
+function phaseCounts(T){
+  const c={solid:0,liquid:0,gas:0,unknown:0};
+  for(const e of ELEMENTS)c[phaseAt(e,T)]++;
+  return c;
+}
+function applyTemp(T){
+  TEMP=T;TMODE=true;
+  for(const e of ELEMENTS){
+    const col=PHASE_COL[phaseAt(e,T)];
+    e._circle.setAttribute('fill',col);
+    if(e._glow)e._glow.setAttribute('fill',`url(#glow-phase-${phaseAt(e,T)})`);
+    e._el.classList.toggle('darktext',needsDarkText(col));
+  }
+  const c=phaseCounts(T);
+  document.getElementById('tK').textContent=T+' K';
+  document.getElementById('tCounts').innerHTML=
+    `<span class="tphase"><span class="pd" style="background:${PHASE_COL.solid}"></span>${c.solid}</span>`+
+    `<span class="tphase"><span class="pd" style="background:${PHASE_COL.liquid}"></span>${c.liquid}</span>`+
+    `<span class="tphase"><span class="pd" style="background:${PHASE_COL.gas}"></span>${c.gas}</span>`+
+    (c.unknown?`<span class="tphase"><span class="pd" style="background:${PHASE_COL.unknown}"></span>${c.unknown}?</span>`:'');
+  document.getElementById('scalebar').classList.remove('show');
+}
+function resetTemp(){
+  TMODE=false;TEMP=298;
+  document.getElementById('tslider').value=298;
+  document.getElementById('tK').textContent='298 K';
+  document.getElementById('tCounts').textContent='';
+  applyColor(document.getElementById('colorby').value);
+}
+
+/* ── glow gradients + per-node glow circles (retrofit onto built nodes) ── */
+function buildGlow(){
+  const defs=el('defs',{});
+  let inner='';
+  for(const k in CAT){
+    inner+=`<radialGradient id="glow-${k}"><stop offset="0" stop-color="${CAT[k].color}" stop-opacity=".55"/><stop offset="1" stop-color="${CAT[k].color}" stop-opacity="0"/></radialGradient>`;
+  }
+  for(const p in PHASE_COL){
+    inner+=`<radialGradient id="glow-phase-${p}"><stop offset="0" stop-color="${PHASE_COL[p]}" stop-opacity=".5"/><stop offset="1" stop-color="${PHASE_COL[p]}" stop-opacity="0"/></radialGradient>`;
+  }
+  defs.innerHTML=inner;
+  svg.insertBefore(defs,svg.firstChild);
+  for(const e of ELEMENTS){
+    const g=el('circle',{class:'glow',cx:0,cy:0,r:(e._r*2.25).toFixed(1),fill:`url(#glow-${e.c})`});
+    e._inner.insertBefore(g,e._circle);
+    e._glow=g;
+    e._lastR=e._r;
+  }
+}
+
+/* ── motion toggle ── */
+function setMotion(on){
+  MOTION=on&&!REDUCED;
+  store('ps-motion',MOTION?'1':'0');
+  const b=document.getElementById('motionbtn');
+  b.textContent=MOTION?'✨':'▪';
+  b.title=MOTION?'Ambient motion on (click to freeze)':'Ambient motion off';
+  document.getElementById('aurora').style.display=MOTION?'':'none';
+  if(!MOTION){globalDirty=true;}
+}
+
+/* ── wiring ── */
+try{
+buildGlow();
+makeComet();
+globalDirty=true;
+requestAnimationFrame(animLoop);
+document.getElementById('tslider').addEventListener('input',ev=>applyTemp(+ev.target.value));
+document.getElementById('treset').addEventListener('click',resetTemp);
+document.getElementById('motionbtn').addEventListener('click',()=>setMotion(!MOTION));
+setMotion(MOTION);
+}catch(err){window.__perr&&window.__perr('v4 init: '+err.message);console.error(err);}
+/* keep glow fill in sync when the color dropdown is used */
+const _applyColor=applyColor;
+applyColor=function(mode){
+  TMODE=false;
+  _applyColor(mode);
+  for(const e of ELEMENTS){
+    if(!e._glow)continue;
+    if(mode==='cat')e._glow.setAttribute('fill',`url(#glow-${e.c})`);
+    else e._glow.setAttribute('fill',e._circle.getAttribute('fill'));
+    if(mode!=='cat')e._glow.removeAttribute('fill-opacity');
+  }
+};
+/* non-category glow: plain color circles need soft look — use opacity via CSS (already .32) */
+
+/* self-test additions */
+(function(){
+  const T=window._selftest;if(!T)return;
+  const add=(name,ok,note)=>T.results.push({check:name,pass:ok?'✓':'✗ FAIL',note:note||''});
+  add('phaseAt: Hg liquid at 298 K',phaseAt(ELEMENTS.find(e=>e.z===80),298)==='liquid');
+  add('phaseAt: W solid at 3600 K',phaseAt(ELEMENTS.find(e=>e.z===74),3600)==='solid');
+  add('phaseAt: He never solid',phaseAt(ELEMENTS.find(e=>e.z===2),1)!=='solid');
+  T.fails=T.results.filter(r=>r.pass!=='✓').length;
+  console.log('v4 checks appended — total fails:',T.fails);
+})();
+
+/* ══════════════════════ BAR HEIGHT VAR (for layout) ══════════════════════ */
+function syncBarHeight(){
+  const h=document.getElementById('topbar').offsetHeight;
+  document.documentElement.style.setProperty('--barH',h+'px');
+}
+syncBarHeight();
+addEventListener('resize',syncBarHeight);
+
+console.log('Spiral periodic table ready —',ELEMENTS.length,'elements');
+</script>
+</body>
+</html>
