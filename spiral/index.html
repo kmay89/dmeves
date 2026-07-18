@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Spiral Periodic Table — Periods as Rings, Groups as Rays</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%80%3C/text%3E%3C/svg%3E">
@@ -34,6 +34,7 @@ button,input,select{font-family:inherit;font-size:inherit;color:inherit}
   position:fixed; inset:0 0 auto 0; z-index:30;
   display:flex; align-items:center; gap:14px; flex-wrap:wrap;
   padding:10px 16px;
+  padding-top:calc(10px + env(safe-area-inset-top));
   background:color-mix(in srgb, var(--bg) 86%, transparent);
   backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);
@@ -60,6 +61,25 @@ button,input,select{font-family:inherit;font-size:inherit;color:inherit}
 .kbdhint{font-size:11px;color:var(--ink2);margin-left:auto;display:none}
 @media(min-width:1100px){.kbdhint{display:block}}
 kbd{font-family:var(--f-mono);font-size:10px;border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:1px 4px;background:var(--panel2)}
+#morebtn{display:none}
+@media(max-width:760px){
+  /* one tidy row: back · title · search · gear — everything else folds away */
+  .topbar{flex-wrap:nowrap;gap:8px;padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top))}
+  .brand{margin-right:0;flex:none}
+  .brand b{font-size:13px;white-space:nowrap}
+  .brand span{display:none}
+  .search{flex:1 1 60px;min-width:60px;max-width:none;padding:7px 9px;font-size:13px}
+  .topbar>.ctl,.topbar>.seg,.kbdhint,
+  #motionbtn,#aboutbtn,#zoomout,#zoomin,#zoomreset{display:none}
+  .topbar.open{flex-wrap:wrap}
+  .topbar.open>.ctl,.topbar.open>.seg{display:flex}
+  .topbar.open>#motionbtn,.topbar.open>#aboutbtn,
+  .topbar.open>#zoomout,.topbar.open>#zoomin,.topbar.open>#zoomreset{display:inline-block}
+  #morebtn{display:inline-block}
+  #morebtn.on{color:var(--ink);border-color:var(--focus)}
+  .chips{padding:6px 10px}
+  .chip{font-size:10.5px;padding:4px 9px}
+}
 
 /* ── Category chips ──────────────────────────────────── */
 .chips{
@@ -150,8 +170,29 @@ svg text{user-select:none}
 .p-row .v{font-family:var(--f-mono);text-align:right}
 .p-note{margin-top:11px;font-size:12.5px;line-height:1.5;color:var(--ink2)}
 .p-note b{color:var(--ink)}
+#panel .grip{display:none}
 @media(max-width:720px){
-  #panel{left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:52vh;border-radius:14px}
+  #panel{
+    left:0;right:0;top:auto;bottom:0;width:auto;
+    height:min(86vh, calc(100vh - var(--barH,56px) - 8px));max-height:none;
+    border-radius:18px 18px 0 0;border-bottom:none;
+    padding:4px 18px calc(18px + env(safe-area-inset-bottom));
+    overflow:hidden;display:none;
+    transform:translateY(var(--sy,42vh));
+    transition:transform .3s cubic-bezier(.22,.9,.3,1);
+    touch-action:none;
+  }
+  #panel.show{display:flex;flex-direction:column}
+  #panel.dragging{transition:none}
+  #panel .grip{
+    display:block;flex:none;width:100%;padding:10px 0 8px;cursor:grab;touch-action:none;
+  }
+  #panel .grip::before{
+    content:"";display:block;width:44px;height:5px;border-radius:3px;
+    background:var(--line2);margin:0 auto;
+  }
+  #panel .close{top:14px}
+  #panelbody{flex:1;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding-bottom:8px}
 }
 
 /* ── Scale legend ────────────────────────────────────── */
@@ -168,8 +209,9 @@ svg text{user-select:none}
 
 /* ── Quantum view modal ──────────────────────────────── */
 #qv{position:fixed;inset:0;z-index:60;display:none;background:rgba(5,7,11,.78);backdrop-filter:blur(6px)}
-#qv.show{display:flex;align-items:center;justify-content:center;padding:18px}
+#qv.show{display:flex;padding:18px}
 .qv-card{
+  margin:auto;
   width:min(900px,100%);max-height:calc(100vh - 36px);overflow-y:auto;
   background:var(--panel);border:1px solid var(--line2);border-radius:16px;
   box-shadow:0 24px 80px rgba(0,0,0,.65);padding:20px 22px;
@@ -239,8 +281,8 @@ svg text{user-select:none}
 
 /* ── v3: intro overlay ──────────────────────────────────── */
 #intro{position:fixed;inset:0;z-index:70;display:none;background:rgba(5,7,11,.88);backdrop-filter:blur(10px);overflow-y:auto}
-#intro.show{display:flex;align-items:center;justify-content:center;padding:22px}
-.intro-card{width:min(680px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:30px 32px;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+#intro.show{display:flex;padding:22px}
+.intro-card{margin:auto;width:min(680px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:30px 32px;box-shadow:0 30px 90px rgba(0,0,0,.6)}
 .intro-eyebrow{font-family:var(--f-mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--focus);opacity:.85}
 .intro-card h2{font-size:26px;font-weight:700;margin:8px 0 4px;letter-spacing:-.01em}
 .intro-tag{color:var(--ink2);font-size:14px;line-height:1.55}
@@ -272,8 +314,8 @@ svg text{user-select:none}
 
 /* ── v3: sources modal ──────────────────────────────────── */
 #srcs{position:fixed;inset:0;z-index:72;display:none;background:rgba(5,7,11,.82);backdrop-filter:blur(8px)}
-#srcs.show{display:flex;align-items:center;justify-content:center;padding:20px}
-.srcs-card{width:min(760px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:24px 26px}
+#srcs.show{display:flex;padding:20px}
+.srcs-card{margin:auto;width:min(760px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:24px 26px}
 .srcs-card h3{font-size:18px;margin-bottom:4px}
 .srcs-sub{font-size:12px;color:var(--ink2);margin-bottom:14px;line-height:1.5}
 .src-row{border-top:1px solid var(--line);padding:10px 0}
@@ -401,6 +443,7 @@ addEventListener('unhandledrejection',function(e){var r=e.reason;window.__perr('
     <button data-lay="spiral" class="on">Spiral</button><button data-lay="grid">Classic</button><button data-lay="wide">Long form</button>
   </div>
   <label class="ctl chk"><input type="checkbox" id="radenc"> size ∝ radius</label>
+  <button class="iconbtn" id="morebtn" aria-label="More controls" aria-expanded="false">⚙</button>
   <button class="iconbtn" id="motionbtn" aria-label="Toggle ambient motion">✨</button>
   <button class="iconbtn" id="aboutbtn" aria-label="About this table">?</button>
   <button class="iconbtn" id="zoomout" aria-label="Zoom out">−</button>
@@ -420,6 +463,7 @@ addEventListener('unhandledrejection',function(e){var r=e.reason;window.__perr('
 <div id="tip" role="tooltip"></div>
 
 <aside id="panel" aria-live="polite">
+  <div class="grip" id="panelgrip" aria-hidden="true"></div>
   <button class="close" id="panelclose" aria-label="Close details">✕</button>
   <div id="panelbody"></div>
 </aside>
@@ -2326,6 +2370,122 @@ syncBarHeight();
 addEventListener('resize',syncBarHeight);
 
 console.log('Spiral periodic table ready —',ELEMENTS.length,'elements');
+</script>
+<script>
+/* ══════════ v5: phone ergonomics — compact bar, hydrogen unfurl, snap sheet ══════════ */
+try{
+/* gear button folds the full control set in and out on phones */
+(function(){
+  const mb=document.getElementById('morebtn'), tb=document.getElementById('topbar');
+  mb.addEventListener('click',()=>{
+    const open=tb.classList.toggle('open');
+    mb.classList.toggle('on',open);
+    mb.setAttribute('aria-expanded',String(open));
+    syncBarHeight();
+  });
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(syncBarHeight);
+  addEventListener('orientationchange',()=>setTimeout(syncBarHeight,150));
+})();
+
+/* the opening shot: nose-to-nose with hydrogen, then the spiral unfurls */
+(function(){
+  const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const H1=ELEMENTS.find(e=>e.z===1);
+  let played=false, flying=null;
+  function flyTo(target,ms,done){
+    if(flying)cancelAnimationFrame(flying);
+    const from={...view}, t0=performance.now();
+    (function step(now){
+      const k=Math.min(1,(now-t0)/ms), e=1-Math.pow(1-k,3);
+      view={x:from.x+(target.x-from.x)*e, y:from.y+(target.y-from.y)*e,
+            w:from.w+(target.w-from.w)*e, h:from.h+(target.h-from.h)*e};
+      applyView();
+      if(k<1)flying=requestAnimationFrame(step); else{flying=null;if(done)done();}
+    })(t0);
+  }
+  function playUnfurl(){
+    if(played)return; played=true;
+    if(RM||!H1||H1._curX===undefined){view={...BASE};applyView();return;}
+    selectZ(1);
+    setTimeout(()=>{ flyTo({...BASE},2400,()=>{clearSelect();}); },1050);
+  }
+  // let a real gesture interrupt the cinematics
+  ['pointerdown','wheel'].forEach(ev=>document.getElementById('stage').addEventListener(ev,()=>{
+    if(flying){cancelAnimationFrame(flying);flying=null;clearSelect();}
+    played=true;
+  },{passive:true}));
+  // camera starts on hydrogen…
+  if(H1&&H1._curX!==undefined&&!RM){
+    const s=innerWidth<760?560:440;
+    view={x:H1._curX-s/2,y:H1._curY-s/2,w:s,h:s};applyView();
+  }
+  // …and unfurls when the room is yours
+  const introEl=document.getElementById('intro');
+  if(introEl.classList.contains('show')){
+    document.getElementById('introExplore').addEventListener('click',()=>setTimeout(playUnfurl,150));
+    document.getElementById('introTour').addEventListener('click',()=>{played=true;view={...BASE};applyView();});
+    document.addEventListener('keydown',ev=>{
+      if(ev.key==='Escape'&&introEl.classList.contains('show'))setTimeout(playUnfurl,150);
+    },true);
+  } else {
+    setTimeout(playUnfurl,700);
+  }
+})();
+
+/* the element panel becomes an iOS-style snap sheet on phones:
+   drag the grip — it snaps to peek / half / full, fling down to dismiss */
+(function(){
+  const mq=matchMedia('(max-width:720px)');
+  const panelEl=document.getElementById('panel'), grip=document.getElementById('panelgrip');
+  let curSy=0, wasShown=false;
+  function sheetH(){return panelEl.getBoundingClientRect().height;}
+  function snaps(){
+    const h=sheetH();
+    return {full:0, half:Math.max(0,h-Math.round(innerHeight*0.44)), peek:Math.max(0,h-140)};
+  }
+  function setSy(px,drag){
+    curSy=px;
+    panelEl.classList.toggle('dragging',!!drag);
+    panelEl.style.setProperty('--sy',px+'px');
+  }
+  function snapTo(name){setSy(snaps()[name],false);}
+  new MutationObserver(()=>{
+    const s=panelEl.classList.contains('show');
+    if(s&&!wasShown&&mq.matches)requestAnimationFrame(()=>snapTo('half'));
+    wasShown=s;
+  }).observe(panelEl,{attributes:true,attributeFilter:['class']});
+  let y0=null, sy0=0, lastY=0, lastT=0, vel=0;
+  grip.addEventListener('pointerdown',ev=>{
+    if(!mq.matches)return;
+    y0=ev.clientY; sy0=curSy; lastY=ev.clientY; lastT=performance.now(); vel=0;
+    try{grip.setPointerCapture(ev.pointerId);}catch(_){}
+    ev.preventDefault();
+  });
+  grip.addEventListener('pointermove',ev=>{
+    if(y0===null)return;
+    const now=performance.now();
+    vel=(ev.clientY-lastY)/Math.max(1,now-lastT);
+    lastY=ev.clientY; lastT=now;
+    setSy(Math.max(0,Math.min(sheetH(),sy0+(ev.clientY-y0))),true);
+  });
+  function endDrag(){
+    if(y0===null)return; y0=null;
+    const s=snaps();
+    let target;
+    if(vel>0.6) target=curSy<s.half?'half':'close';
+    else if(vel<-0.6) target=curSy>s.half?'half':'full';
+    else{
+      target=[['full',s.full],['half',s.half],['peek',s.peek]]
+        .reduce((a,b)=>Math.abs(b[1]-curSy)<Math.abs(a[1]-curSy)?b:a)[0];
+      if(curSy>s.peek+70)target='close';
+    }
+    if(target==='close'){panelEl.classList.remove('dragging');closePanel();}
+    else snapTo(target);
+  }
+  grip.addEventListener('pointerup',endDrag);
+  grip.addEventListener('pointercancel',endDrag);
+})();
+}catch(err){window.__perr&&window.__perr('v5 phone init: '+err.message);console.error(err);}
 </script>
 </body>
 </html>
