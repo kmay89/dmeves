@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
 <title>Spiral Periodic Table — Periods as Rings, Groups as Rays</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%80%3C/text%3E%3C/svg%3E">
@@ -26,7 +26,8 @@ body{
   font-family:var(--f-display); font-size:14px;
   overflow:hidden;
 }
-button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit;touch-action:manipulation}
+.topbar,.chips,#tdock,#panel,.qv-card,.intro-card,.srcs-card,#tour{touch-action:manipulation}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 
 /* ── Top bar ─────────────────────────────────────────── */
@@ -68,7 +69,8 @@ kbd{font-family:var(--f-mono);font-size:10px;border:1px solid var(--line2);borde
   .brand{margin-right:0;flex:none}
   .brand b{font-size:13px;white-space:nowrap}
   .brand span{display:none}
-  .search{flex:1 1 60px;min-width:60px;max-width:none;padding:7px 9px;font-size:13px}
+  .search{flex:1 1 60px;min-width:60px;max-width:none;padding:6px 9px;font-size:16px}
+  .ctl select{font-size:16px}
   .topbar>.ctl,.topbar>.seg,.kbdhint,
   #motionbtn,#aboutbtn,#zoomout,#zoomin,#zoomreset{display:none}
   .topbar.open{flex-wrap:wrap}
@@ -2409,11 +2411,17 @@ try{
     selectZ(1);
     setTimeout(()=>{ flyTo({...BASE},2400,()=>{clearSelect();}); },1050);
   }
-  // let a real gesture interrupt the cinematics
-  ['pointerdown','wheel'].forEach(ev=>document.getElementById('stage').addEventListener(ev,()=>{
+  // let a real gesture — or keyboard navigation — interrupt the cinematics
+  function interrupt(){
     if(flying){cancelAnimationFrame(flying);flying=null;clearSelect();}
     played=true;
-  },{passive:true}));
+  }
+  ['pointerdown','wheel'].forEach(ev=>document.getElementById('stage').addEventListener(ev,interrupt,{passive:true}));
+  document.addEventListener('keydown',ev=>{
+    if(ev.key==='Escape')return; // Escape closes overlays; it shouldn't eat the unfurl
+    if(document.getElementById('intro').classList.contains('show'))return;
+    interrupt();
+  },{passive:true});
   // camera starts on hydrogen…
   if(H1&&H1._curX!==undefined&&!RM){
     const s=innerWidth<760?560:440;
@@ -2422,11 +2430,15 @@ try{
   // …and unfurls when the room is yours
   const introEl=document.getElementById('intro');
   if(introEl.classList.contains('show')){
+    // hook the close itself so every path (button, Escape) starts the unfurl;
+    // the tour sets its own camera, so it opts out
+    const origClose=closeIntro;
+    closeIntro=function(){
+      origClose();
+      setTimeout(()=>{ if(tourStep<0)playUnfurl(); },160);
+    };
     document.getElementById('introExplore').addEventListener('click',()=>setTimeout(playUnfurl,150));
     document.getElementById('introTour').addEventListener('click',()=>{played=true;view={...BASE};applyView();});
-    document.addEventListener('keydown',ev=>{
-      if(ev.key==='Escape'&&introEl.classList.contains('show'))setTimeout(playUnfurl,150);
-    },true);
   } else {
     setTimeout(playUnfurl,700);
   }
@@ -2437,7 +2449,7 @@ try{
 (function(){
   const mq=matchMedia('(max-width:720px)');
   const panelEl=document.getElementById('panel'), grip=document.getElementById('panelgrip');
-  let curSy=0, wasShown=false;
+  let curSy=0;
   function sheetH(){return panelEl.getBoundingClientRect().height;}
   function snaps(){
     const h=sheetH();
@@ -2450,10 +2462,8 @@ try{
   }
   function snapTo(name){setSy(snaps()[name],false);}
   new MutationObserver(()=>{
-    const s=panelEl.classList.contains('show');
-    if(s&&!wasShown&&mq.matches)requestAnimationFrame(()=>snapTo('half'));
-    wasShown=s;
-  }).observe(panelEl,{attributes:true,attributeFilter:['class']});
+    if(mq.matches&&panelEl.classList.contains('show'))requestAnimationFrame(()=>snapTo('half'));
+  }).observe(document.getElementById('panelbody'),{childList:true});
   let y0=null, sy0=0, lastY=0, lastT=0, vel=0;
   grip.addEventListener('pointerdown',ev=>{
     if(!mq.matches)return;
@@ -2484,6 +2494,39 @@ try{
   }
   grip.addEventListener('pointerup',endDrag);
   grip.addEventListener('pointercancel',endDrag);
+})();
+/* double-tap the stage: zoom into that spot; double-tap when deep: fly back out */
+(function(){
+  const stageEl=document.getElementById('stage');
+  let lastT=0,lastX=0,lastY=0,anim=null;
+  function animTo(target,ms){
+    if(anim)cancelAnimationFrame(anim);
+    const from={...view},t0=performance.now();
+    (function step(now){
+      const k=Math.min(1,(now-t0)/ms),e=1-Math.pow(1-k,3);
+      view={x:from.x+(target.x-from.x)*e,y:from.y+(target.y-from.y)*e,
+            w:from.w+(target.w-from.w)*e,h:from.h+(target.h-from.h)*e};
+      applyView();
+      if(k<1)anim=requestAnimationFrame(step);else anim=null;
+    })(t0);
+  }
+  function zoomTargetAt(cx,cy,factor){ // zoomAt's math, without applying it
+    const nw=Math.max(300,Math.min(3200,view.w*factor)), nh=nw*(view.h/view.w);
+    const px=view.x+(cx/innerWidth)*view.w, py=view.y+(cy/innerHeight)*view.h;
+    return {x:px-(cx/innerWidth)*nw, y:py-(cy/innerHeight)*nh, w:nw, h:nh};
+  }
+  stageEl.addEventListener('pointerup',ev=>{
+    if(ev.pointerType!=='touch')return;
+    if(ev.target.closest('.node')){lastT=0;return;}
+    const now=performance.now();
+    if(now-lastT<330 && Math.hypot(ev.clientX-lastX,ev.clientY-lastY)<44){
+      lastT=0;
+      if(view.w<=470) animTo({...BASE},460);
+      else animTo(zoomTargetAt(ev.clientX,ev.clientY,0.5),340);
+    } else {
+      lastT=now;lastX=ev.clientX;lastY=ev.clientY;
+    }
+  });
 })();
 }catch(err){window.__perr&&window.__perr('v5 phone init: '+err.message);console.error(err);}
 </script>
