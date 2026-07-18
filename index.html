@@ -8,6 +8,12 @@
 <meta name="robots" content="noindex">
 <link rel="canonical" href="https://dmeves.com/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AA%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Room 113">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Physical Science">
 <meta property="og:title" content="Physical Science — The Classroom">
@@ -2762,6 +2768,32 @@
     })();
   }
 })();
+</script>
+<script>
+/* Keep home-screen installs fresh: pages load network-first via the service
+   worker (and work offline from cache). We re-check for a new worker every
+   time the app is foregrounded, and offer a gentle refresh — never a forced
+   reload. localStorage (door code, intro, seating charts) is never touched. */
+if ("serviceWorker" in navigator) {
+  addEventListener("load", function () {
+    var hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register("/sw.js").then(function (reg) {
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) reg.update().catch(function () {});
+      });
+    }).catch(function () {});
+    var told = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!hadController || told) return; // first install is not an update
+      told = true;
+      var t = document.createElement("button");
+      t.textContent = "\u2728 The room\u2019s been updated \u2014 tap to refresh";
+      t.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:9999;font-family:Fredoka,Nunito,system-ui,sans-serif;font-size:14px;font-weight:600;color:#fff;background:#1fa05e;border:none;border-radius:999px;padding:11px 20px;box-shadow:0 6px 24px rgba(0,0,0,.28);cursor:pointer";
+      t.onclick = function () { location.reload(); };
+      document.body.appendChild(t);
+    });
+  });
+}
 </script>
 </body>
 </html>

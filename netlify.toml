@@ -35,3 +35,15 @@
   for = "/og-image.png"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+# The service worker must always revalidate so updates are picked up at once
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+# App icons are stable; cache them hard
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
