@@ -182,7 +182,6 @@ svg text{user-select:none}
     overflow:hidden;display:none;
     transform:translateY(var(--sy,42vh));
     transition:transform .3s cubic-bezier(.22,.9,.3,1);
-    touch-action:none;
   }
   #panel.show{display:flex;flex-direction:column}
   #panel.dragging{transition:none}
@@ -194,7 +193,7 @@ svg text{user-select:none}
     background:var(--line2);margin:0 auto;
   }
   #panel .close{top:14px}
-  #panelbody{flex:1;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding-bottom:8px}
+  #panelbody{flex:1;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding-bottom:14px}
 }
 
 /* ── Scale legend ────────────────────────────────────── */
@@ -2455,10 +2454,14 @@ try{
     const h=sheetH();
     return {full:0, half:Math.max(0,h-Math.round(innerHeight*0.44)), peek:Math.max(0,h-140)};
   }
+  const bodyEl=document.getElementById('panelbody');
   function setSy(px,drag){
     curSy=px;
     panelEl.classList.toggle('dragging',!!drag);
     panelEl.style.setProperty('--sy',px+'px');
+    // clamp the scrollable body to the sheet's visible slice
+    const visible=sheetH()-px-bodyEl.offsetTop-14;
+    bodyEl.style.maxHeight=Math.max(80,visible)+'px';
   }
   function snapTo(name){setSy(snaps()[name],false);}
   new MutationObserver(()=>{
