@@ -4,7 +4,7 @@
    work offline from cache. It never touches localStorage — the door-code
    unlock, intro state, and seating charts are untouched by updates.
    Bump VERSION to retire old caches on the next visit. */
-const VERSION = "classroom-v2";
+const VERSION = "classroom-v3";
 
 const CORE = [
   "/",
