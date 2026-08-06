@@ -8,7 +8,7 @@ uses, so students explore the room instead of scrolling a list of links:
 | --- | --- |
 | Chalkboard | Syllabus, this week's plan, homework (→ Google Classroom) |
 | Smart board | Class goals & dreams for the year |
-| Periodic table poster | A full interactive periodic table — all 118 elements |
+| Periodic table poster | A full interactive periodic table — all 118 elements — plus a link to **the museum table** at `/periodic/` |
 | Lab bench | Scientific method, lab report template |
 | The thinking flask | A step-by-step **hypothesis builder** students can copy from |
 | Safety corner | Lab safety rules & contract — and the shower and eyewash actually **work**: push the lever / pull the handle for an animated drill with proper-use reminders |
@@ -87,6 +87,33 @@ PDF (chart + seat-by-seat roster), or print**. The roster is stored only in
 the teacher's own browser; the optional import/export features fetch their
 open-source libraries from a CDN at the moment of use (code only — names
 never leave the device).
+
+### The museum table (`/periodic/`)
+
+A reference-grade, museum-dark periodic table for classes and beyond
+(also reachable as `periodic.dmeves.com` if that domain alias is added in
+Netlify). Highlights:
+
+- **Fact-checked data**: IUPAC 2021 abridged atomic weights, NIST ionization
+  energies, CRC phase data, Cordero/Pyykkö covalent radii — and it
+  **re-verifies itself** against the PubChem Periodic Table (NIH) about once
+  a week, in the visitor's browser, so a CIAAW revision propagates without a
+  deploy. Curated exceptions (sublimation points, predicted superheavy
+  values) are protected from blind overwrites, and every value that isn't a
+  measurement is flagged *≈ predicted*.
+- **Eleven lenses**: families, states of matter with a 0–6000 K temperature
+  slider (watch the table melt and boil), electronegativity,
+  atomic radius (drawn to scale), ionization energy, density, melting &
+  boiling points, log-scale crustal abundance, a playable discovery
+  timeline (1200 → 2016), and s/p/d/f blocks — all OKLCH color ramps.
+- **A dossier per element**: an animated Bohr shell diagram, electron
+  configurations with the real anomalies, property bars showing where the
+  element sits across all 118, oxidation states, discovery credit,
+  etymology, and a one-line museum caption. Deep-linkable (`/periodic/#fe`).
+- 18-column and 32-column (Lu-under-Y) layouts, full keyboard navigation,
+  `/` to search, print stylesheet for a poster, reduced-motion support,
+  offline via the service worker, and the same privacy stance as the rest
+  of the site (the sole network request is the optional PubChem check).
 
 ### Link previews (iMessage etc.)
 

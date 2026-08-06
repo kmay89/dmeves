@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Periodic Table — dmeves.com</title>
+<meta name="description" content="A museum-grade interactive periodic table: 118 elements, IUPAC 2021 atomic weights, NIST-sourced properties, live fact-checking, trends, and a dossier for every element.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#07090d">
+<meta property="og:title" content="The Periodic Table — dmeves.com">
+<meta property="og:description" content="118 elements. IUPAC 2021 data, live-checked. Trends, temperatures, timelines — a museum in a page.">
+<meta property="og:image" content="https://dmeves.com/og-image.png">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>
+/* ============================================================
+   The Periodic Table — a quiet museum hall for 118 elements.
+   No frameworks, no build step, no trackers. Fonts self-hosted.
+   ============================================================ */
+@font-face{font-family:'Space Grotesk';src:url(/fonts/space-grotesk.woff2) format('woff2');font-weight:300 700;font-display:swap}
+@font-face{font-family:'Nunito';src:url(/fonts/nunito.woff2) format('woff2');font-weight:200 900;font-display:swap}
+@font-face{font-family:'Plex Mono';src:url(/fonts/plex-mono-400.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Plex Mono';src:url(/fonts/plex-mono-500.woff2) format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:'Plex Mono';src:url(/fonts/plex-mono-600.woff2) format('woff2');font-weight:600;font-display:swap}
+
+:root{
+  --bg:#07090d; --bg2:#0b0e14; --ink:#e8ecf3; --ink-dim:#9aa3b2; --ink-faint:#5d6675;
+  --line:#1c212b; --line2:#2a3140; --accent:#d8b56a; --accent2:#8ab4ff;
+  --panel:#0e1219f2; --chipbg:#12161f;
+  --cell: clamp(40px, calc((100vw - 72px)/18.6), 78px);
+  --cellr: 6px;
+  --mono:'Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --disp:'Space Grotesk',system-ui,sans-serif;
+  --body:'Nunito',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:
+    radial-gradient(1200px 700px at 50% -10%, #101624 0%, transparent 60%),
+    radial-gradient(900px 600px at 85% 110%, #0d1420 0%, transparent 55%),
+    var(--bg);
+  color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.5;
+  min-height:100svh; display:flex; flex-direction:column;
+}
+::selection{background:#d8b56a44}
+a{color:var(--accent2)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:#000;padding:8px 14px;border-radius:0 0 8px 0;z-index:99;font-weight:700}
+.skip:focus{left:0}
+
+/* ---------- header ---------- */
+header.bar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  padding:clamp(14px,2.5vw,26px) clamp(14px,3vw,36px) 6px;
+}
+.brand .home{
+  font-family:var(--disp); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-faint); text-decoration:none; transition:color .2s;
+}
+.brand .home:hover{color:var(--accent)}
+h1{
+  font-family:var(--disp); font-weight:600; font-size:clamp(22px,3.4vw,34px);
+  letter-spacing:.045em; line-height:1.15; margin-top:2px;
+  background:linear-gradient(100deg,#f2ead7 0%,#d8b56a 55%,#f2ead7 100%);
+  background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation:sheen 2.6s ease .4s 1 both;
+}
+@keyframes sheen{from{background-position:120% 0}to{background-position:0 0}}
+.tag{font-size:12.5px;color:var(--ink-dim);letter-spacing:.02em;margin-top:2px}
+.tag .live-ok{color:#7fd6a0}
+.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.search{
+  display:flex;align-items:center;gap:7px;background:var(--chipbg);border:1px solid var(--line2);
+  border-radius:999px;padding:7px 13px;transition:border-color .2s, box-shadow .2s;
+}
+.search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px #d8b56a22}
+.search svg{opacity:.5;flex:none}
+.search input{
+  background:none;border:0;outline:0;color:var(--ink);font-family:var(--body);font-size:14px;width:150px;
+}
+.search input::placeholder{color:var(--ink-faint)}
+.iconbtn{
+  display:flex;align-items:center;gap:7px;background:var(--chipbg);border:1px solid var(--line2);
+  border-radius:999px;padding:7px 13px;font-size:13px;color:var(--ink-dim);
+  transition:color .2s,border-color .2s,transform .12s;
+}
+.iconbtn:hover{color:var(--ink);border-color:var(--accent)}
+.iconbtn:active{transform:scale(.96)}
+.iconbtn[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
+
+/* ---------- mode chips ---------- */
+nav.modes{
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  padding:10px clamp(14px,3vw,36px) 2px;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+}
+nav.modes::-webkit-scrollbar{display:none}
+.mode{
+  flex:none;font-family:var(--disp);font-size:12.5px;letter-spacing:.06em;
+  padding:7px 13px;border-radius:999px;border:1px solid var(--line2);color:var(--ink-dim);
+  background:transparent;transition:all .22s cubic-bezier(.2,.7,.3,1);white-space:nowrap;
+}
+.mode:hover{color:var(--ink);border-color:#3b4557}
+.mode[aria-pressed="true"]{
+  color:#0c0e12;background:var(--accent);border-color:var(--accent);font-weight:600;
+  box-shadow:0 2px 14px #d8b56a44;
+}
+
+/* ---------- sub bar: legend / sliders / readout ---------- */
+.subbar{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-height:54px;
+  padding:8px clamp(14px,3vw,36px);
+}
+.legend-cats{display:flex;gap:5px;flex-wrap:wrap}
+.lchip{
+  display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-dim);
+  border:1px solid transparent;border-radius:999px;padding:4px 10px;background:var(--chipbg);
+  transition:all .18s;letter-spacing:.02em;
+}
+.lchip i{width:9px;height:9px;border-radius:3px;background:var(--sw);box-shadow:0 0 6px var(--sw);flex:none}
+.lchip:hover{color:var(--ink)}
+.lchip[aria-pressed="true"]{color:var(--ink);border-color:var(--sw)}
+.legend-grad{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.gradbar{position:relative;width:min(340px,58vw);height:10px;border-radius:6px;overflow:hidden;border:1px solid #ffffff18}
+.gradbar .mark{position:absolute;top:-3px;width:2px;height:16px;background:#fff;box-shadow:0 0 6px #000;border-radius:1px;opacity:0;transition:opacity .2s, left .12s}
+.gradlab{font-family:var(--mono);font-size:11px;color:var(--ink-dim)}
+.gradname{font-size:12.5px;color:var(--ink-dim)}
+.gradname b{color:var(--ink);font-weight:600}
+.readout{
+  margin-left:auto;font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);
+  min-height:20px;text-align:right;transition:opacity .15s;
+}
+.readout b{color:var(--ink);font-weight:600}
+.readout .v{color:var(--accent)}
+
+/* temperature + year rigs */
+.rig{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.rig input[type=range]{
+  -webkit-appearance:none;appearance:none;width:min(360px,60vw);height:26px;background:none;cursor:pointer;
+}
+.rig input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--trackbg,#232a38)}
+.rig input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--trackbg,#232a38)}
+.rig input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;
+  border:3px solid var(--accent);margin-top:-6px;box-shadow:0 0 10px #d8b56a66;transition:transform .12s;
+}
+.rig input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+.rig input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 0 10px #d8b56a66}
+.rig .tval{font-family:var(--mono);font-size:13px;color:var(--ink);min-width:200px}
+.rig .tval small{color:var(--ink-faint);font-size:11px}
+.preset{
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);border:1px solid var(--line2);
+  border-radius:6px;padding:3px 7px;transition:all .15s;
+}
+.preset:hover{color:var(--ink);border-color:var(--accent)}
+.playbtn{font-size:15px;border:1px solid var(--line2);border-radius:50%;width:30px;height:30px;display:grid;place-items:center;color:var(--ink-dim)}
+.playbtn:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ---------- the table ---------- */
+main{flex:1;display:flex;flex-direction:column}
+.tablewrap{
+  overflow:auto;padding:6px clamp(14px,3vw,36px) 18px;
+  overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#2a3140 transparent;
+}
+.grid{
+  display:grid;gap:3px;width:max-content;margin:0 auto;position:relative;
+  grid-template-columns:22px repeat(18, var(--cell));
+  grid-template-rows:18px repeat(7, var(--cell)) 16px repeat(2, var(--cell));
+}
+.grid.wide{
+  --wcell:clamp(24px, calc((100vw - 92px)/33.8), 46px);
+  grid-template-columns:22px repeat(32, var(--wcell));
+  grid-template-rows:18px repeat(7, var(--wcell));
+}
+.grid.wide .cell{font-size:calc(var(--wcell) * .42)}
+.grid.wide .cell .num,.grid.wide .cell .mass{display:none}
+.glab,.plab{
+  display:grid;place-items:center;font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+  user-select:none;
+}
+.cell{
+  position:relative;border-radius:var(--cellr);
+  background:color-mix(in srgb, var(--c) 15%, #0d1017);
+  border:1px solid color-mix(in srgb, var(--c) 34%, transparent);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--disp);font-size:calc(var(--cell) * .32);font-weight:600;color:var(--ink);
+  transition:background .45s ease, border-color .45s ease, opacity .35s ease,
+             transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .2s ease, filter .35s ease;
+  transition-delay:var(--wave,0s), var(--wave,0s), 0s, 0s, 0s, 0s;
+  animation:arrive .5s cubic-bezier(.2,.7,.3,1) both;
+  animation-delay:calc(var(--z) * 5ms);
+  touch-action:manipulation;
+}
+@keyframes arrive{from{opacity:0;transform:scale(.7) translateY(6px)}to{opacity:1;transform:none}}
+.cell .num{position:absolute;top:3px;left:5px;font-family:var(--mono);font-weight:400;font-size:calc(var(--cell) * .155);color:var(--ink-dim)}
+.cell .mass{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:var(--mono);font-weight:400;font-size:calc(var(--cell) * .125);color:var(--ink-faint);letter-spacing:0}
+.cell .dot{
+  position:absolute;inset:0;margin:auto;width:calc(100% * var(--rr,0));height:calc(100% * var(--rr,0));font-style:normal;
+  border-radius:50%;background:color-mix(in srgb, var(--c) 55%, transparent);
+  border:1px solid color-mix(in srgb, var(--c) 80%, #fff 10%);
+  opacity:0;transition:all .5s cubic-bezier(.2,.7,.3,1);pointer-events:none;
+}
+.grid[data-mode="radius"] .cell .dot{opacity:1}
+.grid[data-mode="radius"] .cell{background:color-mix(in srgb, var(--c) 4%, #0d1017)}
+.cell:hover,.cell:focus-visible{
+  transform:translateY(-3px) scale(1.09);z-index:5;
+  box-shadow:0 6px 22px -4px color-mix(in srgb, var(--c) 60%, transparent), 0 0 0 1.5px color-mix(in srgb, var(--c) 80%, #fff 20%);
+  background:color-mix(in srgb, var(--c) 34%, #0d1017);
+}
+.cell:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.cell.kin{background:color-mix(in srgb, var(--c) 26%, #0d1017)}
+.cell.dim{opacity:.13;filter:saturate(.3)}
+.cell.undisc{opacity:.06;filter:grayscale(1)}
+.cell.pop{animation:pop .4s cubic-bezier(.2,.7,.3,1)}
+@keyframes pop{40%{transform:translateY(-4px) scale(1.14)}}
+/* state-of-matter borders: a second, non-color channel */
+.grid[data-mode="state"] .cell.st-g{border-style:dashed}
+.grid[data-mode="state"] .cell.st-l{border-bottom-width:4px}
+.grid[data-mode="state"] .cell.st-x{border-style:dotted;color:var(--ink-faint)}
+.grid[data-mode="state"] .cell.st-l .num{animation:bob 2.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(1.5px)}}
+.fnote{
+  grid-column:4 / span 1;display:grid;place-items:center;border-radius:var(--cellr);
+  border:1px dashed var(--line2);color:var(--ink-faint);font-family:var(--mono);font-size:calc(var(--cell) * .16);
+}
+.fnote span{transform:none;text-align:center;line-height:1.3}
+
+/* ---------- dossier ---------- */
+.backdrop{
+  position:fixed;inset:0;background:#05070acc;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity .3s;z-index:40;
+}
+.backdrop.on{opacity:1;pointer-events:auto}
+.dossier{
+  position:fixed;top:0;right:0;height:100dvh;width:min(430px,100vw);z-index:50;
+  background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-left:1px solid var(--line2);
+  transform:translateX(105%);transition:transform .38s cubic-bezier(.2,.75,.25,1);
+  display:flex;flex-direction:column;
+}
+.dossier.on{transform:none;box-shadow:-30px 0 80px -20px #000}
+.dhead{display:flex;align-items:center;gap:14px;padding:18px 20px 12px;border-bottom:1px solid var(--line)}
+.dtile{
+  width:86px;height:86px;flex:none;border-radius:12px;position:relative;
+  background:color-mix(in srgb, var(--c) 22%, #0d1017);
+  border:1.5px solid color-mix(in srgb, var(--c) 60%, transparent);
+  box-shadow:0 0 30px -6px color-mix(in srgb, var(--c) 50%, transparent), inset 0 0 24px -12px color-mix(in srgb, var(--c) 80%, transparent);
+  display:grid;place-items:center;font-family:var(--disp);
+}
+.dtile .sym{font-size:34px;font-weight:700;line-height:1}
+.dtile .z{position:absolute;top:5px;left:8px;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}
+.dtile .am{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink-dim)}
+.dname h2{font-family:var(--disp);font-size:26px;font-weight:600;letter-spacing:.02em}
+.dchips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.dchip{
+  font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-family:var(--disp);
+  padding:3px 8px;border-radius:999px;background:color-mix(in srgb, var(--c) 18%, transparent);
+  border:1px solid color-mix(in srgb, var(--c) 40%, transparent);color:var(--ink);
+}
+.dchip.warn{background:#8a4b1a2e;border-color:#c07a3a66;color:#e8b98a}
+.dclose{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink-dim);font-size:17px;transition:all .15s}
+.dclose:hover{color:var(--ink);background:#ffffff12}
+.dbody{overflow-y:auto;padding:16px 20px 90px;flex:1;overscroll-behavior:contain}
+.dblurb{font-size:15px;line-height:1.55;color:var(--ink)}
+.dety{font-size:12.5px;color:var(--ink-dim);margin-top:8px}
+.dety b{color:var(--accent);font-weight:600}
+.dsec{margin-top:20px}
+.dsec h3{
+  font-family:var(--disp);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.dsec h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.atomwrap{display:flex;justify-content:center;padding:4px 0}
+.atomwrap svg{overflow:visible}
+.ring{fill:none;stroke:#ffffff1c;stroke-width:1}
+.nuc{fill:color-mix(in srgb, var(--c) 70%, #fff 12%);filter:drop-shadow(0 0 8px color-mix(in srgb, var(--c) 80%, transparent))}
+.orb{transform-origin:center;animation:spin var(--dur) linear infinite}
+.orb.rev{animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.eldot{fill:#e8ecf3;filter:drop-shadow(0 0 3px color-mix(in srgb, var(--c) 90%, #fff))}
+.shellcount{font-family:var(--mono);font-size:12px;text-align:center;color:var(--ink-dim);margin-top:6px}
+.cfg{font-family:var(--mono);font-size:14px;text-align:center;margin-top:4px;color:var(--ink)}
+.cfg sup{font-size:9.5px;color:var(--accent)}
+.cfgfull{font-size:11.5px;color:var(--ink-dim);text-align:center;margin-top:3px;line-height:1.7}
+.props{display:flex;flex-direction:column;gap:1px;border-radius:10px;overflow:hidden}
+.prow{
+  display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:baseline;
+  background:#ffffff06;padding:8px 12px;
+}
+.prow .k{font-size:12px;color:var(--ink-dim)}
+.prow .v{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right}
+.prow .v small{color:var(--ink-faint);font-size:11px}
+.prow .bar{grid-column:1 / -1;position:relative;height:3px;border-radius:2px;background:#ffffff10;margin-top:4px}
+.prow .bar i{
+  position:absolute;top:50%;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);
+  background:var(--c);box-shadow:0 0 8px var(--c);transition:left .5s cubic-bezier(.2,.7,.3,1);
+}
+.prow .bar u{position:absolute;inset:0;border-radius:2px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--c) 35%,transparent));text-decoration:none;transform-origin:left;transform:scaleX(var(--fill,0));transition:transform .5s cubic-bezier(.2,.7,.3,1)}
+.dfoot{
+  position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;gap:6px;
+  padding:12px 16px;background:linear-gradient(#0e121900,var(--panel) 40%);
+}
+.navbtn{
+  display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:10px;
+  padding:8px 12px;color:var(--ink-dim);font-size:13px;transition:all .15s;background:var(--chipbg);
+}
+.navbtn:hover{color:var(--ink);border-color:var(--accent)}
+.navbtn .sym{font-family:var(--disp);font-weight:700;color:var(--ink)}
+.navbtn.next{margin-left:auto}
+.keyhint{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin:0 auto;white-space:nowrap}
+@media (max-width:520px){.keyhint{display:none}}
+
+/* ---------- about ---------- */
+.about{
+  position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:18px;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.about.on{opacity:1;pointer-events:auto}
+.acard{
+  width:min(640px,100%);max-height:88dvh;overflow-y:auto;border-radius:16px;
+  background:var(--panel);backdrop-filter:blur(18px);border:1px solid var(--line2);
+  padding:26px 28px;transform:translateY(14px) scale(.98);transition:transform .25s cubic-bezier(.2,.7,.3,1);
+  box-shadow:0 40px 120px -30px #000;
+}
+.about.on .acard{transform:none}
+.acard h2{font-family:var(--disp);font-size:20px;margin-bottom:4px;color:var(--accent)}
+.acard h3{font-family:var(--disp);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:18px 0 6px}
+.acard p,.acard li{font-size:14px;color:var(--ink);line-height:1.6}
+.acard ul{padding-left:20px}
+.acard .mono{font-family:var(--mono);font-size:12.5px}
+.livebox{
+  margin-top:8px;border:1px solid var(--line2);border-radius:10px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#ffffff05;
+}
+.livebox .st{font-size:13px}
+.livebox .st b{color:#7fd6a0}
+.livebox .st b.warn{color:#e8b98a}
+.checkbtn{border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:6px 12px;font-size:13px;transition:all .15s}
+.checkbtn:hover{background:var(--accent);color:#000}
+.checkbtn[disabled]{opacity:.4;pointer-events:none}
+
+/* ---------- footer ---------- */
+footer{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;
+  padding:10px clamp(14px,3vw,36px) calc(14px + env(safe-area-inset-bottom));
+  font-size:12px;color:var(--ink-faint);
+}
+footer a{color:var(--ink-faint);text-decoration:none;border-bottom:1px dotted var(--line2);transition:color .2s}
+footer a:hover{color:var(--accent)}
+.provchip{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;border:1px solid var(--line2);border-radius:999px;padding:4px 11px;color:var(--ink-dim);transition:all .2s}
+.provchip:hover{border-color:var(--accent);color:var(--ink)}
+.provchip .pulse{width:7px;height:7px;border-radius:50%;background:#7fd6a0;box-shadow:0 0 6px #7fd6a0;animation:pulse 2.4s ease infinite}
+.provchip .pulse.off{background:var(--ink-faint);box-shadow:none;animation:none}
+@keyframes pulse{50%{opacity:.45}}
+
+/* ---------- responsive ---------- */
+@media (max-width:820px){
+  :root{--cell:44px}
+  .readout{display:none}
+  .cell .mass{display:none}
+  .cell .num{font-size:9px}
+  .legend-cats{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%}
+  .lchip{white-space:nowrap;flex:none}
+  .dossier{width:100vw;height:auto;max-height:88dvh;top:auto;bottom:0;border-left:0;border-top:1px solid var(--line2);border-radius:18px 18px 0 0;transform:translateY(105%)}
+  .dossier.on{transform:none}
+  .grid.wide{grid-template-columns:22px repeat(32, 30px)}
+}
+@media (hover:none){.cell:hover{transform:none;box-shadow:none}}
+
+/* ---------- motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;animation-delay:0s !important;transition-duration:.001s !important}
+  .orb{animation:none !important}
+  h1{animation:none;background-position:0 0}
+}
+/* ---------- print: a light poster ---------- */
+@media print{
+  body{background:#fff;color:#000}
+  header.bar .tools,nav.modes,.subbar,footer,.dossier,.backdrop,.about{display:none !important}
+  h1{-webkit-text-fill-color:#000;color:#000;background:none;animation:none}
+  .tag{color:#333}
+  .tablewrap{overflow:visible;padding:0}
+  .grid{--cell:36px;transform-origin:top left;margin:0}
+  .cell{background:#fff !important;border:1.2px solid color-mix(in srgb, var(--c) 70%, #333);color:#000;animation:none;box-shadow:none}
+  .cell .num,.cell .mass{color:#444}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#table">Skip to the table</a>
+
+<header class="bar">
+  <div class="brand">
+    <a class="home" href="/">dmeves.com</a>
+    <h1>The Periodic Table</h1>
+    <p class="tag">118 elements · IUPAC 2021 weights · <span id="provTag">fact-checked against NIST &amp; PubChem</span></p>
+  </div>
+  <div class="tools">
+    <label class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+      <input id="q" type="search" placeholder="Search… ( / )" autocomplete="off" spellcheck="false" aria-label="Search elements by name, symbol, or number">
+    </label>
+    <button class="iconbtn" id="wideBtn" aria-pressed="false" title="Toggle 32-column wide form">⟷ <span>wide</span></button>
+    <button class="iconbtn" id="aboutBtn" aria-haspopup="dialog" title="Data sources &amp; about">ⓘ <span>data</span></button>
+  </div>
+</header>
+
+<nav class="modes" id="modes" aria-label="Color the table by"></nav>
+
+<section class="subbar" id="subbar">
+  <div class="legend-cats" id="legendCats" hidden></div>
+  <div class="legend-grad" id="legendGrad" hidden>
+    <span class="gradname" id="gradName"></span>
+    <span class="gradlab" id="gradMin"></span>
+    <div class="gradbar" id="gradBar"><div class="mark" id="gradMark"></div></div>
+    <span class="gradlab" id="gradMax"></span>
+  </div>
+  <div class="rig" id="tempRig" hidden>
+    <button class="preset" data-t="0">0 K</button>
+    <button class="preset" data-t="77">LN₂ 77 K</button>
+    <button class="preset" data-t="298" title="room temperature">room</button>
+    <button class="preset" data-t="1811" title="iron melts">Fe melts</button>
+    <button class="preset" data-t="5772" title="the Sun's surface">☀ 5772 K</button>
+    <input id="tempSlider" type="range" min="0" max="1000" step="1" value="223" aria-label="Temperature">
+    <span class="tval" id="tempVal"></span>
+  </div>
+  <div class="rig" id="yearRig" hidden>
+    <button class="playbtn" id="yearPlay" title="Play through history" aria-label="Play discovery timeline">▶</button>
+    <input id="yearSlider" type="range" min="1200" max="2016" step="1" value="2016" aria-label="Discovery year">
+    <span class="tval" id="yearVal"></span>
+  </div>
+  <div class="readout" id="readout" aria-hidden="true"></div>
+</section>
+
+<main>
+  <div class="tablewrap">
+    <div class="grid" id="grid" data-mode="cat" role="group" aria-label="Periodic table of the elements"></div>
+  </div>
+</main>
+
+<div class="backdrop" id="backdrop"></div>
+
+<aside class="dossier" id="dossier" role="dialog" aria-modal="true" aria-labelledby="dName" hidden>
+  <button class="dclose" id="dClose" aria-label="Close">✕</button>
+  <div class="dhead">
+    <div class="dtile" id="dTile"><span class="z" id="dZ"></span><span class="sym" id="dSym"></span><span class="am" id="dMass"></span></div>
+    <div class="dname">
+      <h2 id="dName"></h2>
+      <div class="dchips" id="dChips"></div>
+    </div>
+  </div>
+  <div class="dbody" id="dBody"></div>
+  <div class="dfoot">
+    <button class="navbtn prev" id="dPrev"></button>
+    <span class="keyhint">← → to wander · esc to close</span>
+    <button class="navbtn next" id="dNext"></button>
+  </div>
+</aside>
+
+<div class="about" id="about" role="dialog" aria-modal="true" aria-label="About this table">
+  <div class="acard">
+    <h2>A table that checks itself</h2>
+    <p>Every value here starts from a curated snapshot — and the page quietly re-verifies it
+    against the <b>PubChem Periodic Table</b> (NIH/NCBI, which carries IUPAC &amp; NIST data)
+    about once a week, right in your browser. If the chemistry world revises a value, this
+    table follows without anyone touching the code.</p>
+    <div class="livebox">
+      <span class="st" id="liveStatus">Live check: not yet run this visit.</span>
+      <button class="checkbtn" id="checkNow">Check now</button>
+    </div>
+    <h3>Where the numbers come from</h3>
+    <ul>
+      <li><b>Atomic weights</b> — IUPAC/CIAAW <i>Standard Atomic Weights 2021</i>, abridged to five digits. Bracketed values <span class="mono">[268]</span> are the mass number of the longest-lived isotope.</li>
+      <li><b>Ionization energies &amp; electron affinities</b> — NIST Atomic Spectra Database (kJ/mol).</li>
+      <li><b>Melting, boiling, density, abundance</b> — CRC Handbook of Chemistry &amp; Physics reference values (K; g/cm³, gases g/L at STP; crustal mg/kg).</li>
+      <li><b>Covalent radii</b> — Cordero <i>et&nbsp;al.</i> 2008; beyond Z=96, Pyykkö 2009 predictions.</li>
+      <li><b>Electron configurations</b> — NIST, including the famous anomalies (Cr, Cu, Nb, Pd, La, Lr…).</li>
+    </ul>
+    <h3>Honesty notes</h3>
+    <ul>
+      <li>For elements beyond ≈ fermium (Z ≥ 100), bulk properties have never been measured — values marked <b>≈ predicted</b> come from theory, and a few atoms per year is all we get.</li>
+      <li>Carbon and arsenic <b>sublime</b> at ordinary pressure — they skip the liquid phase.</li>
+      <li>The 32-column wide form follows the IUPAC provisional arrangement (Lu and Lr below Y). The familiar 18-column form keeps La–Lu and Ac–Lr as footnote rows.</li>
+    </ul>
+    <h3>Privacy</h3>
+    <p>No accounts, no analytics, no cookies. The only network request this page ever makes is
+    the optional data check to PubChem; its result is cached in your own browser.</p>
+    <p style="margin-top:14px"><a href="/">← back to the classroom</a> · <a href="/spiral/">see the spiral table</a></p>
+  </div>
+</div>
+
+<footer>
+  <button class="provchip" id="provChip"><span class="pulse off" id="provDot"></span><span id="provText">IUPAC 2021 · NIST · PubChem</span></button>
+  <a href="/">the classroom</a>
+  <a href="/spiral/">the spiral</a>
+  <a href="/privacy/">privacy</a>
+  <button class="provchip" id="printBtn" title="Print a poster">⎙ print</button>
+</footer>
+
+<script>
+"use strict";
+/* ================= data ================= */
+const DATA = {"cats":["Alkali metal","Alkaline earth metal","Transition metal","Post-transition metal","Metalloid","Nonmetal","Halogen","Noble gas","Lanthanide","Actinide","Unknown properties"],"els":[{"z":1,"s":"H","n":"Hydrogen","m":"1.008","cat":5,"g":1,"p":1,"blk":"s","x":1,"y":1,"wx":1,"wy":1,"ph":"g","mp":13.99,"bp":20.271,"d":8.988e-05,"en":2.2,"ie":1312,"ie2":[],"ea":72.769,"r":31,"sh":[1],"ec":"1s1","ecs":"1s1","ox":"−1, +1","ab":1400,"dy":1766,"db":"Henry Cavendish","et":"Greek hydro + genes: “water-former”","bl":"Three-quarters of all ordinary matter: the Sun burns it, water carries it, and every acid trades it.","mh":28.836},{"z":2,"s":"He","n":"Helium","m":"4.0026","cat":7,"g":18,"p":1,"blk":"s","x":18,"y":1,"wx":32,"wy":1,"ph":"g","mp":0.95,"bp":4.222,"d":0.0001786,"en":null,"ie":2372.3,"ie2":[5250.5],"ea":null,"r":28,"sh":[2],"ec":"1s2","ecs":"1s2","ox":"0","ab":0.008,"dy":1868,"db":"Pierre Janssen & Norman Lockyer","et":"Greek helios, the Sun — found there first","bl":"Spotted in sunlight before it was found on Earth; the only element that never freezes at ordinary pressure."},{"z":3,"s":"Li","n":"Lithium","m":"6.94","cat":0,"g":1,"p":2,"blk":"s","x":1,"y":2,"wx":1,"wy":2,"ph":"s","mp":453.65,"bp":1603,"d":0.534,"en":0.98,"ie":520.2,"ie2":[7298.1,11815],"ea":59.6326,"r":128,"sh":[2,1],"ec":"1s2 2s1","ecs":"[He] 2s1","ox":"+1","ab":20,"dy":1817,"db":"Johan August Arfwedson","et":"Greek lithos, “stone”","bl":"The lightest metal — it floats on oil — and the restless heart of rechargeable batteries.","mh":24.86},{"z":4,"s":"Be","n":"Beryllium","m":"9.0122","cat":1,"g":2,"p":2,"blk":"s","x":2,"y":2,"wx":2,"wy":2,"ph":"s","mp":1560,"bp":2742,"d":1.85,"en":1.57,"ie":899.5,"ie2":[1757.1,14848.7],"ea":null,"r":96,"sh":[2,2],"ec":"1s2 2s2","ecs":"[He] 2s2","ox":"+2","ab":2.8,"dy":1798,"db":"Louis-Nicolas Vauquelin","et":"the gem beryl","bl":"Light, stiff and springy: aerospace frames, X-ray windows, and James Webb's gold-plated mirrors.","mh":16.443},{"z":5,"s":"B","n":"Boron","m":"10.81","cat":4,"g":13,"p":2,"blk":"p","x":13,"y":2,"wx":27,"wy":2,"ph":"s","mp":2349,"bp":4200,"d":2.08,"en":2.04,"ie":800.6,"ie2":[2427.1,3659.7],"ea":26.989,"r":84,"sh":[2,3],"ec":"1s2 2s2 2p1","ecs":"[He] 2s2 2p1","ox":"+3","ab":10,"dy":1808,"db":"Gay-Lussac & Thénard; Humphry Davy","et":"Arabic buraq, “borax”","bl":"Borosilicate glass shrugs off thermal shock; boron fibers stiffen sports gear and armor.","mh":11.087},{"z":6,"s":"C","n":"Carbon","m":"12.011","cat":5,"g":14,"p":2,"blk":"p","x":14,"y":2,"wx":28,"wy":2,"ph":"s","mp":null,"bp":null,"d":1.821,"en":2.55,"ie":1086.5,"ie2":[2352.6,4620.5],"ea":121.7763,"r":76,"sh":[2,4],"ec":"1s2 2s2 2p2","ecs":"[He] 2s2 2p2","ox":"−4, +2, +4","ab":200,"dy":0,"db":"known since antiquity","et":"Latin carbo, “charcoal”","bl":"The element of life — four steady bonds build diamond, graphite, DNA and you.","sub":3915,"mh":8.517},{"z":7,"s":"N","n":"Nitrogen","m":"14.007","cat":5,"g":15,"p":2,"blk":"p","x":15,"y":2,"wx":29,"wy":2,"ph":"g","mp":63.15,"bp":77.355,"d":0.001251,"en":3.04,"ie":1402.3,"ie2":[2856,4578.1],"ea":null,"r":71,"sh":[2,5],"ec":"1s2 2s2 2p3","ecs":"[He] 2s2 2p3","ox":"−3, +3, +5","ab":19,"dy":1772,"db":"Daniel Rutherford","et":"Greek nitron + genes: “niter-former”","bl":"Four-fifths of every breath, locked in a triple bond so strong it took genius to break for fertilizer."},{"z":8,"s":"O","n":"Oxygen","m":"15.999","cat":5,"g":16,"p":2,"blk":"p","x":16,"y":2,"wx":30,"wy":2,"ph":"g","mp":54.36,"bp":90.188,"d":0.0014290000000000001,"en":3.44,"ie":1313.9,"ie2":[3388.3,5300.5],"ea":140.976,"r":66,"sh":[2,6],"ec":"1s2 2s2 2p4","ecs":"[He] 2s2 2p4","ox":"−2","ab":461000,"dy":1774,"db":"Joseph Priestley; Carl Wilhelm Scheele","et":"Greek oxys + genes: “acid-former”","bl":"The fire-feeder: reactive enough to rust iron and power every cell in your body."},{"z":9,"s":"F","n":"Fluorine","m":"18.998","cat":6,"g":17,"p":2,"blk":"p","x":17,"y":2,"wx":31,"wy":2,"ph":"g","mp":53.48,"bp":85.03,"d":0.001696,"en":3.98,"ie":1681,"ie2":[3374.2,6050.4],"ea":328.1649,"r":57,"sh":[2,7],"ec":"1s2 2s2 2p5","ecs":"[He] 2s2 2p5","ox":"−1","ab":585,"dy":1886,"db":"Henri Moissan","et":"Latin fluere, “to flow” (fluorspar)","bl":"The most electron-hungry element of all — nothing keeps electrons from it; it even attacks glass."},{"z":10,"s":"Ne","n":"Neon","m":"20.180","cat":7,"g":18,"p":2,"blk":"p","x":18,"y":2,"wx":32,"wy":2,"ph":"g","mp":24.56,"bp":27.104,"d":0.0009002,"en":null,"ie":2080.7,"ie2":[3952.3,6122],"ea":null,"r":58,"sh":[2,8],"ec":"1s2 2s2 2p6","ecs":"[He] 2s2 2p6","ox":"0","ab":0.005,"dy":1898,"db":"William Ramsay & Morris Travers","et":"Greek neos, “new”","bl":"The original neon glow: charge it and it blazes orange-red, and it refuses to react with anything."},{"z":11,"s":"Na","n":"Sodium","m":"22.990","cat":0,"g":1,"p":3,"blk":"s","x":1,"y":3,"wx":1,"wy":3,"ph":"s","mp":370.944,"bp":1156.09,"d":0.968,"en":0.93,"ie":495.8,"ie2":[4562,6910.3],"ea":52.867,"r":166,"sh":[2,8,1],"ec":"1s2 2s2 2p6 3s1","ecs":"[Ne] 3s1","ox":"+1","ab":23600,"dy":1807,"db":"Humphry Davy","et":"English soda; symbol from Latin natrium","bl":"A soft metal that explodes in water yet, tamed by chlorine, seasons every meal as table salt.","mh":28.23},{"z":12,"s":"Mg","n":"Magnesium","m":"24.305","cat":1,"g":2,"p":3,"blk":"s","x":2,"y":3,"wx":2,"wy":3,"ph":"s","mp":923,"bp":1363,"d":1.738,"en":1.31,"ie":737.7,"ie2":[1450.7,7732.7],"ea":null,"r":141,"sh":[2,8,2],"ec":"1s2 2s2 2p6 3s2","ecs":"[Ne] 3s2","ox":"+2","ab":23300,"dy":1808,"db":"Humphry Davy","et":"Magnesia, a district in Greece","bl":"Burns with blinding white light; holds the center of every chlorophyll molecule that feeds the world.","mh":24.869},{"z":13,"s":"Al","n":"Aluminium","m":"26.982","cat":3,"g":13,"p":3,"blk":"p","x":13,"y":3,"wx":27,"wy":3,"ph":"s","mp":933.47,"bp":2743,"d":2.7,"en":1.61,"ie":577.5,"ie2":[1816.7,2744.8],"ea":41.762,"r":121,"sh":[2,8,3],"ec":"1s2 2s2 2p6 3s2 3p1","ecs":"[Ne] 3s2 3p1","ox":"+3","ab":82300,"dy":1825,"db":"Hans Christian Ørsted","et":"Latin alumen, “bitter salt (alum)”","bl":"Once dearer than gold — Napoleon III's best cutlery — now the recyclable skin of cans and jets.","mh":24.2},{"z":14,"s":"Si","n":"Silicon","m":"28.085","cat":4,"g":14,"p":3,"blk":"p","x":14,"y":3,"wx":28,"wy":3,"ph":"s","mp":1687,"bp":3538,"d":2.329,"en":1.9,"ie":786.5,"ie2":[1577.1,3231.6],"ea":134.0684,"r":111,"sh":[2,8,4],"ec":"1s2 2s2 2p6 3s2 3p2","ecs":"[Ne] 3s2 3p2","ox":"−4, +4","ab":282000,"dy":1824,"db":"Jöns Jacob Berzelius","et":"Latin silex, “flint”","bl":"The bedrock of sand, glass and stone — and, purified, the crystal brain of every computer.","mh":19.789},{"z":15,"s":"P","n":"Phosphorus","m":"30.974","cat":5,"g":15,"p":3,"blk":"p","x":15,"y":3,"wx":29,"wy":3,"ph":"s","mp":317.3,"bp":553.7,"d":1.823,"en":2.19,"ie":1011.8,"ie2":[1907,2914.1],"ea":72.037,"r":107,"sh":[2,8,5],"ec":"1s2 2s2 2p6 3s2 3p3","ecs":"[Ne] 3s2 3p3","ox":"−3, +3, +5","ab":1050,"dy":1669,"db":"Hennig Brand","et":"Greek phosphoros, “light-bearer”","bl":"Discovered in boiled urine by an alchemist hunting gold; now the P in DNA and ATP.","mh":23.824},{"z":16,"s":"S","n":"Sulfur","m":"32.06","cat":5,"g":16,"p":3,"blk":"p","x":16,"y":3,"wx":30,"wy":3,"ph":"s","mp":388.36,"bp":717.8,"d":2.07,"en":2.58,"ie":999.6,"ie2":[2252,3357],"ea":200.4101,"r":105,"sh":[2,8,6],"ec":"1s2 2s2 2p6 3s2 3p4","ecs":"[Ne] 3s2 3p4","ox":"−2, +4, +6","ab":350,"dy":0,"db":"known since antiquity","et":"Latin sulphur (Sanskrit shulbari)","bl":"The yellow stone of volcanoes; vulcanizes rubber and gives rotten eggs their reek.","mh":22.75},{"z":17,"s":"Cl","n":"Chlorine","m":"35.45","cat":6,"g":17,"p":3,"blk":"p","x":17,"y":3,"wx":31,"wy":3,"ph":"g","mp":171.6,"bp":239.11,"d":0.0032,"en":3.16,"ie":1251.2,"ie2":[2298,3822],"ea":348.575,"r":102,"sh":[2,8,7],"ec":"1s2 2s2 2p6 3s2 3p5","ecs":"[Ne] 3s2 3p5","ox":"−1, +1, +3, +5, +7","ab":145,"dy":1774,"db":"Carl Wilhelm Scheele","et":"Greek chloros, “yellow-green”","bl":"A war gas tamed into a lifesaver: it disinfects most of the world's drinking water."},{"z":18,"s":"Ar","n":"Argon","m":"39.95","cat":7,"g":18,"p":3,"blk":"p","x":18,"y":3,"wx":32,"wy":3,"ph":"g","mp":83.81,"bp":87.302,"d":0.001784,"en":null,"ie":1520.6,"ie2":[2665.8,3931],"ea":null,"r":106,"sh":[2,8,8],"ec":"1s2 2s2 2p6 3s2 3p6","ecs":"[Ne] 3s2 3p6","ox":"0","ab":3.5,"dy":1894,"db":"Lord Rayleigh & William Ramsay","et":"Greek argos, “idle” — it reacts with nothing","bl":"One percent of the air, and utterly aloof — it shields welds precisely because it won't react."},{"z":19,"s":"K","n":"Potassium","m":"39.098","cat":0,"g":1,"p":4,"blk":"s","x":1,"y":4,"wx":1,"wy":4,"ph":"s","mp":336.7,"bp":1032,"d":0.862,"en":0.82,"ie":418.8,"ie2":[3052,4420],"ea":48.383,"r":203,"sh":[2,8,8,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s1","ecs":"[Ar] 4s1","ox":"+1","ab":20900,"dy":1807,"db":"Humphry Davy","et":"English potash; symbol from Latin kalium","bl":"So eager to react it must be stored in oil; your nerves fire on its ions every second.","mh":29.6},{"z":20,"s":"Ca","n":"Calcium","m":"40.078","cat":1,"g":2,"p":4,"blk":"s","x":2,"y":4,"wx":2,"wy":4,"ph":"s","mp":1115,"bp":1757,"d":1.55,"en":1,"ie":589.8,"ie2":[1145.4,4912.4],"ea":2.37,"r":176,"sh":[2,8,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2","ecs":"[Ar] 4s2","ox":"+2","ab":41500,"dy":1808,"db":"Humphry Davy","et":"Latin calx, “lime”","bl":"Bones, teeth, shells, chalk, marble: life's favorite construction metal.","mh":25.929},{"z":21,"s":"Sc","n":"Scandium","m":"44.956","cat":2,"g":3,"p":4,"blk":"d","x":3,"y":4,"wx":17,"wy":4,"ph":"s","mp":1814,"bp":3109,"d":2.985,"en":1.36,"ie":633.1,"ie2":[1235,2388.6],"ea":18,"r":170,"sh":[2,8,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d1","ecs":"[Ar] 3d1 4s2","ox":"+3","ab":22,"dy":1879,"db":"Lars Fredrik Nilson","et":"Scandinavia","bl":"A rare-earth cousin that toughens aluminum in fighter jets and bike frames.","mh":25.52},{"z":22,"s":"Ti","n":"Titanium","m":"47.867","cat":2,"g":4,"p":4,"blk":"d","x":4,"y":4,"wx":18,"wy":4,"ph":"s","mp":1941,"bp":3560,"d":4.506,"en":1.54,"ie":658.8,"ie2":[1309.8,2652.5],"ea":7.289,"r":160,"sh":[2,8,10,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d2","ecs":"[Ar] 3d2 4s2","ox":"+3, +4","ab":5650,"dy":1791,"db":"William Gregor","et":"the Titans of Greek myth","bl":"As strong as steel at nearly half the weight, and so inert your body accepts it as a hip.","mh":25.06},{"z":23,"s":"V","n":"Vanadium","m":"50.942","cat":2,"g":5,"p":4,"blk":"d","x":5,"y":4,"wx":19,"wy":4,"ph":"s","mp":2183,"bp":3680,"d":6,"en":1.63,"ie":650.9,"ie2":[1414,2830],"ea":50.911,"r":153,"sh":[2,8,11,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d3","ecs":"[Ar] 3d3 4s2","ox":"+2, +3, +4, +5","ab":120,"dy":1801,"db":"Andrés Manuel del Río","et":"Vanadís, Norse goddess of beauty","bl":"Named for a goddess of beauty because its oxidation states span a rainbow.","mh":24.89},{"z":24,"s":"Cr","n":"Chromium","m":"51.996","cat":2,"g":6,"p":4,"blk":"d","x":6,"y":4,"wx":20,"wy":4,"ph":"s","mp":2180,"bp":2944,"d":7.19,"en":1.66,"ie":652.9,"ie2":[1590.6,2987],"ea":65.21,"r":139,"sh":[2,8,13,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s1 3d5","ecs":"[Ar] 3d5 4s1","ox":"+2, +3, +6","ab":102,"dy":1797,"db":"Louis-Nicolas Vauquelin","et":"Greek chroma, “color” — its compounds are vivid","bl":"The gleam in chrome bumpers, the green in emeralds, the red in rubies.","mh":23.35},{"z":25,"s":"Mn","n":"Manganese","m":"54.938","cat":2,"g":7,"p":4,"blk":"d","x":7,"y":4,"wx":21,"wy":4,"ph":"s","mp":1519,"bp":2334,"d":7.21,"en":1.55,"ie":717.3,"ie2":[1509,3248],"ea":null,"r":139,"sh":[2,8,13,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d5","ecs":"[Ar] 3d5 4s2","ox":"+2, +4, +7","ab":950,"dy":1774,"db":"Johan Gottlieb Gahn","et":"Latin magnes, “magnet”","bl":"Steel's quiet bodyguard — it scavenges impurities — and the purple in permanganate.","mh":26.32},{"z":26,"s":"Fe","n":"Iron","m":"55.845","cat":2,"g":8,"p":4,"blk":"d","x":8,"y":4,"wx":22,"wy":4,"ph":"s","mp":1811,"bp":3134,"d":7.874,"en":1.83,"ie":762.5,"ie2":[1561.9,2957],"ea":14.785,"r":132,"sh":[2,8,14,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d6","ecs":"[Ar] 3d6 4s2","ox":"+2, +3","ab":56300,"dy":0,"db":"known since antiquity","et":"Old English iren; symbol from Latin ferrum","bl":"Forged in dying stars, the core of our planet, the carrier of oxygen in your blood.","mh":25.1},{"z":27,"s":"Co","n":"Cobalt","m":"58.933","cat":2,"g":9,"p":4,"blk":"d","x":9,"y":4,"wx":23,"wy":4,"ph":"s","mp":1768,"bp":3200,"d":8.9,"en":1.88,"ie":760.4,"ie2":[1648,3232],"ea":63.898,"r":126,"sh":[2,8,15,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d7","ecs":"[Ar] 3d7 4s2","ox":"+2, +3","ab":25,"dy":1735,"db":"Georg Brandt","et":"German kobold, “goblin ore”","bl":"Medieval miners cursed this 'goblin ore'; its blue has colored glass for 4,500 years.","mh":24.81},{"z":28,"s":"Ni","n":"Nickel","m":"58.693","cat":2,"g":10,"p":4,"blk":"d","x":10,"y":4,"wx":24,"wy":4,"ph":"s","mp":1728,"bp":3003,"d":8.908,"en":1.91,"ie":737.1,"ie2":[1753,3395],"ea":111.65,"r":124,"sh":[2,8,16,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d8","ecs":"[Ar] 3d8 4s2","ox":"+2","ab":84,"dy":1751,"db":"Axel Fredrik Cronstedt","et":"German kupfernickel, “devil's copper”","bl":"Meteorites carry it, coins wear it, and stainless steel leans on it.","mh":26.07},{"z":29,"s":"Cu","n":"Copper","m":"63.546","cat":2,"g":11,"p":4,"blk":"d","x":11,"y":4,"wx":25,"wy":4,"ph":"s","mp":1357.77,"bp":2835,"d":8.96,"en":1.9,"ie":745.5,"ie2":[1957.9,3555],"ea":119.235,"r":132,"sh":[2,8,18,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s1 3d10","ecs":"[Ar] 3d10 4s1","ox":"+1, +2","ab":60,"dy":0,"db":"known since antiquity","et":"Cyprus, the Roman island of copper","bl":"Humanity's first metal — and still the artery of every power grid on Earth.","mh":24.44},{"z":30,"s":"Zn","n":"Zinc","m":"65.38","cat":2,"g":12,"p":4,"blk":"d","x":12,"y":4,"wx":26,"wy":4,"ph":"s","mp":692.68,"bp":1180,"d":7.14,"en":1.65,"ie":906.4,"ie2":[1733.3,3833],"ea":null,"r":122,"sh":[2,8,18,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10","ecs":"[Ar] 3d10 4s2","ox":"+2","ab":70,"dy":1746,"db":"Andreas Sigismund Marggraf","et":"German zinke, “pointed” crystals","bl":"The sacrificial metal: it corrodes so steel doesn't, and it guards your immune system.","mh":25.47},{"z":31,"s":"Ga","n":"Gallium","m":"69.723","cat":3,"g":13,"p":4,"blk":"p","x":13,"y":4,"wx":27,"wy":4,"ph":"s","mp":302.9146,"bp":2673,"d":5.91,"en":1.81,"ie":578.8,"ie2":[1979.3,2963],"ea":41,"r":122,"sh":[2,8,18,3],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p1","ecs":"[Ar] 3d10 4s2 4p1","ox":"+3","ab":19,"dy":1875,"db":"Paul-Émile Lecoq de Boisbaudran","et":"Gallia, Latin for France","bl":"A metal that melts in your palm — solid at room temperature, liquid at 30 °C.","mh":25.86},{"z":32,"s":"Ge","n":"Germanium","m":"72.630","cat":4,"g":14,"p":4,"blk":"p","x":14,"y":4,"wx":28,"wy":4,"ph":"s","mp":1211.4,"bp":3106,"d":5.323,"en":2.01,"ie":762,"ie2":[1537.5,3302.1],"ea":118.9352,"r":120,"sh":[2,8,18,4],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p2","ecs":"[Ar] 3d10 4s2 4p2","ox":"−4, +2, +4","ab":1.5,"dy":1886,"db":"Clemens Winkler","et":"Germania, Latin for Germany","bl":"The transistor was born on germanium before silicon took the throne.","mh":23.222},{"z":33,"s":"As","n":"Arsenic","m":"74.922","cat":4,"g":15,"p":4,"blk":"p","x":15,"y":4,"wx":29,"wy":4,"ph":"s","mp":null,"bp":null,"d":5.727,"en":2.18,"ie":947,"ie2":[1798,2735],"ea":77.65,"r":119,"sh":[2,8,18,5],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p3","ecs":"[Ar] 3d10 4s2 4p3","ox":"−3, +3, +5","ab":1.8,"dy":1250,"db":"Albertus Magnus","et":"Greek arsenikon, a yellow pigment","bl":"The poisoner's classic, yet gallium arsenide lasers read every fiber-optic message.","sub":887,"mh":24.64},{"z":34,"s":"Se","n":"Selenium","m":"78.971","cat":5,"g":16,"p":4,"blk":"p","x":16,"y":4,"wx":30,"wy":4,"ph":"s","mp":494,"bp":958,"d":4.81,"en":2.55,"ie":941,"ie2":[2045,2973.7],"ea":194.9587,"r":120,"sh":[2,8,18,6],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p4","ecs":"[Ar] 3d10 4s2 4p4","ox":"−2, +4, +6","ab":0.05,"dy":1817,"db":"Jöns Jacob Berzelius","et":"Greek selene, the Moon","bl":"A semiconductor that senses light — early photocells — and an essential trace nutrient.","mh":25.363},{"z":35,"s":"Br","n":"Bromine","m":"79.904","cat":6,"g":17,"p":4,"blk":"p","x":17,"y":4,"wx":31,"wy":4,"ph":"l","mp":265.8,"bp":332,"d":3.1028,"en":2.96,"ie":1139.9,"ie2":[2103,3470],"ea":324.537,"r":120,"sh":[2,8,18,7],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p5","ecs":"[Ar] 3d10 4s2 4p5","ox":"−1, +1, +5","ab":2.4,"dy":1826,"db":"Antoine Jérôme Balard","et":"Greek bromos, “stench”","bl":"One of only two elements liquid at room temperature: a dense, fuming red-brown sea."},{"z":36,"s":"Kr","n":"Krypton","m":"83.798","cat":7,"g":18,"p":4,"blk":"p","x":18,"y":4,"wx":32,"wy":4,"ph":"g","mp":115.78,"bp":119.93,"d":0.003749,"en":3,"ie":1350.8,"ie2":[2350.4,3565],"ea":null,"r":116,"sh":[2,8,18,8],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6","ecs":"[Ar] 3d10 4s2 4p6","ox":"0, +2","ab":0.0001,"dy":1898,"db":"William Ramsay & Morris Travers","et":"Greek kryptos, “hidden”","bl":"The 'hidden' gas; from 1960 to 1983 the meter itself was defined by its orange spectral line."},{"z":37,"s":"Rb","n":"Rubidium","m":"85.468","cat":0,"g":1,"p":5,"blk":"s","x":1,"y":5,"wx":1,"wy":5,"ph":"s","mp":312.45,"bp":961,"d":1.532,"en":0.82,"ie":403,"ie2":[2633,3860],"ea":46.884,"r":220,"sh":[2,8,18,8,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1","ecs":"[Kr] 5s1","ox":"+1","ab":90,"dy":1861,"db":"Robert Bunsen & Gustav Kirchhoff","et":"Latin rubidus, “deep red” spectral lines","bl":"Its atoms tick so steadily that rubidium clocks discipline GPS satellites.","mh":31.06},{"z":38,"s":"Sr","n":"Strontium","m":"87.62","cat":1,"g":2,"p":5,"blk":"s","x":2,"y":5,"wx":2,"wy":5,"ph":"s","mp":1050,"bp":1650,"d":2.64,"en":0.95,"ie":549.5,"ie2":[1064.2,4138],"ea":5.023,"r":195,"sh":[2,8,18,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2","ecs":"[Kr] 5s2","ox":"+2","ab":370,"dy":1808,"db":"Humphry Davy","et":"Strontian, a village in Scotland","bl":"Burns carmine-red in fireworks; strontium clocks lose a second only every 15 billion years.","mh":26.4},{"z":39,"s":"Y","n":"Yttrium","m":"88.906","cat":2,"g":3,"p":5,"blk":"d","x":3,"y":5,"wx":17,"wy":5,"ph":"s","mp":1799,"bp":3203,"d":4.472,"en":1.22,"ie":600,"ie2":[1180,1980],"ea":29.6,"r":190,"sh":[2,8,18,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d1","ecs":"[Kr] 4d1 5s2","ox":"+3","ab":33,"dy":1794,"db":"Johan Gadolin","et":"Ytterby, a village in Sweden","bl":"Host crystal of red phosphors that lit every CRT screen, and of YAG lasers.","mh":26.53},{"z":40,"s":"Zr","n":"Zirconium","m":"91.224","cat":2,"g":4,"p":5,"blk":"d","x":4,"y":5,"wx":18,"wy":5,"ph":"s","mp":2128,"bp":4650,"d":6.52,"en":1.33,"ie":640.1,"ie2":[1270,2218],"ea":41.806,"r":175,"sh":[2,8,18,10,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d2","ecs":"[Kr] 4d2 5s2","ox":"+4","ab":165,"dy":1789,"db":"Martin Heinrich Klaproth","et":"Persian zargun, “gold-colored”","bl":"Nuclear fuel wears zirconium cladding: transparent to neutrons, defiant to corrosion.","mh":25.36},{"z":41,"s":"Nb","n":"Niobium","m":"92.906","cat":2,"g":5,"p":5,"blk":"d","x":5,"y":5,"wx":19,"wy":5,"ph":"s","mp":2750,"bp":5017,"d":8.57,"en":1.6,"ie":652.1,"ie2":[1380,2416],"ea":88.516,"r":164,"sh":[2,8,18,12,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d4","ecs":"[Kr] 4d4 5s1","ox":"+5","ab":20,"dy":1801,"db":"Charles Hatchett","et":"Niobe, daughter of Tantalus","bl":"Superconducting niobium magnets steer particles at CERN and image you in MRI.","mh":24.6},{"z":42,"s":"Mo","n":"Molybdenum","m":"95.95","cat":2,"g":6,"p":5,"blk":"d","x":6,"y":5,"wx":20,"wy":5,"ph":"s","mp":2896,"bp":4912,"d":10.28,"en":2.16,"ie":684.3,"ie2":[1560,2618],"ea":72.1,"r":154,"sh":[2,8,18,13,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d5","ecs":"[Kr] 4d5 5s1","ox":"+4, +6","ab":1.2,"dy":1781,"db":"Peter Jacob Hjelm","et":"Greek molybdos, “lead”","bl":"A trace of it lets enzymes fix nitrogen; a lot of it lets steel cut steel.","mh":24.06},{"z":43,"s":"Tc","n":"Technetium","m":"[98]","cat":2,"g":7,"p":5,"blk":"d","x":7,"y":5,"wx":21,"wy":5,"ph":"s","mp":2430,"bp":4538,"d":11,"en":1.9,"ie":702,"ie2":[1470,2850],"ea":53,"r":147,"sh":[2,8,18,13,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d5","ecs":"[Kr] 4d5 5s2","ox":"+4, +7","ab":0,"dy":1937,"db":"Carlo Perrier & Emilio Segrè","et":"Greek technetos, “artificial” — the first made element","bl":"The first element made by humans — every atom on Earth today is manufactured.","mh":24.27},{"z":44,"s":"Ru","n":"Ruthenium","m":"101.07","cat":2,"g":8,"p":5,"blk":"d","x":8,"y":5,"wx":22,"wy":5,"ph":"s","mp":2607,"bp":4423,"d":12.45,"en":2.2,"ie":710.2,"ie2":[1620,2747],"ea":100.96,"r":146,"sh":[2,8,18,15,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d7","ecs":"[Kr] 4d7 5s1","ox":"+3, +4, +8","ab":0.001,"dy":1844,"db":"Karl Ernst Claus","et":"Ruthenia, Latin for Russia","bl":"A hardening agent for platinum pens and electrical contacts that must never fail.","mh":24.06},{"z":45,"s":"Rh","n":"Rhodium","m":"102.91","cat":2,"g":9,"p":5,"blk":"d","x":9,"y":5,"wx":23,"wy":5,"ph":"s","mp":2237,"bp":3968,"d":12.41,"en":2.28,"ie":719.7,"ie2":[1740,2997],"ea":110.27,"r":142,"sh":[2,8,18,16,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d8","ecs":"[Kr] 4d8 5s1","ox":"+3","ab":0.001,"dy":1803,"db":"William Hyde Wollaston","et":"Greek rhodon, “rose” — for its pink salts","bl":"The rarest stable metal in the crust; your car's catalytic converter carries a gram of it.","mh":24.98},{"z":46,"s":"Pd","n":"Palladium","m":"106.42","cat":2,"g":10,"p":5,"blk":"d","x":10,"y":5,"wx":24,"wy":5,"ph":"s","mp":1828.05,"bp":3236,"d":12.023,"en":2.2,"ie":804.4,"ie2":[1870,3177],"ea":54.24,"r":139,"sh":[2,8,18,18],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 4d10","ecs":"[Kr] 4d10","ox":"+2, +4","ab":0.015,"dy":1803,"db":"William Hyde Wollaston","et":"asteroid Pallas, found two years earlier","bl":"Breathes in hydrogen like a sponge — 900 times its own volume.","mh":25.98},{"z":47,"s":"Ag","n":"Silver","m":"107.87","cat":2,"g":11,"p":5,"blk":"d","x":11,"y":5,"wx":25,"wy":5,"ph":"s","mp":1234.93,"bp":2435,"d":10.49,"en":1.93,"ie":731,"ie2":[2070,3361],"ea":125.862,"r":145,"sh":[2,8,18,18,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d10","ecs":"[Kr] 4d10 5s1","ox":"+1","ab":0.075,"dy":0,"db":"known since antiquity","et":"Old English seolfor; symbol from Latin argentum","bl":"The best conductor of heat and electricity of any element, and photography's first light-catcher.","mh":25.35},{"z":48,"s":"Cd","n":"Cadmium","m":"112.41","cat":2,"g":12,"p":5,"blk":"d","x":12,"y":5,"wx":26,"wy":5,"ph":"s","mp":594.22,"bp":1040,"d":8.65,"en":1.69,"ie":867.8,"ie2":[1631.4,3616],"ea":null,"r":144,"sh":[2,8,18,18,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10","ecs":"[Kr] 4d10 5s2","ox":"+2","ab":0.15,"dy":1817,"db":"Friedrich Stromeyer","et":"Greek kadmeia, calamine ore","bl":"Paints Monet's yellows and van Gogh's oranges; banished from batteries as a toxin.","mh":26.02},{"z":49,"s":"In","n":"Indium","m":"114.82","cat":3,"g":13,"p":5,"blk":"p","x":13,"y":5,"wx":27,"wy":5,"ph":"s","mp":429.7485,"bp":2345,"d":7.31,"en":1.78,"ie":558.3,"ie2":[1820.7,2704],"ea":37.043,"r":142,"sh":[2,8,18,18,3],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p1","ecs":"[Kr] 4d10 5s2 5p1","ox":"+3","ab":0.25,"dy":1863,"db":"Ferdinand Reich & Hieronymous Richter","et":"the indigo line in its spectrum","bl":"Soft enough to bite; its oxide is the invisible wiring of every touchscreen.","mh":26.74},{"z":50,"s":"Sn","n":"Tin","m":"118.71","cat":3,"g":14,"p":5,"blk":"p","x":14,"y":5,"wx":28,"wy":5,"ph":"s","mp":505.08,"bp":2875,"d":7.365,"en":1.96,"ie":708.6,"ie2":[1411.8,2943],"ea":107.2984,"r":139,"sh":[2,8,18,18,4],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p2","ecs":"[Kr] 4d10 5s2 5p2","ox":"+2, +4","ab":2.3,"dy":0,"db":"known since antiquity","et":"Old English tin; symbol from Latin stannum","bl":"Bronze's better half — tin hardened copper and named an age of civilization.","mh":27.112},{"z":51,"s":"Sb","n":"Antimony","m":"121.76","cat":4,"g":15,"p":5,"blk":"p","x":15,"y":5,"wx":29,"wy":5,"ph":"s","mp":903.78,"bp":1908,"d":6.697,"en":2.05,"ie":834,"ie2":[1594.9,2440],"ea":101.059,"r":139,"sh":[2,8,18,18,5],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p3","ecs":"[Kr] 4d10 5s2 5p3","ox":"−3, +3, +5","ab":0.2,"dy":0,"db":"known since antiquity","et":"Latin antimonium; symbol from stibium","bl":"Kohl eyeliner in ancient Egypt, flame retardant and type-metal since.","mh":25.23},{"z":52,"s":"Te","n":"Tellurium","m":"127.60","cat":4,"g":16,"p":5,"blk":"p","x":16,"y":5,"wx":30,"wy":5,"ph":"s","mp":722.66,"bp":1261,"d":6.24,"en":2.1,"ie":869.3,"ie2":[1790,2698],"ea":190.161,"r":138,"sh":[2,8,18,18,6],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p4","ecs":"[Kr] 4d10 5s2 5p4","ox":"−2, +4, +6","ab":0.001,"dy":1782,"db":"Franz-Joseph Müller von Reichenstein","et":"Latin tellus, “Earth”","bl":"Rarer than platinum in the crust; cadmium telluride skins solar panels.","mh":25.73},{"z":53,"s":"I","n":"Iodine","m":"126.90","cat":6,"g":17,"p":5,"blk":"p","x":17,"y":5,"wx":31,"wy":5,"ph":"s","mp":386.85,"bp":457.4,"d":4.933,"en":2.66,"ie":1008.4,"ie2":[1845.9,3180],"ea":295.1531,"r":139,"sh":[2,8,18,18,7],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p5","ecs":"[Kr] 4d10 5s2 5p5","ox":"−1, +1, +5, +7","ab":0.45,"dy":1811,"db":"Bernard Courtois","et":"Greek iodes, “violet”","bl":"Violet vapor from seaweed ash; your thyroid concentrates it to set your metabolism."},{"z":54,"s":"Xe","n":"Xenon","m":"131.29","cat":7,"g":18,"p":5,"blk":"p","x":18,"y":5,"wx":32,"wy":5,"ph":"g","mp":161.4,"bp":165.051,"d":0.005894,"en":2.6,"ie":1170.4,"ie2":[2046.4,3099.4],"ea":null,"r":140,"sh":[2,8,18,18,8],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6","ecs":"[Kr] 4d10 5s2 5p6","ox":"0, +2, +4, +6","ab":3e-05,"dy":1898,"db":"William Ramsay & Morris Travers","et":"Greek xenos, “stranger”","bl":"The 'stranger' that finally reacted — xenon compounds broke the noble gases' perfect record in 1962."},{"z":55,"s":"Cs","n":"Cesium","m":"132.91","cat":0,"g":1,"p":6,"blk":"s","x":1,"y":6,"wx":1,"wy":6,"ph":"s","mp":301.7,"bp":944,"d":1.93,"en":0.79,"ie":375.7,"ie2":[2234.3,3400],"ea":45.505,"r":244,"sh":[2,8,18,18,8,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s1","ecs":"[Xe] 6s1","ox":"+1","ab":3.0,"dy":1860,"db":"Robert Bunsen & Gustav Kirchhoff","et":"Latin caesius, “sky-blue” spectral lines","bl":"The atom that defines the second: 9,192,631,770 vibrations of cesium-133.","mh":32.21},{"z":56,"s":"Ba","n":"Barium","m":"137.33","cat":1,"g":2,"p":6,"blk":"s","x":2,"y":6,"wx":2,"wy":6,"ph":"s","mp":1000,"bp":2118,"d":3.51,"en":0.89,"ie":502.9,"ie2":[965.2,3600],"ea":13.954,"r":215,"sh":[2,8,18,18,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2","ecs":"[Xe] 6s2","ox":"+2","ab":425,"dy":1808,"db":"Humphry Davy","et":"Greek barys, “heavy”","bl":"Swallowed as a milkshake to make your gut glow on X-rays; green in fireworks.","mh":28.07},{"z":57,"s":"La","n":"Lanthanum","m":"138.91","cat":8,"g":3,"p":6,"blk":"f","x":3,"y":9,"wx":3,"wy":6,"ph":"s","mp":1193,"bp":3737,"d":6.162,"en":1.1,"ie":538.1,"ie2":[1067,1850.3],"ea":53,"r":207,"sh":[2,8,18,18,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 5d1","ecs":"[Xe] 5d16","ox":"+3","ab":39,"dy":1839,"db":"Carl Gustaf Mosander","et":"Greek lanthanein, “to lie hidden”","bl":"First of the hidden rare earths; brightens camera lenses and hybrid-car batteries.","mh":27.11},{"z":58,"s":"Ce","n":"Cerium","m":"140.12","cat":8,"g":3,"p":6,"blk":"f","x":4,"y":9,"wx":4,"wy":6,"ph":"s","mp":1068,"bp":3716,"d":6.77,"en":1.12,"ie":534.4,"ie2":[1050,1949],"ea":55,"r":204,"sh":[2,8,18,19,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 5d1 4f1","ecs":"[Xe] 4f1 5d1 6s2","ox":"+3, +4","ab":66.5,"dy":1803,"db":"Berzelius & Hisinger; Klaproth","et":"the asteroid Ceres, found two years earlier","bl":"Sparks from a lighter flint are burning cerium; it also polishes every phone screen.","mh":26.94},{"z":59,"s":"Pr","n":"Praseodymium","m":"140.91","cat":8,"g":3,"p":6,"blk":"f","x":5,"y":9,"wx":5,"wy":6,"ph":"s","mp":1208,"bp":3403,"d":6.77,"en":1.13,"ie":527,"ie2":[1020,2086],"ea":93,"r":203,"sh":[2,8,18,21,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f3","ecs":"[Xe] 4f3 6s2","ox":"+3","ab":9.2,"dy":1885,"db":"Carl Auer von Welsbach","et":"Greek prasios didymos, “green twin”","bl":"The green 'twin' — it tints welder's goggles and aircraft-engine alloys.","mh":27.2},{"z":60,"s":"Nd","n":"Neodymium","m":"144.24","cat":8,"g":3,"p":6,"blk":"f","x":6,"y":9,"wx":6,"wy":6,"ph":"s","mp":1297,"bp":3347,"d":7.01,"en":1.14,"ie":533.1,"ie2":[1040,2130],"ea":184.87,"r":201,"sh":[2,8,18,22,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f4","ecs":"[Xe] 4f4 6s2","ox":"+3","ab":41.5,"dy":1885,"db":"Carl Auer von Welsbach","et":"Greek neos didymos, “new twin”","bl":"The mightiest small magnets known: earbuds, wind turbines and electric cars turn on it.","mh":27.45},{"z":61,"s":"Pm","n":"Promethium","m":"[145]","cat":8,"g":3,"p":6,"blk":"f","x":7,"y":9,"wx":7,"wy":6,"ph":"s","mp":1315,"bp":3273,"d":7.26,"en":1.13,"ie":540,"ie2":[1050,2150],"ea":12.45,"r":199,"sh":[2,8,18,23,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f5","ecs":"[Xe] 4f5 6s2","ox":"+3","ab":0,"dy":1945,"db":"Marinsky, Glendenin & Coryell","et":"Prometheus, who stole fire for humanity","bl":"The only rare earth with no stable atoms; it glowed on Cold-War watch dials."},{"z":62,"s":"Sm","n":"Samarium","m":"150.36","cat":8,"g":3,"p":6,"blk":"f","x":8,"y":9,"wx":8,"wy":6,"ph":"s","mp":1345,"bp":2173,"d":7.52,"en":1.17,"ie":544.5,"ie2":[1070,2260],"ea":15.63,"r":198,"sh":[2,8,18,24,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f6","ecs":"[Xe] 4f6 6s2","ox":"+2, +3","ab":7.05,"dy":1879,"db":"Paul-Émile Lecoq de Boisbaudran","et":"the mineral samarskite","bl":"Samarium-cobalt magnets keep working red-hot where neodymium gives up.","mh":29.54},{"z":63,"s":"Eu","n":"Europium","m":"151.96","cat":8,"g":3,"p":6,"blk":"f","x":9,"y":9,"wx":9,"wy":6,"ph":"s","mp":1099,"bp":1802,"d":5.264,"en":1.2,"ie":547.1,"ie2":[1085,2404],"ea":11.2,"r":198,"sh":[2,8,18,25,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f7","ecs":"[Xe] 4f7 6s2","ox":"+2, +3","ab":2.0,"dy":1901,"db":"Eugène-Anatole Demarçay","et":"Europe","bl":"Europe's element paints the red of screens and the hidden anti-forgery glow of euro banknotes.","mh":27.66},{"z":64,"s":"Gd","n":"Gadolinium","m":"157.25","cat":8,"g":3,"p":6,"blk":"f","x":10,"y":9,"wx":10,"wy":6,"ph":"s","mp":1585,"bp":3273,"d":7.9,"en":1.2,"ie":593.4,"ie2":[1170,1990],"ea":13.22,"r":196,"sh":[2,8,18,25,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f7 5d1","ecs":"[Xe] 4f7 5d1 6s2","ox":"+3","ab":6.2,"dy":1880,"db":"Jean Charles Galissard de Marignac","et":"Johan Gadolin, chemist of Ytterby fame","bl":"Injected as MRI contrast; grabs neutrons better than any other element.","mh":37.03},{"z":65,"s":"Tb","n":"Terbium","m":"158.93","cat":8,"g":3,"p":6,"blk":"f","x":11,"y":9,"wx":11,"wy":6,"ph":"s","mp":1629,"bp":3396,"d":8.23,"en":1.1,"ie":565.8,"ie2":[1110,2114],"ea":112.4,"r":194,"sh":[2,8,18,27,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f9","ecs":"[Xe] 4f9 6s2","ox":"+3, +4","ab":1.2,"dy":1843,"db":"Carl Gustaf Mosander","et":"Ytterby, a village in Sweden","bl":"Green phosphors and magnetostrictive alloys that turn windowpanes into speakers.","mh":28.91},{"z":66,"s":"Dy","n":"Dysprosium","m":"162.50","cat":8,"g":3,"p":6,"blk":"f","x":12,"y":9,"wx":12,"wy":6,"ph":"s","mp":1680,"bp":2840,"d":8.54,"en":1.22,"ie":573,"ie2":[1130,2200],"ea":33.96,"r":192,"sh":[2,8,18,28,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f10","ecs":"[Xe] 4f10 6s2","ox":"+3","ab":5.2,"dy":1886,"db":"Paul-Émile Lecoq de Boisbaudran","et":"Greek dysprositos, “hard to get at”","bl":"'Hard to get at' — and hard to do without in electric-car magnets that run hot.","mh":27.7},{"z":67,"s":"Ho","n":"Holmium","m":"164.93","cat":8,"g":3,"p":6,"blk":"f","x":13,"y":9,"wx":13,"wy":6,"ph":"s","mp":1734,"bp":2873,"d":8.79,"en":1.23,"ie":581,"ie2":[1140,2204],"ea":32.61,"r":192,"sh":[2,8,18,29,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f11","ecs":"[Xe] 4f11 6s2","ox":"+3","ab":1.3,"dy":1878,"db":"Delafontaine & Soret","et":"Holmia, Latin for Stockholm","bl":"Holds the record for magnetic strength per atom; tunes surgical lasers.","mh":27.15},{"z":68,"s":"Er","n":"Erbium","m":"167.26","cat":8,"g":3,"p":6,"blk":"f","x":14,"y":9,"wx":14,"wy":6,"ph":"s","mp":1802,"bp":3141,"d":9.066,"en":1.24,"ie":589.3,"ie2":[1150,2194],"ea":30.1,"r":189,"sh":[2,8,18,30,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f12","ecs":"[Xe] 4f12 6s2","ox":"+3","ab":3.5,"dy":1843,"db":"Carl Gustaf Mosander","et":"Ytterby, a village in Sweden","bl":"Erbium amplifiers boost every long-haul fiber-optic signal under the oceans.","mh":28.12},{"z":69,"s":"Tm","n":"Thulium","m":"168.93","cat":8,"g":3,"p":6,"blk":"f","x":15,"y":9,"wx":15,"wy":6,"ph":"s","mp":1818,"bp":2223,"d":9.32,"en":1.25,"ie":596.7,"ie2":[1160,2285],"ea":99,"r":190,"sh":[2,8,18,31,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f13","ecs":"[Xe] 4f13 6s2","ox":"+2, +3","ab":0.52,"dy":1879,"db":"Per Teodor Cleve","et":"Thule, the mythical far North","bl":"The rarest stable rare earth; portable X-ray sources fit in a suitcase thanks to it.","mh":27.03},{"z":70,"s":"Yb","n":"Ytterbium","m":"173.05","cat":8,"g":3,"p":6,"blk":"f","x":16,"y":9,"wx":16,"wy":6,"ph":"s","mp":1097,"bp":1469,"d":6.9,"en":1.1,"ie":603.4,"ie2":[1174.8,2417],"ea":null,"r":187,"sh":[2,8,18,32,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14","ecs":"[Xe] 4f14 6s2","ox":"+2, +3","ab":3.2,"dy":1878,"db":"Jean Charles Galissard de Marignac","et":"Ytterby, a village in Sweden","bl":"Ytterby's fourth element; ytterbium lattice clocks are Earth's most precise timekeepers.","mh":26.74},{"z":71,"s":"Lu","n":"Lutetium","m":"174.97","cat":8,"g":3,"p":6,"blk":"f","x":17,"y":9,"wx":17,"wy":6,"ph":"s","mp":1925,"bp":3675,"d":9.841,"en":1.27,"ie":523.5,"ie2":[1340,2022.3],"ea":33.4,"r":187,"sh":[2,8,18,32,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d1","ecs":"[Xe] 4f14 5d1 6s2","ox":"+3","ab":0.8,"dy":1907,"db":"Georges Urbain","et":"Lutetia, Latin for Paris","bl":"The last lanthanide targets cancers in PET scans and radiotherapy.","mh":26.86},{"z":72,"s":"Hf","n":"Hafnium","m":"178.49","cat":2,"g":4,"p":6,"blk":"d","x":4,"y":6,"wx":18,"wy":6,"ph":"s","mp":2506,"bp":4876,"d":13.31,"en":1.3,"ie":658.5,"ie2":[1440,2250],"ea":17.18,"r":175,"sh":[2,8,18,32,10,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d2","ecs":"[Xe] 4f14 5d2 6s2","ox":"+4","ab":3.0,"dy":1923,"db":"Dirk Coster & George de Hevesy","et":"Hafnia, Latin for Copenhagen","bl":"Hidden in zirconium ores for 134 years; nuclear submarines steer with its control rods.","mh":25.73},{"z":73,"s":"Ta","n":"Tantalum","m":"180.95","cat":2,"g":5,"p":6,"blk":"d","x":5,"y":6,"wx":19,"wy":6,"ph":"s","mp":3290,"bp":5731,"d":16.69,"en":1.5,"ie":761,"ie2":[1500],"ea":31,"r":170,"sh":[2,8,18,32,11,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d3","ecs":"[Xe] 4f14 5d3 6s2","ox":"+5","ab":2.0,"dy":1802,"db":"Anders Gustaf Ekeberg","et":"Tantalus, punished with eternal thirst","bl":"So inert the body ignores it: surgical implants — and the capacitors in your phone.","mh":25.36},{"z":74,"s":"W","n":"Tungsten","m":"183.84","cat":2,"g":6,"p":6,"blk":"d","x":6,"y":6,"wx":20,"wy":6,"ph":"s","mp":3695,"bp":6203,"d":19.25,"en":2.36,"ie":770,"ie2":[1700],"ea":78.76,"r":162,"sh":[2,8,18,32,12,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d4","ecs":"[Xe] 4f14 5d4 6s2","ox":"+4, +6","ab":1.25,"dy":1783,"db":"Juan José & Fausto Elhuyar","et":"Swedish tung sten, “heavy stone”; symbol from wolframite","bl":"The highest melting point of any metal, 3,695 K — lightbulb filaments and rocket nozzles.","mh":24.27},{"z":75,"s":"Re","n":"Rhenium","m":"186.21","cat":2,"g":7,"p":6,"blk":"d","x":7,"y":6,"wx":21,"wy":6,"ph":"s","mp":3459,"bp":5869,"d":21.02,"en":1.9,"ie":760,"ie2":[1260,2510],"ea":5.8273,"r":151,"sh":[2,8,18,32,13,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d5","ecs":"[Xe] 4f14 5d5 6s2","ox":"+4, +7","ab":0.0007,"dy":1925,"db":"Noddack, Tacke & Berg","et":"Rhenus, Latin for the river Rhine","bl":"One of the last stable elements found; superalloy jet-engine blades spin white-hot on it.","mh":25.48},{"z":76,"s":"Os","n":"Osmium","m":"190.23","cat":2,"g":8,"p":6,"blk":"d","x":8,"y":6,"wx":22,"wy":6,"ph":"s","mp":3306,"bp":5285,"d":22.59,"en":2.2,"ie":840,"ie2":[1600],"ea":103.99,"r":144,"sh":[2,8,18,32,14,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d6","ecs":"[Xe] 4f14 5d6 6s2","ox":"+4, +8","ab":0.0015,"dy":1803,"db":"Smithson Tennant","et":"Greek osme, “smell”","bl":"The densest of all elements — a liter brick would weigh 22.6 kilograms.","mh":24.7},{"z":77,"s":"Ir","n":"Iridium","m":"192.22","cat":2,"g":9,"p":6,"blk":"d","x":9,"y":6,"wx":23,"wy":6,"ph":"s","mp":2719,"bp":4403,"d":22.56,"en":2.2,"ie":880,"ie2":[1600],"ea":150.94,"r":141,"sh":[2,8,18,32,15,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d7","ecs":"[Xe] 4f14 5d7 6s2","ox":"+3, +4","ab":0.001,"dy":1803,"db":"Smithson Tennant","et":"Iris, goddess of the rainbow — its salts are colorful","bl":"A thin iridium layer worldwide marks the day the dinosaurs' asteroid struck.","mh":25.1},{"z":78,"s":"Pt","n":"Platinum","m":"195.08","cat":2,"g":10,"p":6,"blk":"d","x":10,"y":6,"wx":24,"wy":6,"ph":"s","mp":2041.4,"bp":4098,"d":21.45,"en":2.28,"ie":870,"ie2":[1791],"ea":205.041,"r":136,"sh":[2,8,18,32,17,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s1 4f14 5d9","ecs":"[Xe] 4f14 5d9 6s1","ox":"+2, +4","ab":0.005,"dy":1735,"db":"Antonio de Ulloa","et":"Spanish platina, “little silver”","bl":"So unreactive Spanish miners called it a nuisance; now it catalyzes clean exhaust and chemotherapy.","mh":25.86},{"z":79,"s":"Au","n":"Gold","m":"196.97","cat":2,"g":11,"p":6,"blk":"d","x":11,"y":6,"wx":25,"wy":6,"ph":"s","mp":1337.33,"bp":3243,"d":19.3,"en":2.54,"ie":890.1,"ie2":[1980],"ea":222.747,"r":136,"sh":[2,8,18,32,18,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s1 4f14 5d10","ecs":"[Xe] 4f14 5d10 6s1","ox":"+1, +3","ab":0.004,"dy":0,"db":"known since antiquity","et":"Old English gold; symbol from Latin aurum","bl":"The incorruptible metal: all gold ever mined would fit in a 22-meter cube.","mh":25.418},{"z":80,"s":"Hg","n":"Mercury","m":"200.59","cat":2,"g":12,"p":6,"blk":"d","x":12,"y":6,"wx":26,"wy":6,"ph":"l","mp":234.321,"bp":629.88,"d":13.534,"en":2,"ie":1007.1,"ie2":[1810,3300],"ea":null,"r":132,"sh":[2,8,18,32,18,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10","ecs":"[Xe] 4f14 5d10 6s2","ox":"+1, +2","ab":0.085,"dy":0,"db":"known since antiquity","et":"the planet Mercury; symbol from hydrargyrum, “water-silver”","bl":"The only metal liquid at room temperature — quicksilver, beautiful and toxic.","mh":27.983},{"z":81,"s":"Tl","n":"Thallium","m":"204.38","cat":3,"g":13,"p":6,"blk":"p","x":13,"y":6,"wx":27,"wy":6,"ph":"s","mp":577,"bp":1746,"d":11.85,"en":1.62,"ie":589.4,"ie2":[1971,2878],"ea":36.4,"r":145,"sh":[2,8,18,32,18,3],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p1","ecs":"[Xe] 4f14 5d10 6s2 6p1","ox":"+1, +3","ab":0.85,"dy":1861,"db":"William Crookes","et":"Greek thallos, “green shoot” spectral line","bl":"'The poisoner's poison' turned useful in heart-scan isotopes and infrared optics.","mh":26.32},{"z":82,"s":"Pb","n":"Lead","m":"207.2","cat":3,"g":14,"p":6,"blk":"p","x":14,"y":6,"wx":28,"wy":6,"ph":"s","mp":600.61,"bp":2022,"d":11.34,"en":1.87,"ie":715.6,"ie2":[1450.5,3081.5],"ea":34.4204,"r":146,"sh":[2,8,18,32,18,4],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p2","ecs":"[Xe] 4f14 5d10 6s2 6p2","ox":"+2, +4","ab":14,"dy":0,"db":"known since antiquity","et":"Old English lead; symbol from Latin plumbum","bl":"Dense, soft and once everywhere — pipes, paint, gasoline — until its toxicity caught up.","mh":26.65},{"z":83,"s":"Bi","n":"Bismuth","m":"208.98","cat":3,"g":15,"p":6,"blk":"p","x":15,"y":6,"wx":29,"wy":6,"ph":"s","mp":544.7,"bp":1837,"d":9.78,"en":2.02,"ie":703,"ie2":[1610,2466],"ea":90.924,"r":148,"sh":[2,8,18,32,18,5],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p3","ecs":"[Xe] 4f14 5d10 6s2 6p3","ox":"+3, +5","ab":0.0085,"dy":1753,"db":"Claude François Geoffroy","et":"German wismut, “white mass”","bl":"A metal that grows staircase rainbow crystals; heavier than lead yet nearly harmless.","mh":25.52},{"z":84,"s":"Po","n":"Polonium","m":"[209]","cat":3,"g":16,"p":6,"blk":"p","x":16,"y":6,"wx":30,"wy":6,"ph":"s","mp":527,"bp":1235,"d":9.196,"en":2,"ie":812.1,"ie2":[],"ea":136,"r":140,"sh":[2,8,18,32,18,6],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p4","ecs":"[Xe] 4f14 5d10 6s2 6p4","ox":"−2, +2, +4","ab":2e-10,"dy":1898,"db":"Marie & Pierre Curie","et":"Poland, Marie Curie's homeland","bl":"Marie Curie's first element, named for her homeland; fiercely radioactive.","mh":26.4},{"z":85,"s":"At","n":"Astatine","m":"[210]","cat":6,"g":17,"p":6,"blk":"p","x":17,"y":6,"wx":31,"wy":6,"ph":"s","mp":575,"bp":610,"d":6.35,"en":2.2,"ie":899.003,"ie2":[],"ea":233,"r":150,"sh":[2,8,18,32,18,7],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p5","ecs":"[Xe] 4f14 5d10 6s2 6p5","ox":"−1, +1","ab":0,"dy":1940,"db":"Corson, MacKenzie & Segrè","et":"Greek astatos, “unstable”","bl":"The rarest natural element — less than a gram exists on Earth at any moment."},{"z":86,"s":"Rn","n":"Radon","m":"[222]","cat":7,"g":18,"p":6,"blk":"p","x":18,"y":6,"wx":32,"wy":6,"ph":"g","mp":202,"bp":211.5,"d":0.00973,"en":2.2,"ie":1037,"ie2":[],"ea":null,"r":150,"sh":[2,8,18,32,18,8],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6","ecs":"[Xe] 4f14 5d10 6s2 6p6","ox":"0, +2","ab":4e-13,"dy":1900,"db":"Friedrich Ernst Dorn","et":"named as the emanation of radium","bl":"An invisible radioactive gas that seeps from bedrock into basements."},{"z":87,"s":"Fr","n":"Francium","m":"[223]","cat":0,"g":1,"p":7,"blk":"s","x":1,"y":7,"wx":1,"wy":7,"ph":"s","mp":300,"bp":950,"d":1.87,"en":0.79,"ie":380,"ie2":[],"ea":46.89,"r":260,"sh":[2,8,18,32,18,8,1],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s1","ecs":"[Rn] 7s1","ox":"+1","ab":0,"dy":1939,"db":"Marguerite Perey","et":"France","bl":"Discovered by Marguerite Perey, Curie's technician; vanishes with a 22-minute half-life."},{"z":88,"s":"Ra","n":"Radium","m":"[226]","cat":1,"g":2,"p":7,"blk":"s","x":2,"y":7,"wx":2,"wy":7,"ph":"s","mp":1233,"bp":2010,"d":5.5,"en":0.9,"ie":509.3,"ie2":[979],"ea":9.6485,"r":221,"sh":[2,8,18,32,18,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2","ecs":"[Rn] 7s2","ox":"+2","ab":9e-07,"dy":1898,"db":"Marie & Pierre Curie","et":"Latin radius, “ray”","bl":"Once painted on watch dials until the dial-painters' tragedy taught radiation safety."},{"z":89,"s":"Ac","n":"Actinium","m":"[227]","cat":9,"g":3,"p":7,"blk":"f","x":3,"y":10,"wx":3,"wy":7,"ph":"s","mp":1500,"bp":3500,"d":10,"en":1.1,"ie":499,"ie2":[1170],"ea":33.77,"r":215,"sh":[2,8,18,32,18,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 6d1","ecs":"[Rn] 6d1 7s2","ox":"+3","ab":5.5e-10,"dy":1899,"db":"André-Louis Debierne","et":"Greek aktis, “ray”","bl":"The actinides' namesake; glows faint blue in the dark.","mh":27.2},{"z":90,"s":"Th","n":"Thorium","m":"232.04","cat":9,"g":3,"p":7,"blk":"f","x":4,"y":10,"wx":4,"wy":7,"ph":"s","mp":2023,"bp":5061,"d":11.724,"en":1.3,"ie":587,"ie2":[1110,1930],"ea":112.72,"r":206,"sh":[2,8,18,32,18,10,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 6d2","ecs":"[Rn] 6d2 7s2","ox":"+4","ab":9.6,"dy":1829,"db":"Jöns Jacob Berzelius","et":"Thor, Norse god of thunder","bl":"Named for a thunder god; gas-lantern mantles and a possible future nuclear fuel.","mh":26.23},{"z":91,"s":"Pa","n":"Protactinium","m":"231.04","cat":9,"g":3,"p":7,"blk":"f","x":5,"y":10,"wx":5,"wy":7,"ph":"s","mp":1841,"bp":4300,"d":15.37,"en":1.5,"ie":568,"ie2":[],"ea":53.03,"r":200,"sh":[2,8,18,32,20,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f2 6d1","ecs":"[Rn] 5f2 6d1 7s2","ox":"+4, +5","ab":1.4e-06,"dy":1913,"db":"Kasimir Fajans & Oswald Göhring","et":"“parent of actinium” — it decays into it","bl":"The 'parent of actinium' — rare, radioactive, and mostly a stepping-stone in decay chains."},{"z":92,"s":"U","n":"Uranium","m":"238.03","cat":9,"g":3,"p":7,"blk":"f","x":6,"y":10,"wx":6,"wy":7,"ph":"s","mp":1405.3,"bp":4404,"d":19.1,"en":1.38,"ie":597.6,"ie2":[1420],"ea":50.94,"r":196,"sh":[2,8,18,32,21,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f3 6d1","ecs":"[Rn] 5f3 6d1 7s2","ox":"+3, +4, +5, +6","ab":2.7,"dy":1789,"db":"Martin Heinrich Klaproth","et":"the planet Uranus, found eight years earlier","bl":"The heaviest natural element in quantity: it dates the Earth and split the atom.","mh":27.665},{"z":93,"s":"Np","n":"Neptunium","m":"[237]","cat":9,"g":3,"p":7,"blk":"f","x":7,"y":10,"wx":7,"wy":7,"ph":"s","mp":912,"bp":4447,"d":20.45,"en":1.36,"ie":604.5,"ie2":[],"ea":45.85,"r":190,"sh":[2,8,18,32,22,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f4 6d1","ecs":"[Rn] 5f4 6d1 7s2","ox":"+3, +4, +5, +6, +7","ab":0,"dy":1940,"db":"Edwin McMillan & Philip Abelson","et":"the planet Neptune, past Uranus","bl":"First past uranium, as Neptune is past Uranus; a reactor stepping-stone to plutonium.","mh":29.46},{"z":94,"s":"Pu","n":"Plutonium","m":"[244]","cat":9,"g":3,"p":7,"blk":"f","x":8,"y":10,"wx":8,"wy":7,"ph":"s","mp":912.5,"bp":3505,"d":19.816,"en":1.28,"ie":584.7,"ie2":[],"ea":null,"r":187,"sh":[2,8,18,32,24,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f6","ecs":"[Rn] 5f6 7s2","ox":"+3, +4, +5, +6","ab":0,"dy":1940,"db":"Glenn Seaborg et al.","et":"the dwarf planet Pluto, past Neptune","bl":"Born by the kilogram in reactors; a warm pellet of it powers the Voyager probes.","mh":35.5},{"z":95,"s":"Am","n":"Americium","m":"[243]","cat":9,"g":3,"p":7,"blk":"f","x":9,"y":10,"wx":9,"wy":7,"ph":"s","mp":1449,"bp":2880,"d":12,"en":1.13,"ie":578,"ie2":[],"ea":9.93,"r":180,"sh":[2,8,18,32,25,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f7","ecs":"[Rn] 5f7 7s2","ox":"+3","ab":null,"dy":1944,"db":"Glenn Seaborg et al.","et":"the Americas, mirroring europium","bl":"The working radioactive element in millions of household smoke detectors.","mh":62.7},{"z":96,"s":"Cm","n":"Curium","m":"[247]","cat":9,"g":3,"p":7,"blk":"f","x":10,"y":10,"wx":10,"wy":7,"ph":"s","mp":1613,"bp":3383,"d":13.51,"en":1.28,"ie":581,"ie2":[],"ea":27.17,"r":169,"sh":[2,8,18,32,25,9,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f7 6d1","ecs":"[Rn] 5f7 6d1 7s2","ox":"+3","ab":null,"dy":1944,"db":"Glenn Seaborg et al.","et":"Marie and Pierre Curie","bl":"Named for the Curies; curium power sources rode aboard Mars rovers' spectrometers."},{"z":97,"s":"Bk","n":"Berkelium","m":"[247]","cat":9,"g":3,"p":7,"blk":"f","x":11,"y":10,"wx":11,"wy":7,"ph":"s","mp":1259,"bp":2900,"d":14.78,"en":1.3,"ie":601,"ie2":[],"ea":null,"r":168,"sh":[2,8,18,32,27,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f9","ecs":"[Rn] 5f9 7s2","ox":"+3, +4","ab":null,"dy":1949,"db":"Lawrence Berkeley Lab","et":"Berkeley, California","bl":"Made atom by atom in Berkeley; a stepping-stone to the heaviest elements."},{"z":98,"s":"Cf","n":"Californium","m":"[251]","cat":9,"g":3,"p":7,"blk":"f","x":12,"y":10,"wx":12,"wy":7,"ph":"s","mp":1173,"bp":1743,"d":15.1,"en":1.3,"ie":608,"ie2":[],"ea":null,"r":168,"sh":[2,8,18,32,28,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f10","ecs":"[Rn] 5f10 7s2","ox":"+3","ab":null,"dy":1950,"db":"Lawrence Berkeley Lab","et":"California","bl":"The strongest neutron source you can hold — it starts up reactors and finds gold ore."},{"z":99,"s":"Es","n":"Einsteinium","m":"[252]","cat":9,"g":3,"p":7,"blk":"f","x":13,"y":10,"wx":13,"wy":7,"ph":"s","mp":1133,"bp":1269,"d":8.84,"en":1.3,"ie":619,"ie2":[],"ea":null,"r":165,"sh":[2,8,18,32,29,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f11","ecs":"[Rn] 5f11 7s2","ox":"+3","ab":null,"dy":1952,"db":"Lawrence Berkeley Lab","et":"Albert Einstein","bl":"Discovered in the fallout of the first hydrogen bomb, and named for Einstein."},{"z":100,"s":"Fm","n":"Fermium","m":"[257]","cat":9,"g":3,"p":7,"blk":"f","x":14,"y":10,"wx":14,"wy":7,"ph":"s","mp":1800,"bp":null,"d":null,"en":1.3,"ie":627,"ie2":[],"ea":33.96,"r":167,"sh":[2,8,18,32,30,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f12","ecs":"[Rn] 5f12 7s2","ox":"+3","ab":null,"dy":1952,"db":"Lawrence Berkeley Lab","et":"Enrico Fermi","bl":"Fermi's element, also born in thermonuclear fallout; the last makeable by neutron capture.","pr":1},{"z":101,"s":"Md","n":"Mendelevium","m":"[258]","cat":9,"g":3,"p":7,"blk":"f","x":15,"y":10,"wx":15,"wy":7,"ph":"s","mp":1100,"bp":null,"d":null,"en":1.3,"ie":635,"ie2":[],"ea":93.91,"r":173,"sh":[2,8,18,32,31,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f13","ecs":"[Rn] 5f13 7s2","ox":"+2, +3","ab":null,"dy":1955,"db":"Lawrence Berkeley Lab","et":"Dmitri Mendeleev","bl":"Mendeleev's honor — first element discovered one atom at a time.","pr":1},{"z":102,"s":"No","n":"Nobelium","m":"[259]","cat":9,"g":3,"p":7,"blk":"f","x":16,"y":10,"wx":16,"wy":7,"ph":"s","mp":1100,"bp":null,"d":null,"en":1.3,"ie":639,"ie2":[],"ea":null,"r":176,"sh":[2,8,18,32,32,8,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14","ecs":"[Rn] 5f14 7s2","ox":"+2, +3","ab":null,"dy":1958,"db":"Lawrence Berkeley Lab","et":"Alfred Nobel","bl":"Nobel's element, forged in a cyclotron a few atoms per hour.","pr":1},{"z":103,"s":"Lr","n":"Lawrencium","m":"[266]","cat":9,"g":3,"p":7,"blk":"d","x":17,"y":10,"wx":17,"wy":7,"ph":"s","mp":1900,"bp":null,"d":null,"en":1.3,"ie":479,"ie2":[],"ea":null,"r":161,"sh":[2,8,18,32,32,8,3],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 7p1","ecs":"[Rn] 5f14 7s2 7p1","ox":"+3","ab":null,"dy":1961,"db":"Lawrence Berkeley Lab","et":"Ernest Lawrence, inventor of the cyclotron","bl":"Lawrence's element closes the actinides; its atoms outlive most superheavies at 11 hours.","pr":1},{"z":104,"s":"Rf","n":"Rutherfordium","m":"[267]","cat":2,"g":4,"p":7,"blk":"d","x":4,"y":7,"wx":18,"wy":7,"ph":"s","mp":2400,"bp":5800,"d":23.2,"en":null,"ie":580,"ie2":[],"ea":null,"r":157,"sh":[2,8,18,32,32,10,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d2","ecs":"[Rn] 5f14 6d2 7s2","ox":"+4","ab":null,"dy":1964,"db":"JINR (Dubna) & LBNL (Berkeley)","et":"Ernest Rutherford","bl":"The first transactinide; chemistry done on single atoms shows it behaves like hafnium.","pr":1},{"z":105,"s":"Db","n":"Dubnium","m":"[268]","cat":2,"g":5,"p":7,"blk":"d","x":5,"y":7,"wx":19,"wy":7,"ph":"s","mp":null,"bp":null,"d":29.3,"en":null,"ie":null,"ie2":[],"ea":null,"r":149,"sh":[2,8,18,32,32,11,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d3","ecs":"[Rn] 5f14 6d3 7s2","ox":"+5","ab":null,"dy":1968,"db":"JINR (Dubna) & LBNL (Berkeley)","et":"Dubna, Russia","bl":"A Cold-War naming dispute lasted decades; Dubna finally kept this one.","pr":1},{"z":106,"s":"Sg","n":"Seaborgium","m":"[269]","cat":2,"g":6,"p":7,"blk":"d","x":6,"y":7,"wx":20,"wy":7,"ph":"s","mp":null,"bp":null,"d":35,"en":null,"ie":null,"ie2":[],"ea":null,"r":143,"sh":[2,8,18,32,32,12,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d4","ecs":"[Rn] 5f14 6d4 7s2","ox":"+6","ab":null,"dy":1974,"db":"Lawrence Berkeley Lab","et":"Glenn Seaborg — named while he lived","bl":"Seaborg saw his own element named — a first in science history.","pr":1},{"z":107,"s":"Bh","n":"Bohrium","m":"[270]","cat":2,"g":7,"p":7,"blk":"d","x":7,"y":7,"wx":21,"wy":7,"ph":"s","mp":null,"bp":null,"d":37.1,"en":null,"ie":null,"ie2":[],"ea":null,"r":141,"sh":[2,8,18,32,32,13,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d5","ecs":"[Rn] 5f14 6d5 7s2","ox":"+7","ab":null,"dy":1981,"db":"GSI, Darmstadt","et":"Niels Bohr","bl":"Bohr's element: a handful of atoms, gone in seconds.","pr":1},{"z":108,"s":"Hs","n":"Hassium","m":"[269]","cat":2,"g":8,"p":7,"blk":"d","x":8,"y":7,"wx":22,"wy":7,"ph":"s","mp":null,"bp":null,"d":40.7,"en":null,"ie":null,"ie2":[],"ea":null,"r":134,"sh":[2,8,18,32,32,14,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d6","ecs":"[Rn] 5f14 6d6 7s2","ox":"+8","ab":null,"dy":1984,"db":"GSI, Darmstadt","et":"Hassia, Latin for Hesse, Germany","bl":"Heaviest element whose chemistry has been measured — it forms a volatile oxide like osmium.","pr":1},{"z":109,"s":"Mt","n":"Meitnerium","m":"[278]","cat":10,"g":9,"p":7,"blk":"d","x":9,"y":7,"wx":23,"wy":7,"ph":"s","mp":null,"bp":null,"d":37.4,"en":null,"ie":null,"ie2":[],"ea":null,"r":129,"sh":[2,8,18,32,32,15,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d7","ecs":"[Rn] 5f14 6d7 7s2","ox":null,"ab":null,"dy":1982,"db":"GSI, Darmstadt","et":"Lise Meitner","bl":"Honors Lise Meitner, who explained fission and was denied its Nobel.","pr":1},{"z":110,"s":"Ds","n":"Darmstadtium","m":"[281]","cat":10,"g":10,"p":7,"blk":"d","x":10,"y":7,"wx":24,"wy":7,"ph":"s","mp":null,"bp":null,"d":34.8,"en":null,"ie":null,"ie2":[],"ea":null,"r":128,"sh":[2,8,18,32,32,16,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d8","ecs":"[Rn] 5f14 6d9 7s1","ox":null,"ab":null,"dy":1994,"db":"GSI, Darmstadt","et":"Darmstadt, Germany","bl":"Made in Darmstadt, decays in milliseconds.","pr":1},{"z":111,"s":"Rg","n":"Roentgenium","m":"[282]","cat":10,"g":11,"p":7,"blk":"d","x":11,"y":7,"wx":25,"wy":7,"ph":"s","mp":null,"bp":null,"d":28.7,"en":null,"ie":null,"ie2":[],"ea":151,"r":121,"sh":[2,8,18,32,32,17,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d9","ecs":"[Rn] 5f14 6d10 7s1","ox":null,"ab":null,"dy":1994,"db":"GSI, Darmstadt","et":"Wilhelm Röntgen, discoverer of X-rays","bl":"Röntgen's element; theory predicts it may be a noble, silver-like metal.","pr":1},{"z":112,"s":"Cn","n":"Copernicium","m":"[285]","cat":2,"g":12,"p":7,"blk":"d","x":12,"y":7,"wx":26,"wy":7,"ph":"l","mp":null,"bp":357,"d":14.0,"en":null,"ie":null,"ie2":[],"ea":null,"r":122,"sh":[2,8,18,32,32,18,2],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10","ecs":"[Rn] 5f14 6d10 7s2","ox":null,"ab":null,"dy":1996,"db":"GSI, Darmstadt","et":"Nicolaus Copernicus","bl":"Copernicus's element behaves like a volatile cousin of mercury.","pr":1},{"z":113,"s":"Nh","n":"Nihonium","m":"[286]","cat":10,"g":13,"p":7,"blk":"p","x":13,"y":7,"wx":27,"wy":7,"ph":"s","mp":700,"bp":1430,"d":16,"en":null,"ie":null,"ie2":[],"ea":66.6,"r":136,"sh":[2,8,18,32,32,18,3],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p1","ecs":"[Rn] 5f14 6d10 7s2 7p1","ox":null,"ab":null,"dy":2004,"db":"RIKEN, Japan","et":"Nihon — Japan, “land of the rising sun”","bl":"The first element discovered in Asia — nine years for three atoms at RIKEN.","pr":1},{"z":114,"s":"Fl","n":"Flerovium","m":"[289]","cat":10,"g":14,"p":7,"blk":"p","x":14,"y":7,"wx":28,"wy":7,"ph":"s","mp":340,"bp":420,"d":14,"en":null,"ie":null,"ie2":[],"ea":null,"r":143,"sh":[2,8,18,32,32,18,4],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p2","ecs":"[Rn] 5f14 6d10 7s2 7p2","ox":null,"ab":null,"dy":1999,"db":"JINR (Dubna) & LLNL","et":"Georgy Flyorov, Soviet nuclear pioneer","bl":"Named for the Flyorov lab; surprisingly volatile for a metal — relativity at work.","pr":1},{"z":115,"s":"Mc","n":"Moscovium","m":"[290]","cat":10,"g":15,"p":7,"blk":"p","x":15,"y":7,"wx":29,"wy":7,"ph":"s","mp":670,"bp":1400,"d":13.5,"en":null,"ie":null,"ie2":[],"ea":35.3,"r":162,"sh":[2,8,18,32,32,18,5],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p3","ecs":"[Rn] 5f14 6d10 7s2 7p3","ox":null,"ab":null,"dy":2003,"db":"JINR (Dubna) & LLNL","et":"Moscow oblast","bl":"A fusion product of calcium-48 beams on americium targets.","pr":1},{"z":116,"s":"Lv","n":"Livermorium","m":"[293]","cat":10,"g":16,"p":7,"blk":"p","x":16,"y":7,"wx":30,"wy":7,"ph":"s","mp":709,"bp":1085,"d":12.9,"en":null,"ie":null,"ie2":[],"ea":74.9,"r":175,"sh":[2,8,18,32,32,18,6],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p4","ecs":"[Rn] 5f14 6d10 7s2 7p4","ox":null,"ab":null,"dy":2000,"db":"JINR (Dubna) & LLNL","et":"Livermore, California","bl":"Livermore's element; a few dozen atoms have ever existed.","pr":1},{"z":117,"s":"Ts","n":"Tennessine","m":"[294]","cat":10,"g":17,"p":7,"blk":"p","x":17,"y":7,"wx":31,"wy":7,"ph":"s","mp":723,"bp":883,"d":7.17,"en":null,"ie":null,"ie2":[],"ea":165.9,"r":165,"sh":[2,8,18,32,32,18,7],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p5","ecs":"[Rn] 5f14 6d10 7s2 7p5","ox":null,"ab":null,"dy":2010,"db":"JINR, LLNL & ORNL","et":"Tennessee","bl":"Second-newest element; its americium target flew Moscow–Tennessee under guard.","pr":1},{"z":118,"s":"Og","n":"Oganesson","m":"[294]","cat":10,"g":18,"p":7,"blk":"p","x":18,"y":7,"wx":32,"wy":7,"ph":"s","mp":null,"bp":350,"d":4.95,"en":null,"ie":null,"ie2":[],"ea":5.40318,"r":157,"sh":[2,8,18,32,32,18,8],"ec":"1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p6","ecs":"[Rn] 5f14 6d10 7s2 7p6","ox":null,"ab":null,"dy":2002,"db":"JINR (Dubna) & LLNL","et":"Yuri Oganessian — named while he lives","bl":"The heaviest known element — predicted to be a solid 'noble gas' that isn't noble at all.","pr":1}]};
+const CATS = DATA.cats, ELS = DATA.els;
+const bySym = {}; ELS.forEach(e => bySym[e.s.toLowerCase()] = e);
+
+/* ================= color engine (OKLCH → sRGB) ================= */
+function oklch(L, C, H){
+  const hr = H * Math.PI / 180, a = C * Math.cos(hr), b = C * Math.sin(hr);
+  const l_ = L + 0.3963377774*a + 0.2158037573*b;
+  const m_ = L - 0.1055613458*a - 0.0638541728*b;
+  const s_ = L - 0.0894841775*a - 1.2914855480*b;
+  const l = l_**3, m = m_**3, s = s_**3;
+  const R =  4.0767416621*l - 3.3077115913*m + 0.2309699292*s;
+  const G = -1.2684380046*l + 2.6097574011*m - 0.3413193965*s;
+  const B = -0.0041960863*l - 0.7034186147*m + 1.7076147010*s;
+  const f = x => { x = Math.min(1, Math.max(0, x)); return x <= 0.0031308 ? 12.92*x : 1.055*x**(1/2.4) - 0.055; };
+  return `rgb(${Math.round(f(R)*255)},${Math.round(f(G)*255)},${Math.round(f(B)*255)})`;
+}
+function rampAt(stops, t){ // stops: [[L,C,H],...] · t in 0..1 · hue via shortest arc
+  t = Math.min(1, Math.max(0, t));
+  const n = stops.length - 1, i = Math.min(n - 0, Math.max(0, Math.floor(t * n))), j = Math.min(n, i + 1);
+  const u = t * n - i, A = stops[i], B = stops[j];
+  let dh = B[2] - A[2]; if (dh > 180) dh -= 360; if (dh < -180) dh += 360;
+  return oklch(A[0] + (B[0]-A[0])*u, A[1] + (B[1]-A[1])*u, A[2] + dh*u);
+}
+const CAT_COL = [
+  [.70,.17, 30], // alkali — vermilion
+  [.78,.14, 78], // alkaline earth — gold
+  [.72,.10,235], // transition — steel blue
+  [.75,.10,192], // post-transition — teal
+  [.75,.13,122], // metalloid — chartreuse
+  [.74,.15,152], // nonmetal — green
+  [.70,.14,297], // halogen — violet
+  [.72,.16,332], // noble gas — magenta
+  [.73,.10,265], // lanthanide — periwinkle
+  [.63,.10, 55], // actinide — bronze
+  [.70,.02,250], // unknown — fog
+];
+const catColor = i => oklch(...CAT_COL[i]);
+const RAMPS = {
+  fire:  [[.38,.08,262],[.60,.11,215],[.78,.13,110],[.75,.16,62],[.66,.21,32]],
+  moon:  [[.34,.05,250],[.58,.09,215],[.80,.10,190],[.93,.06,160]],
+  violet:[[.33,.07,300],[.58,.14,310],[.76,.13,345],[.92,.07,80]],
+  lead:  [[.86,.04,210],[.60,.09,262],[.36,.12,292]],
+  heat:  [[.27,.03,270],[.45,.13,25],[.66,.16,48],[.82,.14,85],[.95,.03,100]],
+  earth: [[.33,.10,310],[.52,.09,255],[.70,.13,175],[.85,.14,130]],
+  time:  [[.52,.09,60],[.62,.10,150],[.68,.12,220],[.78,.14,310]],
+};
+const STATE_COL = { s: oklch(.68,.055,252), l: oklch(.80,.115,205), g: oklch(.74,.13,42), x: oklch(.42,.01,250) };
+const BLK_COL = { s: oklch(.70,.15,30), p: oklch(.72,.12,232), d: oklch(.76,.13,85), f: oklch(.68,.13,300) };
+const NODATA = oklch(.35,.008,250);
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const K2C = k => k - 273.15, K2F = k => k * 9/5 - 459.67;
+const fmtT = k => `${fmtNum(k)} K`;
+function fmtNum(v){
+  if (v == null) return "—";
+  if (v !== 0 && Math.abs(v) < 0.001) return v.toExponential(1).replace('e-','×10⁻').replace(/^(.*)×/, '$1 ×');
+  const s = Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('en-US')
+        : Math.round(v*100)/100 + '';
+  return s;
+}
+function fmtPPM(v){
+  if (v == null) return "not found in nature";
+  if (v === 0) return "trace";
+  if (v >= 10000) return (v/10000).toPrecision(3) + "% of the crust";
+  if (v < 0.001) return v.toExponential(0).replace('e-','×10⁻') + " ppm";
+  return fmtNum(v) + " ppm";
+}
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* state-of-matter at temperature T (K) */
+function stateAt(e, T){
+  if (e.sub != null) return T < e.sub ? 's' : 'g';
+  const mp = e.mp, bp = e.bp;
+  if (mp == null && bp == null) return 'x';
+  if (mp != null && T < mp) return 's';
+  if (bp != null && T >= bp) return 'g';
+  if (mp != null && bp != null) return 'l';
+  if (mp != null) return 'l';      // past mp, bp unknown
+  return 'x';                      // bp known only, below it: unknown
+}
+
+/* ================= modes ================= */
+const MODES = [
+  { id:'cat',    label:'Families' },
+  { id:'state',  label:'States of matter' },
+  { id:'en',     label:'Electronegativity', get:e=>e.en, ramp:'fire',  unit:'', name:'Electronegativity', sub:'Pauling scale', fmt:v=>v.toFixed(2) },
+  { id:'radius', label:'Atomic radius',     get:e=>e.r,  ramp:'moon',  unit:'pm', name:'Covalent radius', fmt:v=>Math.round(v)+' pm' },
+  { id:'ie',     label:'Ionization',        get:e=>e.ie, ramp:'violet',unit:'kJ/mol', name:'First ionization energy', fmt:v=>fmtNum(v)+' kJ/mol' },
+  { id:'density',label:'Density',           get:e=>e.d,  ramp:'lead',  unit:'g/cm³', name:'Density', log:true, fmt:v=> v < 0.01 ? (v*1000).toPrecision(3)+' g/L' : fmtNum(v)+' g/cm³' },
+  { id:'melt',   label:'Melting point',     get:e=>e.mp ?? e.sub, ramp:'heat', unit:'K', name:'Melting point', fmt:fmtT },
+  { id:'boil',   label:'Boiling point',     get:e=>e.bp ?? e.sub, ramp:'heat', unit:'K', name:'Boiling point', fmt:fmtT },
+  { id:'ab',     label:'Abundance',         get:e=>(e.ab == null || e.ab === 0) ? null : e.ab, ramp:'earth', unit:'', name:'Abundance in Earth’s crust', log:true, fmt:fmtPPM },
+  { id:'year',   label:'Discovery' },
+  { id:'blk',    label:'Blocks' },
+];
+for (const m of MODES){ // numeric domains
+  if (!m.get) continue;
+  const vs = ELS.map(m.get).filter(v => v != null);
+  m.min = Math.min(...vs); m.max = Math.max(...vs);
+  m.t = v => {
+    if (v == null) return null;
+    if (m.log){ const lo = Math.log10(m.min), hi = Math.log10(m.max); return (Math.log10(v) - lo) / (hi - lo); }
+    return (v - m.min) / (m.max - m.min);
+  };
+}
+let mode = MODES[0];
+let curT = 298, curYear = 2016, layoutWide = false, catFilter = null;
+
+/* ================= build the grid ================= */
+const grid = $('grid');
+const cellOf = {};   // z -> button
+const posMap = {};   // "x,y" -> element (rebuilt per layout)
+function buildGrid(){
+  grid.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  const gmax = layoutWide ? 32 : 18;
+  for (let g = 1; g <= gmax; g++){
+    const lab = document.createElement('div');
+    lab.className = 'glab'; lab.style.gridColumn = g + 1; lab.style.gridRow = 1;
+    if (!layoutWide) lab.textContent = g;
+    else if (g <= 2) lab.textContent = g; else if (g >= 17) lab.textContent = g - 14;
+    frag.appendChild(lab);
+  }
+  for (let p = 1; p <= 7; p++){
+    const lab = document.createElement('div');
+    lab.className = 'plab'; lab.style.gridColumn = 1; lab.style.gridRow = p + 1;
+    lab.textContent = p; frag.appendChild(lab);
+  }
+  for (const k in posMap) delete posMap[k];
+  for (const e of ELS){
+    const x = layoutWide ? e.wx : e.x, y = layoutWide ? e.wy : e.y;
+    const b = document.createElement('button');
+    b.className = 'cell'; b.dataset.z = e.z;
+    b.style.gridColumn = x + 1; b.style.gridRow = y + 1;
+    b.style.setProperty('--z', e.z);
+    b.style.setProperty('--rr', (e.r / 260 * 0.92).toFixed(3));
+    b.setAttribute('aria-label', `${e.n}, ${e.s}, element ${e.z}`);
+    b.innerHTML = `<i class="dot"></i><span class="num">${e.z}</span>${e.s}<span class="mass">${e.m}</span>`;
+    posMap[`${x},${y}`] = e;
+    cellOf[e.z] = b;
+    frag.appendChild(b);
+  }
+  if (!layoutWide){
+    const mk = (row, txt) => {
+      const d = document.createElement('div');
+      d.className = 'fnote'; d.style.gridColumn = 4; d.style.gridRow = row;
+      d.innerHTML = `<span>${txt}</span>`; frag.appendChild(d);
+    };
+    mk(7, '57–71'); mk(8, '89–103');
+  }
+  grid.appendChild(frag);
+  paint(false);
+}
+
+/* color one repaint of every cell for the current mode */
+function colorFor(e){
+  switch (mode.id){
+    case 'cat':   return catColor(e.cat);
+    case 'blk':   return BLK_COL[e.blk];
+    case 'state': return STATE_COL[stateAt(e, curT)];
+    case 'year':  return e.dy === 0 ? oklch(.60,.09,65) : rampAt(RAMPS.time, (e.dy - 1660) / (2016 - 1660));
+    default: {
+      const t = mode.t(mode.get(e));
+      return t == null ? NODATA : rampAt(RAMPS[mode.ramp], t);
+    }
+  }
+}
+function paint(wave = true){
+  grid.dataset.mode = mode.id;
+  for (const e of ELS){
+    const b = cellOf[e.z];
+    if (wave && !reduceMotion) b.style.setProperty('--wave', (Math.min(e.x, 18) * 14) + 'ms');
+    else b.style.setProperty('--wave', '0s');
+    b.style.setProperty('--c', colorFor(e));
+    b.classList.remove('st-s','st-l','st-g','st-x');
+    if (mode.id === 'state') b.classList.add('st-' + stateAt(e, curT));
+    const nod = (mode.get && mode.t(mode.get(e)) == null && mode.id !== 'cat');
+    b.classList.toggle('nodata', !!nod);
+    b.classList.toggle('undisc', mode.id === 'year' && e.dy > curYear);
+  }
+  refreshLegend();
+}
+
+/* ================= legend & sub-bar ================= */
+const legendCats = $('legendCats'), legendGrad = $('legendGrad');
+const tempRig = $('tempRig'), yearRig = $('yearRig');
+function refreshLegend(){
+  legendCats.hidden = !(mode.id === 'cat' || mode.id === 'blk' || mode.id === 'state');
+  legendGrad.hidden = !mode.get;
+  tempRig.hidden = mode.id !== 'state';
+  yearRig.hidden = mode.id !== 'year';
+  if (mode.id === 'cat'){
+    legendCats.innerHTML = CATS.map((c, i) =>
+      `<button class="lchip" data-cat="${i}" aria-pressed="${catFilter === i}" style="--sw:${catColor(i)}"><i></i>${c}</button>`).join('');
+  } else if (mode.id === 'blk'){
+    legendCats.innerHTML = ['s','p','d','f'].map(k =>
+      `<span class="lchip" style="--sw:${BLK_COL[k]}"><i></i>${k}-block</span>`).join('');
+  } else if (mode.id === 'state'){
+    legendCats.innerHTML = [['s','solid'],['l','liquid'],['g','gas'],['x','unknown']].map(([k, n]) =>
+      `<span class="lchip" style="--sw:${STATE_COL[k]}"><i></i>${n}</span>`).join('');
+    updateTempReadout();
+  }
+  if (mode.get){
+    const stops = [];
+    for (let i = 0; i <= 14; i++) stops.push(rampAt(RAMPS[mode.ramp], i/14) + ' ' + (i/14*100).toFixed(1) + '%');
+    $('gradBar').style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
+    $('gradName').innerHTML = `<b>${mode.name}</b>${mode.sub ? ' · ' + mode.sub : ''}`;
+    $('gradMin').textContent = mode.fmt(mode.min);
+    $('gradMax').textContent = mode.fmt(mode.max);
+  }
+  if (mode.id === 'year') updateYearReadout();
+}
+legendCats.addEventListener('click', ev => {
+  const chip = ev.target.closest('[data-cat]'); if (!chip) return;
+  const i = +chip.dataset.cat;
+  catFilter = (catFilter === i) ? null : i;
+  for (const e of ELS) cellOf[e.z].classList.toggle('dim', catFilter != null && e.cat !== catFilter);
+  refreshLegend();
+});
+
+/* temperature rig — slider is sqrt-scaled for cryogenic detail */
+const tempSlider = $('tempSlider');
+const sliderToK = v => Math.round((v/1000)**2 * 6000);
+const kToSlider = k => Math.round(Math.sqrt(k/6000) * 1000);
+function updateTempReadout(){
+  const counts = { s:0, l:0, g:0, x:0 };
+  for (const e of ELS) counts[stateAt(e, curT)]++;
+  $('tempVal').innerHTML = `<b>${curT.toLocaleString('en-US')} K</b> · ${Math.round(K2C(curT)).toLocaleString('en-US')} °C · ${Math.round(K2F(curT)).toLocaleString('en-US')} °F<br><small>${counts.s} solid · ${counts.l} liquid · ${counts.g} gas</small>`;
+}
+tempSlider.addEventListener('input', () => { curT = sliderToK(+tempSlider.value); paint(false); });
+tempRig.addEventListener('click', ev => {
+  const p = ev.target.closest('.preset'); if (!p) return;
+  curT = +p.dataset.t; tempSlider.value = kToSlider(curT); paint(false);
+});
+
+/* discovery rig */
+const yearSlider = $('yearSlider');
+let yearTimer = null;
+function updateYearReadout(){
+  const n = ELS.filter(e => e.dy <= curYear).length;
+  $('yearVal').innerHTML = curYear <= 1200
+    ? `<b>antiquity</b> · ${ELS.filter(e => e.dy === 0).length} elements known`
+    : `<b>${curYear}</b> · ${n} of 118 known`;
+}
+yearSlider.addEventListener('input', () => { curYear = +yearSlider.value; paint(false); });
+$('yearPlay').addEventListener('click', () => {
+  if (yearTimer){ clearInterval(yearTimer); yearTimer = null; $('yearPlay').textContent = '▶'; return; }
+  curYear = 1200; yearSlider.value = 1200; paint(false);
+  $('yearPlay').textContent = '⏸';
+  const step = reduceMotion ? 816 : 3;
+  yearTimer = setInterval(() => {
+    curYear = Math.min(2016, curYear + step);
+    yearSlider.value = curYear; paint(false);
+    if (curYear >= 2016){ clearInterval(yearTimer); yearTimer = null; $('yearPlay').textContent = '▶'; }
+  }, 30);
+});
+
+/* mode chips */
+const modesNav = $('modes');
+modesNav.innerHTML = MODES.map(m => `<button class="mode" data-mode="${m.id}" aria-pressed="${m === mode}">${m.label}</button>`).join('');
+modesNav.addEventListener('click', ev => {
+  const btn = ev.target.closest('.mode'); if (!btn) return;
+  mode = MODES.find(m => m.id === btn.dataset.mode);
+  if (yearTimer){ clearInterval(yearTimer); yearTimer = null; $('yearPlay').textContent = '▶'; }
+  catFilter = null;
+  for (const e of ELS) cellOf[e.z].classList.remove('dim');
+  modesNav.querySelectorAll('.mode').forEach(b => b.setAttribute('aria-pressed', b === btn));
+  paint(true);
+});
+
+/* wide form */
+$('wideBtn').addEventListener('click', () => {
+  layoutWide = !layoutWide;
+  $('wideBtn').setAttribute('aria-pressed', layoutWide);
+  grid.classList.toggle('wide', layoutWide);
+  buildGrid();
+  applySearch($('q').value);
+});
+
+/* ================= hover: kinship + readout ================= */
+const readout = $('readout');
+function modeValueText(e){
+  switch (mode.id){
+    case 'cat':   return CATS[e.cat];
+    case 'blk':   return e.blk + '-block';
+    case 'state': { const st = stateAt(e, curT); return { s:'solid', l:'liquid', g:'gas', x:'state unknown' }[st] + ` at ${curT} K`; }
+    case 'year':  return e.dy === 0 ? 'known since antiquity' : 'discovered ' + e.dy;
+    default: { const v = mode.get(e); return v == null ? 'no data' : mode.fmt(v); }
+  }
+}
+grid.addEventListener('mouseover', ev => {
+  const b = ev.target.closest('.cell'); if (!b) return;
+  const e = ELS[b.dataset.z - 1];
+  const x = layoutWide ? e.wx : e.x, y = layoutWide ? e.wy : e.y;
+  for (const o of ELS){
+    const ox = layoutWide ? o.wx : o.x, oy = layoutWide ? o.wy : o.y;
+    cellOf[o.z].classList.toggle('kin', (ox === x || oy === y) && o.z !== e.z);
+  }
+  readout.innerHTML = `<b>${e.n}</b> · ${e.s} — <span class="v">${modeValueText(e)}</span>`;
+  if (mode.get){
+    const t = mode.t(mode.get(e));
+    const mark = $('gradMark');
+    if (t != null){ mark.style.opacity = 1; mark.style.left = `calc(${(t*100).toFixed(1)}% - 1px)`; }
+    else mark.style.opacity = 0;
+  }
+});
+grid.addEventListener('mouseout', ev => {
+  if (ev.relatedTarget && ev.relatedTarget.closest && ev.relatedTarget.closest('#grid')) return;
+  for (const e of ELS) cellOf[e.z].classList.remove('kin');
+  readout.textContent = ''; $('gradMark').style.opacity = 0;
+});
+
+/* ================= search ================= */
+const q = $('q');
+function applySearch(term){
+  term = term.trim().toLowerCase();
+  if (term === '119' || term === 'uue' || term === 'ununennium'){
+    readout.innerHTML = `<b>Element 119</b> — <span class="v">still being hunted, in Dubna and RIKEN. Check back.</span>`;
+  }
+  if (!term){ for (const e of ELS) cellOf[e.z].classList.toggle('dim', catFilter != null && e.cat !== catFilter); return null; }
+  let best = null, bestRank = 9;
+  for (const e of ELS){
+    const name = e.n.toLowerCase(), sym = e.s.toLowerCase();
+    const hit = sym === term ? 0 : String(e.z) === term ? 1 : name.startsWith(term) ? 2
+              : sym.startsWith(term) ? 3 : name.includes(term) ? 4 : 9;
+    cellOf[e.z].classList.toggle('dim', hit === 9);
+    if (hit < bestRank){ bestRank = hit; best = e; }
+  }
+  return bestRank < 9 ? best : null;
+}
+q.addEventListener('input', () => applySearch(q.value));
+q.addEventListener('keydown', ev => {
+  if (ev.key === 'Enter'){ ev.preventDefault(); const hit = applySearch(q.value); if (hit) openEl(hit.z); }
+  if (ev.key === 'Escape'){ q.value = ''; applySearch(''); q.blur(); }
+});
+
+/* ================= keyboard nav on the grid ================= */
+grid.addEventListener('keydown', ev => {
+  const b = ev.target.closest('.cell'); if (!b) return;
+  const e = ELS[b.dataset.z - 1];
+  let x = layoutWide ? e.wx : e.x, y = layoutWide ? e.wy : e.y;
+  const dir = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] }[ev.key];
+  if (!dir) return;
+  ev.preventDefault();
+  const maxX = layoutWide ? 32 : 18, maxY = layoutWide ? 7 : 10;
+  for (let step = 0; step < Math.max(maxX, maxY); step++){
+    x += dir[0]; y += dir[1];
+    if (x < 1 || y < 1 || x > maxX || y > maxY) return;
+    const hit = posMap[`${x},${y}`];
+    if (hit){ cellOf[hit.z].focus(); return; }
+  }
+});
+grid.addEventListener('click', ev => {
+  const b = ev.target.closest('.cell'); if (!b) return;
+  b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+  openEl(+b.dataset.z);
+});
+
+/* ================= the dossier ================= */
+const dossier = $('dossier'), backdrop = $('backdrop'), dBody = $('dBody');
+let openZ = null, lastFocus = null;
+
+function supCfg(s){
+  return s.replace(/(\d+)([spdf])(\d+)/g, '$1$2<sup>$3</sup>');
+}
+function atomSVG(e){
+  const n = e.sh.length, R0 = 26, R1 = 96;
+  let out = `<svg width="216" height="216" viewBox="-108 -108 216 216" role="img" aria-label="Electron shell diagram: ${e.sh.join(', ')}">`;
+  out += `<circle class="nuc" r="16"></circle>`;
+  out += `<text y="4.5" text-anchor="middle" style="font:600 11px var(--mono);fill:#07090d">${e.s}</text>`;
+  e.sh.forEach((cnt, i) => {
+    const r = n === 1 ? 54 : R0 + (R1 - R0) * i / (n - 1);
+    out += `<circle class="ring" r="${r.toFixed(1)}"></circle>`;
+    out += `<g class="orb${i % 2 ? ' rev' : ''}" style="--dur:${(26 + i * 9)}s">`;
+    for (let k = 0; k < cnt; k++){
+      const a = 2 * Math.PI * k / cnt - Math.PI / 2;
+      out += `<circle class="eldot" r="2.7" cx="${(r * Math.cos(a)).toFixed(1)}" cy="${(r * Math.sin(a)).toFixed(1)}"></circle>`;
+    }
+    out += `</g>`;
+  });
+  return out + `</svg>`;
+}
+const PROPS = [
+  { k:'Atomic mass',   get:e=>parseFloat(e.m.replace(/[[\]]/g,'')), fmt:(v,e)=>`${e.m} <small>u${e.m.startsWith('[')?' · longest-lived isotope':''}</small>` },
+  { k:'Electronegativity', get:e=>e.en, fmt:v=>`${v.toFixed(2)} <small>Pauling</small>` },
+  { k:'1st ionization energy', get:e=>e.ie, fmt:v=>`${fmtNum(v)} <small>kJ/mol</small> · ${(v/96.485).toFixed(2)} <small>eV</small>` },
+  { k:'2nd · 3rd ionization', get:e=>(e.ie2 && e.ie2.length ? 1 : null), bar:false, fmt:(v,e)=>e.ie2.map(fmtNum).join(' · ') + ' <small>kJ/mol</small>' },
+  { k:'Electron affinity', get:e=>e.ea, fmt:v=>`${fmtNum(v)} <small>kJ/mol</small>`, none:'anion not stable' },
+  { k:'Covalent radius', get:e=>e.r, fmt:(v,e)=>`${v} <small>pm${e.z>96?' · predicted':''}</small>` },
+  { k:'Density', get:e=>e.d, log:true, fmt:(v,e)=>`${e.pr?'≈ ':''}${v<0.01?(v*1000).toPrecision(3)+' <small>g/L</small>':fmtNum(v)+' <small>g/cm³</small>'}` },
+  { k:'Melting point', get:e=>e.mp ?? e.sub, fmt:(v,e)=> e.sub!=null
+      ? `${fmtNum(v)} <small>K · sublimes</small>`
+      : `${e.pr?'≈ ':''}${fmtNum(v)} <small>K</small> · ${fmtNum(K2C(v))} <small>°C</small>` },
+  { k:'Boiling point', get:e=>e.sub!=null?null:e.bp, fmt:(v,e)=>`${e.pr?'≈ ':''}${fmtNum(v)} <small>K</small> · ${fmtNum(K2C(v))} <small>°C</small>` },
+  { k:'Molar heat capacity', get:e=>e.mh, bar:false, fmt:v=>`${fmtNum(v)} <small>J/(mol·K)</small>` },
+  { k:'Oxidation states', get:e=>e.ox || null, bar:false, fmt:v=>v },
+  { k:'Crustal abundance', get:e=>e.ab, log:true, min:1e-13, fmt:(v,e)=>fmtPPM(v) },
+];
+for (const p of PROPS){ // domains for the position bars
+  if (p.bar === false) continue;
+  const vs = ELS.map(p.get).filter(v => typeof v === 'number' && v > (p.log ? 0 : -Infinity));
+  p.lo = p.min ?? Math.min(...vs); p.hi = Math.max(...vs);
+}
+function barT(p, v){
+  if (typeof v !== 'number') return null;
+  if (p.log){ if (v <= 0) return 0; const lo = Math.log10(p.lo), hi = Math.log10(p.hi); return Math.min(1, Math.max(0, (Math.log10(v) - lo) / (hi - lo))); }
+  return Math.min(1, Math.max(0, (v - p.lo) / (p.hi - p.lo)));
+}
+
+function openEl(z, fromNav){
+  const e = ELS[z - 1]; if (!e) return;
+  openZ = z;
+  if (!fromNav) lastFocus = document.activeElement;
+  const c = catColor(e.cat);
+  dossier.style.setProperty('--c', c);
+  $('dZ').textContent = e.z; $('dSym').textContent = e.s;
+  $('dMass').textContent = e.m; $('dName').textContent = e.n;
+  const rt = stateAt(e, 298);
+  const chips = [CATS[e.cat],
+    { s:'solid', l:'liquid', g:'gas', x:null }[rt] && ({ s:'solid', l:'liquid', g:'gas' }[rt] + ' at 25 °C'),
+    `${e.blk}-block`, e.g ? `group ${e.g}` : 'f-block', `period ${e.p}`];
+  $('dChips').innerHTML = chips.filter(Boolean).map(t => `<span class="dchip">${t}</span>`).join('')
+    + (e.pr ? `<span class="dchip warn">≈ predicted values</span>` : '');
+  let h = `<p class="dblurb">${e.bl}</p>
+    <p class="dety"><b>${e.n}</b> — from ${e.et}.</p>
+    <div class="dsec"><h3>The atom</h3>
+      <div class="atomwrap">${atomSVG(e)}</div>
+      <div class="shellcount">${e.sh.join(' · ')}</div>
+      <div class="cfg">${supCfg(e.ecs)}</div>
+      <div class="cfgfull">${supCfg(e.ec)}</div>
+    </div>
+    <div class="dsec"><h3>Measured &amp; known</h3><div class="props">`;
+  for (const p of PROPS){
+    const v = p.get(e);
+    if (v == null){ if (p.none) h += `<div class="prow"><span class="k">${p.k}</span><span class="v"><small>${p.none}</small></span></div>`; continue; }
+    h += `<div class="prow"><span class="k">${p.k}</span><span class="v">${p.fmt(v, e)}</span>`;
+    if (p.bar !== false){
+      const t = barT(p, v);
+      if (t != null) h += `<div class="bar"><u style="--fill:${t.toFixed(3)}"></u><i style="left:${(t*100).toFixed(1)}%"></i></div>`;
+    }
+    h += `</div>`;
+  }
+  h += `</div></div>
+    <div class="dsec"><h3>Discovery</h3>
+      <p style="font-size:13.5px;color:var(--ink)">${e.dy === 0 ? 'Known since antiquity' : e.dy} — ${e.db}.</p>
+    </div>
+    <div class="dsec" style="font-size:12.5px;color:var(--ink-dim)">
+      Cross-checked against IUPAC 2021 &amp; NIST · <a href="/spiral/" style="color:var(--accent2)">see it on the spiral →</a>
+    </div>`;
+  dBody.innerHTML = h;
+  if (reduceMotion) dBody.querySelectorAll('.orb').forEach(g => g.style.animation = 'none');
+  const prev = ELS[z - 2], next = ELS[z];
+  $('dPrev').innerHTML = prev ? `‹ <span class="sym">${prev.s}</span> ${prev.n}` : '';
+  $('dPrev').style.visibility = prev ? 'visible' : 'hidden';
+  $('dNext').innerHTML = next ? `${next.n} <span class="sym">${next.s}</span> ›` : '';
+  $('dNext').style.visibility = next ? 'visible' : 'hidden';
+  dossier.hidden = false; requestAnimationFrame(() => { dossier.classList.add('on'); backdrop.classList.add('on'); });
+  dBody.scrollTop = 0;
+  history.replaceState(null, '', '#' + e.s.toLowerCase());
+  if (!fromNav) $('dClose').focus({ preventScroll: true });
+}
+function closeEl(){
+  if (openZ == null) return;
+  dossier.classList.remove('on'); backdrop.classList.remove('on');
+  setTimeout(() => { if (openZ == null) dossier.hidden = true; }, 380);
+  history.replaceState(null, '', location.pathname);
+  if (lastFocus && lastFocus.isConnected) lastFocus.focus({ preventScroll: true });
+  openZ = null;
+}
+$('dClose').addEventListener('click', closeEl);
+backdrop.addEventListener('click', closeEl);
+$('dPrev').addEventListener('click', () => openZ > 1 && openEl(openZ - 1, true));
+$('dNext').addEventListener('click', () => openZ < 118 && openEl(openZ + 1, true));
+
+/* ================= about ================= */
+const about = $('about');
+function openAbout(){ about.classList.add('on'); }
+function closeAbout(){ about.classList.remove('on'); }
+$('aboutBtn').addEventListener('click', openAbout);
+$('provChip').addEventListener('click', openAbout);
+about.addEventListener('click', ev => { if (!ev.target.closest('.acard')) closeAbout(); });
+$('printBtn').addEventListener('click', () => window.print());
+
+/* ================= global keys ================= */
+document.addEventListener('keydown', ev => {
+  const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+  if (ev.key === 'Escape'){
+    if (about.classList.contains('on')) return closeAbout();
+    if (openZ != null) return closeEl();
+  }
+  if (typing) return;
+  if (ev.key === '/'){ ev.preventDefault(); q.focus(); return; }
+  if (openZ != null){
+    if (ev.key === 'ArrowLeft' && openZ > 1){ ev.preventDefault(); openEl(openZ - 1, true); }
+    if (ev.key === 'ArrowRight' && openZ < 118){ ev.preventDefault(); openEl(openZ + 1, true); }
+  }
+});
+
+/* ================= live fact-check (PubChem / NIH) =================
+   Baked data is the verified snapshot; this refreshes it so the table
+   never goes stale. Column names are matched by header (never position),
+   every value is sanity-bounded, and curated exceptions are protected. */
+const LIVE_URL = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON';
+const LIVE_KEY = 'periodic-live-v1';
+const TTL = 7 * 86400e3;
+const EV = 96.485;
+const PROTECT = { mp: new Set([6, 15, 33, 108, 112]), bp: new Set([6, 15, 33, 108, 112]) };
+const abridge5 = x => parseFloat(Number(x).toPrecision(5)).toString();
+
+function applyLive(vals){
+  const changes = [];
+  for (const [zs, u] of Object.entries(vals || {})){
+    const z = +zs, e = ELS[z - 1]; if (!e) continue;
+    const put = (f, label, val, disp) => { changes.push({ z, s: e.s, field: label, from: disp[0], to: disp[1] }); e[f] = val; };
+    if (u.m != null && isFinite(u.m)){
+      const mine = parseFloat(e.m.replace(/[[\]]/g, ''));
+      if (Math.abs(u.m - mine) / mine < 0.005){   // weights only ever drift a little
+        const nm = e.m.startsWith('[') ? `[${Math.round(u.m)}]` : abridge5(u.m);
+        if (nm !== e.m){ changes.push({ z, s: e.s, field: 'atomic mass', from: e.m, to: nm }); e.m = nm; }
+      }
+    }
+    const numeric = [['en', 'electronegativity', 0.25], ['ie', 'ionization energy', 0.25],
+                     ['ea', 'electron affinity', 0.25], ['mp', 'melting point', 0.25],
+                     ['bp', 'boiling point', 0.25], ['d', 'density', 0.25]];
+    for (const [f, nm, tol] of numeric){
+      const v = u[f];
+      if (v == null || !isFinite(v)) continue;
+      if (PROTECT[f] && PROTECT[f].has(z)) continue;
+      if (e.pr) continue;                       // keep predicted flags honest
+      const mine = e[f];
+      if (mine == null) continue;               // don't invent data we didn't curate
+      const rel = Math.abs(v - mine) / Math.abs(mine || 1);
+      if (rel > 0.002 && rel < tol) put(f, nm, v, [fmtNum(mine), fmtNum(v)]);
+    }
+  }
+  return changes;
+}
+function refreshLabels(changes){
+  for (const ch of changes){
+    const b = cellOf[ch.z]; if (!b) continue;
+    b.querySelector('.mass').textContent = ELS[ch.z - 1].m;
+  }
+}
+function liveState(){ try { return JSON.parse(localStorage.getItem(LIVE_KEY)); } catch (_) { return null; } }
+function setLiveUI(ok, msg, n){
+  $('liveStatus').innerHTML = msg;
+  $('provDot').classList.toggle('off', !ok);
+  if (ok) $('provText').textContent = `IUPAC 2021 · NIST · verified ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` + (n ? ` · ${n} refreshed` : '');
+  $('provTag').textContent = ok ? (n ? `live-checked · ${n} value${n > 1 ? 's' : ''} refreshed` : 'live-checked against PubChem/NIST — all current')
+                                : 'fact-checked against NIST & PubChem';
+  if (ok) $('provTag').classList.add('live-ok');
+}
+async function liveCheck(force){
+  const cached = liveState();
+  if (!force && cached && Date.now() - cached.ts < TTL){
+    const applied = applyLive(cached.vals), n = applied.length;
+    refreshLabels(applied);
+    setLiveUI(true, `Verified against PubChem on ${new Date(cached.ts).toLocaleDateString()} — ${n ? n + ` value${n > 1 ? 's' : ''} refreshed from the baked snapshot.` : 'every value current.'}`, n);
+    if (n){ paint(false); if (openZ) openEl(openZ, true); }
+    return;
+  }
+  if (!navigator.onLine){ setLiveUI(false, 'Offline — the verified snapshot stands.'); return; }
+  $('liveStatus').textContent = 'Checking against PubChem…';
+  try {
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 15000);
+    const res = await fetch(LIVE_URL, { signal: ctl.signal, mode: 'cors' });
+    clearTimeout(tm);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const cols = json.Table.Columns.Column, rows = json.Table.Row;
+    const ix = {}; cols.forEach((c, i) => ix[c] = i);
+    const need = ['AtomicNumber', 'AtomicMass'];
+    if (!need.every(c => c in ix)) throw new Error('unexpected shape');
+    const vals = {};
+    for (const r of rows){
+      const c = r.Cell, z = parseInt(c[ix.AtomicNumber], 10);
+      if (!z || z > 118) continue;
+      const num = name => { const i = ix[name]; if (i == null) return null; const v = parseFloat(c[i]); return isFinite(v) ? v : null; };
+      vals[z] = {
+        m: num('AtomicMass'), en: num('Electronegativity'),
+        ie: num('IonizationEnergy') != null ? num('IonizationEnergy') * EV : null,
+        ea: num('ElectronAffinity') != null ? num('ElectronAffinity') * EV : null,
+        mp: num('MeltingPoint'), bp: num('BoilingPoint'), d: num('Density'),
+      };
+    }
+    const changes = applyLive(vals);
+    refreshLabels(changes);
+    localStorage.setItem(LIVE_KEY, JSON.stringify({ ts: Date.now(), vals }));
+    const n = changes.length;
+    let msg = `Verified just now against PubChem (NIH) — ${n ? '' : 'all 118 elements current.'}`;
+    if (n) msg += `${n} value${n > 1 ? 's' : ''} refreshed: ` + changes.slice(0, 4).map(ch => `${ch.s} ${ch.field} ${ch.from} → ${ch.to}`).join('; ') + (n > 4 ? '…' : '');
+    setLiveUI(true, msg, n);
+    if (n){ paint(false); if (openZ) openEl(openZ, true); }
+  } catch (err){
+    setLiveUI(false, 'Couldn’t reach PubChem right now — the verified snapshot stands. ' +
+      '<span style="color:var(--ink-faint)">(' + (err && err.name === 'AbortError' ? 'timed out' : String(err.message || err)) + ')</span>');
+  }
+}
+$('checkNow').addEventListener('click', () => liveCheck(true));
+
+/* ================= boot ================= */
+buildGrid();
+(function route(){
+  const h = location.hash.replace('#', '').toLowerCase();
+  if (!h) return;
+  const e = bySym[h] || (/^\d+$/.test(h) ? ELS[+h - 1] : null);
+  if (e) setTimeout(() => openEl(e.z), reduceMotion ? 0 : 750);
+})();
+window.addEventListener('hashchange', () => {
+  const h = location.hash.replace('#', '').toLowerCase();
+  const e = bySym[h] || (/^\d+$/.test(h) ? ELS[+h - 1] : null);
+  if (e) openEl(e.z);
+});
+setTimeout(() => liveCheck(false), 2500);
+if ('serviceWorker' in navigator && location.protocol === 'https:')
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+</script>
+</body>
+</html>

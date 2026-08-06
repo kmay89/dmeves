@@ -15,6 +15,21 @@
   status = 301
   force = true
 
+# Optional pretty subdomain for the periodic table. Takes effect only if
+# periodic.dmeves.com is added as a domain alias (Netlify → Domain management)
+# with a DNS record pointing at the site; harmless until then.
+[[redirects]]
+  from = "https://periodic.dmeves.com/*"
+  to = "https://dmeves.com/periodic/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://periodic.dmeves.com/*"
+  to = "https://dmeves.com/periodic/:splat"
+  status = 301
+  force = true
+
 # Security headers for every page
 [[headers]]
   for = "/*"
