@@ -45,6 +45,18 @@ body{
   min-height:100svh; display:flex; flex-direction:column;
 }
 ::selection{background:#d8b56a44}
+/* slow aurora drift behind everything — the hall breathes */
+body::before,body::after{
+  content:"";position:fixed;inset:-30%;z-index:-1;pointer-events:none;
+  background:radial-gradient(38% 30% at 32% 28%, #17224a30 0%, transparent 70%);
+  animation:drift1 55s ease-in-out infinite alternate;
+}
+body::after{
+  background:radial-gradient(34% 28% at 70% 72%, #2c173f2c 0%, transparent 70%);
+  animation:drift2 70s ease-in-out infinite alternate;
+}
+@keyframes drift1{to{transform:translate(3.5%,2.5%) scale(1.07)}}
+@keyframes drift2{to{transform:translate(-3.5%,-2%) scale(1.09)}}
 a{color:var(--accent2)}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:#000;padding:8px 14px;border-radius:0 0 8px 0;z-index:99;font-weight:700}
@@ -150,6 +162,9 @@ nav.modes::-webkit-scrollbar{display:none}
 .rig input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .rig input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 0 10px #d8b56a66}
 .rig .tval{font-family:var(--mono);font-size:13px;color:var(--ink);min-width:200px}
+/* the sliders wear their own physics: a blackbody thermometer, a timeline patina */
+#tempSlider{--trackbg:linear-gradient(90deg,#10132e,#33124d 20%,#8a2020 46%,#d86a2a 68%,#f2c14e 85%,#fdf6e3 100%)}
+#yearSlider{--trackbg:linear-gradient(90deg,#8a6a34,#41815f 36%,#2f6f95 66%,#b45fd0 100%)}
 .rig .tval small{color:var(--ink-faint);font-size:11px}
 .preset{
   font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);border:1px solid var(--line2);
@@ -185,6 +200,7 @@ main{flex:1;display:flex;flex-direction:column}
   position:relative;border-radius:var(--cellr);
   background:color-mix(in srgb, var(--c) 15%, #0d1017);
   border:1px solid color-mix(in srgb, var(--c) 34%, transparent);
+  box-shadow:inset 0 1px 0 #ffffff0d, inset 0 -6px 14px -12px color-mix(in srgb, var(--c) 55%, transparent);
   display:flex;align-items:center;justify-content:center;
   font-family:var(--disp);font-size:calc(var(--cell) * .32);font-weight:600;color:var(--ink);
   transition:background .45s ease, border-color .45s ease, opacity .35s ease,
@@ -213,6 +229,7 @@ main{flex:1;display:flex;flex-direction:column}
 .cell:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .cell.kin{background:color-mix(in srgb, var(--c) 26%, #0d1017)}
 .cell.dim{opacity:.13;filter:saturate(.3)}
+.cell.nodata{background-image:repeating-linear-gradient(45deg, transparent 0 5px, #ffffff06 5px 8px)}
 .cell.undisc{opacity:.06;filter:grayscale(1)}
 .cell.pop{animation:pop .4s cubic-bezier(.2,.7,.3,1)}
 @keyframes pop{40%{transform:translateY(-4px) scale(1.14)}}
@@ -242,7 +259,10 @@ main{flex:1;display:flex;flex-direction:column}
   display:flex;flex-direction:column;
 }
 .dossier.on{transform:none;box-shadow:-30px 0 80px -20px #000}
-.dhead{display:flex;align-items:center;gap:14px;padding:18px 20px 12px;border-bottom:1px solid var(--line)}
+.dhead{
+  display:flex;align-items:center;gap:14px;padding:18px 20px 12px;border-bottom:1px solid var(--line);
+  background:radial-gradient(130% 160% at 88% -30%, color-mix(in srgb, var(--c) 17%, transparent), transparent 62%);
+}
 .dtile{
   width:86px;height:86px;flex:none;border-radius:12px;position:relative;
   background:color-mix(in srgb, var(--c) 22%, #0d1017);
@@ -263,7 +283,15 @@ main{flex:1;display:flex;flex-direction:column}
 .dchip.warn{background:#8a4b1a2e;border-color:#c07a3a66;color:#e8b98a}
 .dclose{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink-dim);font-size:17px;transition:all .15s}
 .dclose:hover{color:var(--ink);background:#ffffff12}
-.dbody{overflow-y:auto;padding:16px 20px 90px;flex:1;overscroll-behavior:contain}
+.dbody{overflow-y:auto;padding:16px 20px 90px;flex:1;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#2a3140 transparent}
+/* each dossier reads like a page being laid on the table */
+.dbody>*{animation:rise .5s cubic-bezier(.2,.7,.3,1) both}
+.dbody>*:nth-child(2){animation-delay:55ms}
+.dbody>*:nth-child(3){animation-delay:110ms}
+.dbody>*:nth-child(4){animation-delay:165ms}
+.dbody>*:nth-child(5){animation-delay:220ms}
+.dbody>*:nth-child(n+6){animation-delay:275ms}
+@keyframes rise{from{opacity:0;transform:translateY(11px)}}
 .dblurb{font-size:15px;line-height:1.55;color:var(--ink)}
 .dety{font-size:12.5px;color:var(--ink-dim);margin-top:8px}
 .dety b{color:var(--accent);font-weight:600}
@@ -275,12 +303,12 @@ main{flex:1;display:flex;flex-direction:column}
 .dsec h3::after{content:"";flex:1;height:1px;background:var(--line)}
 .atomwrap{display:flex;justify-content:center;padding:4px 0}
 .atomwrap svg{overflow:visible}
-.ring{fill:none;stroke:#ffffff1c;stroke-width:1}
-.nuc{fill:color-mix(in srgb, var(--c) 70%, #fff 12%);filter:drop-shadow(0 0 8px color-mix(in srgb, var(--c) 80%, transparent))}
-.orb{transform-origin:center;animation:spin var(--dur) linear infinite}
-.orb.rev{animation-direction:reverse}
-@keyframes spin{to{transform:rotate(360deg)}}
+.ring{fill:none;stroke:#ffffff17;stroke-width:1}
+.ring.val{stroke:color-mix(in srgb, var(--c) 45%, transparent);stroke-width:1.3}
+.nuc{fill:color-mix(in srgb, var(--c) 70%, #fff 12%);filter:drop-shadow(0 0 8px color-mix(in srgb, var(--c) 80%, transparent));animation:nucpulse 4.6s ease-in-out infinite}
+@keyframes nucpulse{50%{opacity:.8}}
 .eldot{fill:#e8ecf3;filter:drop-shadow(0 0 3px color-mix(in srgb, var(--c) 90%, #fff))}
+.eldot.val{fill:color-mix(in srgb, var(--c) 60%, #fff);filter:drop-shadow(0 0 5px var(--c))}
 .shellcount{font-family:var(--mono);font-size:12px;text-align:center;color:var(--ink-dim);margin-top:6px}
 .cfg{font-family:var(--mono);font-size:14px;text-align:center;margin-top:4px;color:var(--ink)}
 .cfg sup{font-size:9.5px;color:var(--accent)}
@@ -297,8 +325,16 @@ main{flex:1;display:flex;flex-direction:column}
 .prow .bar i{
   position:absolute;top:50%;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);
   background:var(--c);box-shadow:0 0 8px var(--c);transition:left .5s cubic-bezier(.2,.7,.3,1);
+  animation:popdot .5s ease .42s both;
 }
-.prow .bar u{position:absolute;inset:0;border-radius:2px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--c) 35%,transparent));text-decoration:none;transform-origin:left;transform:scaleX(var(--fill,0));transition:transform .5s cubic-bezier(.2,.7,.3,1)}
+.prow .bar u{
+  position:absolute;inset:0;border-radius:2px;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--c) 35%,transparent));
+  text-decoration:none;transform-origin:left;transform:scaleX(var(--fill,0));
+  animation:growbar .8s cubic-bezier(.2,.7,.3,1) .18s both;
+}
+@keyframes growbar{from{transform:scaleX(0)}}
+@keyframes popdot{from{opacity:0}}
 .dfoot{
   position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;gap:6px;
   padding:12px 16px;background:linear-gradient(#0e121900,var(--panel) 40%);
@@ -373,7 +409,6 @@ footer a:hover{color:var(--accent)}
 /* ---------- motion ---------- */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s !important;animation-delay:0s !important;transition-duration:.001s !important}
-  .orb{animation:none !important}
   h1{animation:none;background-position:0 0}
 }
 /* ---------- print: a light poster ---------- */
@@ -877,11 +912,16 @@ function atomSVG(e){
   out += `<text y="4.5" text-anchor="middle" style="font:600 11px var(--mono);fill:#07090d">${e.s}</text>`;
   e.sh.forEach((cnt, i) => {
     const r = n === 1 ? 54 : R0 + (R1 - R0) * i / (n - 1);
-    out += `<circle class="ring" r="${r.toFixed(1)}"></circle>`;
-    out += `<g class="orb${i % 2 ? ' rev' : ''}" style="--dur:${(26 + i * 9)}s">`;
+    const val = i === n - 1;   // valence shell, tinted with the element's color
+    out += `<circle class="ring${val ? ' val' : ''}" r="${r.toFixed(1)}"></circle>`;
+    out += `<g>`;
+    // SMIL rotation about the nucleus at (0,0) — explicit center, so electrons
+    // can never drift off their rings the way CSS transform-origin let them
+    if (!reduceMotion)
+      out += `<animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 0 0" to="${i % 2 ? -360 : 360} 0 0" dur="${26 + i * 9}s" repeatCount="indefinite"/>`;
     for (let k = 0; k < cnt; k++){
       const a = 2 * Math.PI * k / cnt - Math.PI / 2;
-      out += `<circle class="eldot" r="2.7" cx="${(r * Math.cos(a)).toFixed(1)}" cy="${(r * Math.sin(a)).toFixed(1)}"></circle>`;
+      out += `<circle class="eldot${val ? ' val' : ''}" r="${val ? 3.1 : 2.6}" cx="${(r * Math.cos(a)).toFixed(1)}" cy="${(r * Math.sin(a)).toFixed(1)}"></circle>`;
     }
     out += `</g>`;
   });
@@ -955,7 +995,6 @@ function openEl(z, fromNav){
       Cross-checked against IUPAC 2021 &amp; NIST · <a href="/spiral/" style="color:var(--accent2)">see it on the spiral →</a>
     </div>`;
   dBody.innerHTML = h;
-  if (reduceMotion) dBody.querySelectorAll('.orb').forEach(g => g.style.animation = 'none');
   const prev = ELS[z - 2], next = ELS[z];
   $('dPrev').innerHTML = prev ? `‹ <span class="sym">${prev.s}</span> ${prev.n}` : '';
   $('dPrev').style.visibility = prev ? 'visible' : 'hidden';
