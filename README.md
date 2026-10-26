@@ -123,17 +123,16 @@ it carries `noindex`, a permanent "Demo" banner, no hotline, no payment
 processor, and every unverified detail is a `[bracketed]` placeholder.
 It exists so the real thing can be built out from it.
 
-- **Finder guide**: pick the animal, answer one question, get leave / re-nest /
-  bring-in / refer advice with the Ohio rule behind each answer and the
-  Medina County numbers to call (ODNR 1-800-WILDLIFE, Wildlife District
-  Three in Akron, the county health department, the Medina Raptor Center).
-- **Species & the law**: a table of what Ohio and federal law say per animal
-  group (ORC 1531.02, OAC 1501:31-25-03 permit categories, the nuisance rule
-  1501:31-15-03, bite reporting, the Migratory Bird Treaty Act).
-- **Ops desk**: intake form matching the ODNR record requirements, case log,
-  one ledger, year-end figures (990-N, Ohio AG report, ODNR species record),
-  a permits-and-setup checklist, and a capacity model scaled to one person
-  with a day job. Sample data lives only in the browser's localStorage.
+- **For finders** (the default view): one question, one answer. Pick the
+  animal, pick the situation, get leave / put-it-back / who-to-call with a
+  tap-to-call button (ODNR 1-800-WILDLIFE, Medina County Health Department,
+  Medina Raptor Center) and the Ohio rule folded away under "Why: the law".
+  A short "The law, in plain words" page sits behind one link.
+- **Ops desk** (a switch in the header): intake form matching the ODNR record
+  requirements, case log, one ledger, year-end figures (990-N, Ohio AG
+  report, ODNR species record), a permits-and-setup checklist, and a
+  capacity model scaled to one person with a day job. Sample data lives only
+  in the browser's localStorage.
 - **Sources**: every legal claim cites the rule or publication it came from,
   plus a "verify before launch" list.
 
