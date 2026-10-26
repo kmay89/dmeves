@@ -115,6 +115,31 @@ Netlify). Highlights:
   offline via the service worker, and the same privacy stance as the rest
   of the site (the sole network request is the optional PubChem check).
 
+### Wildlife page (`/wildlife/`, demo, not linked)
+
+A separate, unlinked demo build for a one-person wildlife-rehabilitation
+operation in Medina County, Ohio. It is **not live**: nothing links to it,
+it carries `noindex`, a permanent "Demo" banner, no hotline, no payment
+processor, and every unverified detail is a `[bracketed]` placeholder.
+It exists so the real thing can be built out from it.
+
+- **Finder guide**: pick the animal, answer one question, get leave / re-nest /
+  bring-in / refer advice with the Ohio rule behind each answer and the
+  Medina County numbers to call (ODNR 1-800-WILDLIFE, Wildlife District
+  Three in Akron, the county health department, the Medina Raptor Center).
+- **Species & the law**: a table of what Ohio and federal law say per animal
+  group (ORC 1531.02, OAC 1501:31-25-03 permit categories, the nuisance rule
+  1501:31-15-03, bite reporting, the Migratory Bird Treaty Act).
+- **Ops desk**: intake form matching the ODNR record requirements, case log,
+  one ledger, year-end figures (990-N, Ohio AG report, ODNR species record),
+  a permits-and-setup checklist, and a capacity model scaled to one person
+  with a day job. Sample data lives only in the browser's localStorage.
+- **Sources**: every legal claim cites the rule or publication it came from,
+  plus a "verify before launch" list.
+
+Self-hosted fonts, no third-party requests, same privacy stance as the rest
+of the site.
+
 ### Link previews (iMessage etc.)
 
 `og-image.png` plus the Open Graph tags in `index.html` give the site a
