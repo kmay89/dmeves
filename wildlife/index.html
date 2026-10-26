@@ -182,6 +182,13 @@ ul.plain{margin:0;padding-left:20px;display:grid;gap:8px}
 .wizard .opt button{background:var(--surface2);border:2px solid transparent;border-radius:999px;padding:10px 18px;cursor:pointer;font-weight:700;font-size:1rem;color:var(--fg)}
 .wizard .opt button:hover{border-color:var(--accent)}
 .wizard .opt button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.wizard .opt.animals{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,104px),1fr));gap:10px}
+.wizard .opt.animals button{display:grid;justify-items:center;align-content:start;gap:6px;border-radius:16px;padding:14px 6px 12px;font-size:.92rem;line-height:1.2;text-align:center;color:var(--accent);--cut:var(--surface2)}
+.wizard .opt.animals button span{color:var(--fg)}
+.wizard .opt.animals button svg{width:52px;height:52px;display:block}
+.wizard .opt.animals button .cut{fill:var(--cut)}
+.wizard .opt.animals button[aria-pressed="true"]{color:var(--accent-ink);--cut:var(--accent)}
+.wizard .opt.animals button[aria-pressed="true"] span{color:var(--accent-ink)}
 .answer{display:grid;gap:14px;background:var(--surface2);border-radius:14px;padding:20px}
 .answer.kind-leave{background:var(--good-soft)}
 .answer.kind-health{background:var(--amber-soft)}
@@ -242,7 +249,7 @@ footer.site a{color:var(--muted)}
 
   <div class="card wizard" id="wizard">
     <p class="step">What did you find?</p>
-    <div class="opt" id="wzAnimal"></div>
+    <div class="opt animals" id="wzAnimal"></div>
     <div id="wzQ2wrap" hidden style="display:grid;gap:12px"><p class="step">What's going on with it?</p><div class="opt" id="wzSit"></div></div>
     <div id="wzAnswer" hidden></div>
   </div>
@@ -594,6 +601,22 @@ const WZ={
   ["leave","She's laying eggs. Leave her, and keep the dog away from that spot for the summer."]]},
 };
 
+const ICONS = {
+rabbit:`<ellipse cx="17" cy="15" rx="4.6" ry="12" transform="rotate(-10 17 15)"/><ellipse cx="31" cy="15" rx="4.6" ry="12" transform="rotate(10 31 15)"/><circle cx="24" cy="32" r="12"/><circle class="cut" cx="19.5" cy="30" r="1.7"/><circle class="cut" cx="28.5" cy="30" r="1.7"/>`,
+squirrel:`<path d="M19 39C5 37 2 20 13 9c-3 9 1 17 10 21z"/><ellipse cx="27" cy="33" rx="11" ry="8.5"/><circle cx="32" cy="23" r="7"/><circle cx="36" cy="16.5" r="2.4"/><circle class="cut" cx="34.5" cy="22" r="1.3"/>`,
+opossum:`<circle cx="12" cy="13" r="5.5"/><circle cx="36" cy="13" r="5.5"/><path d="M9 21c0-9 7-13 15-13s15 4 15 13c0 6-9 17-15 23C18 38 9 27 9 21z"/><circle class="cut" cx="18" cy="22" r="2"/><circle class="cut" cx="30" cy="22" r="2"/><circle class="cut" cx="24" cy="36" r="2.2"/>`,
+groundhog:`<ellipse cx="24" cy="31" rx="14" ry="12"/><circle cx="24" cy="16" r="9.5"/><circle cx="16.5" cy="9.5" r="2.6"/><circle cx="31.5" cy="9.5" r="2.6"/><circle class="cut" cx="20" cy="15" r="1.5"/><circle class="cut" cx="28" cy="15" r="1.5"/><rect class="cut" x="22" y="20" width="4" height="3.5" rx="1"/>`,
+songbird:`<ellipse cx="21" cy="29" rx="13" ry="9.5"/><circle cx="31" cy="18" r="6.5"/><path d="M36 16l9 3-9 3z"/><path d="M10 27L3 18l11 5z"/><circle class="cut" cx="32.5" cy="17" r="1.3"/>`,
+duck:`<ellipse cx="22" cy="32" rx="15" ry="8.5"/><circle cx="32" cy="18" r="7"/><path d="M38 16l9 3-9 4z"/><path d="M8 29l-5-8 9 5z"/><circle class="cut" cx="34" cy="17" r="1.3"/>`,
+owl:`<ellipse cx="24" cy="29" rx="14" ry="15"/><path d="M12 18L9 6l11 8z"/><path d="M36 18l3-12-11 8z"/><circle class="cut" cx="18" cy="24" r="5"/><circle class="cut" cx="30" cy="24" r="5"/><circle cx="18" cy="24" r="2.2"/><circle cx="30" cy="24" r="2.2"/><path class="cut" d="M22 31h4l-2 4z"/>`,
+raccoon:`<path d="M11 17L12 5l10 8z"/><path d="M37 17L36 5l-10 8z"/><circle cx="24" cy="27" r="14"/><path class="cut" d="M10 26c4-5 9-7 14-7s10 2 14 7c-3 5-8 8-14 8s-11-3-14-8z"/><circle cx="18" cy="27" r="2.4"/><circle cx="30" cy="27" r="2.4"/><circle class="cut" cx="24" cy="35" r="1.6"/>`,
+bat:`<path d="M20 22C13 9 2 13 2 23c4-2 7 0 8 4 3-3 6-3 10-1z"/><path d="M28 22c7-13 18-9 18 1-4-2-7 0-8 4-3-3-6-3-10-1z"/><ellipse cx="24" cy="27" rx="5.5" ry="9"/><path d="M19 20l1-7 4 6z"/><path d="M29 20l-1-7-4 6z"/><circle class="cut" cx="22" cy="24" r="1.2"/><circle class="cut" cx="26" cy="24" r="1.2"/>`,
+fawn:`<ellipse cx="11" cy="17" rx="8" ry="4.5" transform="rotate(-28 11 17)"/><ellipse cx="37" cy="17" rx="8" ry="4.5" transform="rotate(28 37 17)"/><ellipse cx="24" cy="27" rx="9.5" ry="13"/><circle class="cut" cx="20" cy="24" r="1.7"/><circle class="cut" cx="28" cy="24" r="1.7"/><ellipse class="cut" cx="24" cy="35.5" rx="3" ry="2"/>`,
+turtle:`<path d="M7 31a17 13 0 0 1 34 0z"/><circle cx="41" cy="31" r="5"/><ellipse cx="14" cy="35" rx="4" ry="3"/><ellipse cx="33" cy="35" rx="4" ry="3"/><path d="M8 31l-6-3 5 7z"/><circle class="cut" cx="42.5" cy="30" r="1.2"/>`
+};
+const ANIMAL_ICON={"Baby rabbit":"rabbit","Baby squirrel or chipmunk":"squirrel","Opossum":"opossum","Groundhog":"groundhog","Baby bird (songbird)":"songbird","Duck or goose":"duck","Hawk, owl or vulture":"owl","Raccoon, skunk, fox or coyote":"raccoon","Bat":"bat","Deer fawn":"fawn","Turtle":"turtle"};
+const ANIMAL_LABEL={"Baby rabbit":"Rabbit","Baby squirrel or chipmunk":"Squirrel","Opossum":"Opossum","Groundhog":"Groundhog","Baby bird (songbird)":"Songbird","Duck or goose":"Duck or goose","Hawk, owl or vulture":"Hawk or owl","Raccoon, skunk, fox or coyote":"Raccoon, skunk, fox","Bat":"Bat","Deer fawn":"Fawn","Turtle":"Turtle"};
+
 /* ---------- state ---------- */
 const DEFAULT_SETTINGS={name:"[Working name] Wildlife",county:"Medina",cat:0,fed:0,rvs:0,tax:"sole"};
 let S={...DEFAULT_SETTINGS};
@@ -726,10 +749,10 @@ const CALLS={odnr:["Call ODNR, 1-800-WILDLIFE","tel:18009453543"],health:["Call 
 function permitSummary(){const p=[];p.push(S.cat?`ODNR Category ${catName(S.cat)}`:"no ODNR permit yet");p.push(S.fed?"federal bird permit":"no federal bird permit");p.push(S.rvs?"rabies-vector approval":"no rabies-vector approval");return p.join(", ")}
 function renderSite(){
   $("#siteCounty").textContent=S.county+" County";$("#brandName").textContent=S.name;
-  $("#wzAnimal").innerHTML=Object.keys(WZ).map(k=>`<button type="button" aria-pressed="${wz.animal===k}">${k}</button>`).join("");
+  $("#wzAnimal").innerHTML=Object.keys(WZ).map(k=>`<button type="button" data-k="${k}" aria-pressed="${wz.animal===k}" aria-label="${k}"><svg viewBox="0 0 48 48" aria-hidden="true" fill="currentColor">${ICONS[ANIMAL_ICON[k]]||""}</svg><span>${ANIMAL_LABEL[k]||k}</span></button>`).join("");
   wzRender();
 }
-$("#wzAnimal").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;wz={animal:b.textContent,sit:null};renderSite();$("#wzQ2wrap").scrollIntoView({behavior:"smooth",block:"nearest"})});
+$("#wzAnimal").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;wz={animal:b.dataset.k,sit:null};renderSite();$("#wzQ2wrap").scrollIntoView({behavior:"smooth",block:"nearest"})});
 $("#wzSit").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;wz.sit=+b.dataset.i;wzRender();$("#wzAnswer").scrollIntoView({behavior:"smooth",block:"nearest"})});
 function wzRender(){
   const w=WZ[wz.animal];$("#wzQ2wrap").hidden=!w;$("#wzAnswer").hidden=!(w&&wz.sit!=null);
