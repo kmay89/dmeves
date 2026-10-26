@@ -187,6 +187,8 @@ ul.plain{margin:0;padding-left:20px;display:grid;gap:8px}
 .wizard .opt.animals button span{color:var(--fg)}
 .wizard .opt.animals button svg{width:52px;height:52px;display:block}
 .wizard .opt.animals button .cut{fill:var(--cut)}
+.wizard .opt.animals button .cuts{fill:none;stroke:var(--cut);stroke-width:2.2;stroke-linecap:round}
+.wizard .opt.animals button .tail{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .wizard .opt.animals button[aria-pressed="true"]{color:var(--accent-ink);--cut:var(--accent)}
 .wizard .opt.animals button[aria-pressed="true"] span{color:var(--accent-ink)}
 .answer{display:grid;gap:14px;background:var(--surface2);border-radius:14px;padding:20px}
@@ -439,6 +441,7 @@ footer.site a{color:var(--muted)}
     <div class="card" style="display:grid;gap:8px">
       <h3>Ohio law and rules</h3>
       <ul class="tight small">
+        <li><b>ORC 1531.01</b>, definitions: "wild animals" includes wild birds, wild quadrupeds and all other wild mammals (so mice, voles, shrews and moles are covered); chipmunks are listed as game quadrupeds. <span class="mono">codes.ohio.gov/ohio-revised-code/section-1531.01</span></li>
         <li><b>ORC 1531.02</b>, ownership of wildlife; no take, possession or transport except as permitted. <span class="mono">codes.ohio.gov/ohio-revised-code/section-1531.02</span></li>
         <li><b>ORC 1533.07</b>, nongame birds protected; starlings, English sparrows and common pigeons excepted. <span class="mono">codes.ohio.gov/ohio-revised-code/section-1533.07</span></li>
         <li><b>ORC 1533.08</b>, permits to take, possess and transport wild animals for rehabilitation; no fee. <span class="mono">codes.ohio.gov/ohio-revised-code/section-1533.08</span></li>
@@ -519,7 +522,7 @@ const ORV2025=["Ashtabula","Belmont","Carroll","Columbiana","Geauga","Harrison",
 // cat: ODNR permit category under OAC 1501:31-25-03. fed: federal migratory bird permit needed. rvs: rabies-vector species.
 // chief: excluded from the permit unless the Chief of the Division of Wildlife approves. no: not rehabilitated in Ohio without ODNR approval (deer, coyote, mute swan).
 const SPECIES=[
- {n:"Eastern cottontail",g:"Mammal",cat:1},{n:"Eastern gray squirrel",g:"Mammal",cat:1},{n:"Fox squirrel",g:"Mammal",cat:1},{n:"Red squirrel",g:"Mammal",cat:1},{n:"Southern flying squirrel",g:"Mammal",cat:1},{n:"Eastern chipmunk",g:"Mammal",cat:1},{n:"Groundhog (woodchuck)",g:"Mammal",cat:1},{n:"Virginia opossum",g:"Mammal",cat:1},
+ {n:"Eastern cottontail",g:"Mammal",cat:1},{n:"Eastern gray squirrel",g:"Mammal",cat:1},{n:"Fox squirrel",g:"Mammal",cat:1},{n:"Red squirrel",g:"Mammal",cat:1},{n:"Southern flying squirrel",g:"Mammal",cat:1},{n:"Eastern chipmunk",g:"Mammal",cat:1},{n:"White-footed or deer mouse",g:"Mammal",cat:1},{n:"Meadow vole",g:"Mammal",cat:1},{n:"Northern short-tailed shrew",g:"Mammal",cat:1},{n:"Eastern mole",g:"Mammal",cat:1},{n:"Groundhog (woodchuck)",g:"Mammal",cat:1},{n:"Virginia opossum",g:"Mammal",cat:1},
  {n:"Beaver",g:"Mammal",cat:2},{n:"Mink or weasel",g:"Mammal",cat:2},
  {n:"Raccoon",g:"Mammal",cat:2,rvs:1,chief:1},{n:"Striped skunk",g:"Mammal",cat:2,rvs:1,chief:1},{n:"Red fox",g:"Mammal",cat:2,rvs:1,chief:1},{n:"Gray fox",g:"Mammal",cat:2,rvs:1,chief:1},{n:"Bat (any species)",g:"Mammal",cat:2,rvs:1,chief:1},
  {n:"Coyote",g:"Mammal",cat:2,rvs:1,no:1},{n:"White-tailed deer",g:"Mammal",cat:2,no:1},
@@ -534,6 +537,9 @@ const EXP_CATS=["Food & formula","Medical & meds","Vet services","Caging & enclo
 /* Species-by-species law table. Plain-language summaries; the Sources tab has the citations. */
 const LAW=[
  ["Rabbits, squirrels, chipmunks, groundhogs","Ohio (ORC 1531.02)","Category I or II permit holder","Re-nest or leave if healthy. If it needs help: box it, no food or water, and get it to a permit holder or call ODNR the same day. Keeping it is unlawful.","The most common calls, and the species a first-year Category I holder can actually take."],
+ ["Chipmunk","Ohio (ORC 1531.01 lists it as a game quadruped)","Category I or II","Reunite if it is healthy; a rehabilitator if it is cold, injured, or a cat had it. Keeping one is unlawful.","A weaned juvenile out alone is normal. A closed-eyed baby outside the burrow is not."],
+ ["Mice and voles (native)","Ohio (ORC 1531.01, 'all other wild mammals')","Category I or II","Rebuild a disturbed nest where it was; put an uninjured house visitor outside under cover; any cat contact means a rehabilitator the same day. Gloves and hand-washing.","House mice and Norway rats are non-native. Most rehabilitators decline them; <span class=\"ph\">[confirm ODNR's position before stating it]</span>."],
+ ["Shrews and moles","Ohio (ORC 1531.01)","Category I or II","Leave an uninjured one under cover where it was found; never relocate a mole; cat contact means a rehabilitator. Heavy gloves: the northern short-tailed shrew has a venomous, painful bite.","Shrews starve within hours, so a cat-caught shrew is urgent. Not rodents: they eat insects, which is why they come indoors in fall."],
  ["Virginia opossum","Ohio","Category I or II","Same as above. Check a road-killed mother's pouch; bring the whole animal in a box rather than pulling joeys off.","Under about 7 inches nose-to-rump it cannot survive alone. Nuisance-trapped opossums must be released on site or euthanized, not relocated (OAC 1501:31-15-03)."],
  ["Songbirds, doves, woodpeckers","Federal (MBTA) and Ohio","Ohio permit plus a federal migratory bird rehabilitation permit","Put a nestling back; leave a fledgling. If injured or a cat had it: box it and get it to a federally permitted rehabilitator; ODNR has the list.","Medina Raptor Center in Spencer handles birds. Without the federal permit this operation can only log and transfer."],
  ["European starling, house sparrow, pigeon","Not protected (ORC 1533.07; not under the MBTA)","Ohio rehabilitation permit still applies to possessing a wild bird","No federal permit is needed. Still not a pet.","Ohio law allows these three to be killed at any time; that has no bearing on whether a finder may keep one."],
@@ -554,11 +560,26 @@ const WZ={
   ["bring","Get it to a permit holder today. Cat saliva causes infections that kill rabbits within days even with no visible wound. Box, towel, warm, dark, no food or water."],
   ["bring","Get it to a permit holder today. Box, towel, warm, dark, no food or water. Fly eggs hatch within hours."],
   ["leave","It's weaned. A rabbit the size of a tennis ball with open eyes and ears up is on its own and fine. Leave it alone."]]},
- "Baby squirrel or chipmunk":{law:"Squirrels and chipmunks are Category I animals. A finder may not keep one; a permit holder may.",q:["Fell from a nest, uninjured, the tree is right there","Cold, injured, or it's dark out","It followed me or climbed my leg","The tree was just cut down"],a:[
+ "Baby squirrel":{law:"Squirrels are Category I animals under Ohio's rehabilitation rule. A finder may not keep one; a permit holder may.",q:["Fell from a nest, uninjured, the tree is right there","Cold, injured, or it's dark out","It followed me or climbed my leg","The tree was just cut down"],a:[
   ["renest","Try a reunite first. Put it in a small open box with a sock of warm water, at the base of the tree, and leave the area for two to three hours in daylight. Mothers retrieve babies all the time. Still there at dusk: box it and call."],
   ["bring","Get it to a permit holder. Warm it first: sock of warm water in the box, not touching the animal."],
   ["bring","That is a hungry orphan asking for help. Box it and call today."],
   ["renest","Give the mother a couple of hours in daylight near the stump; mothers often move litters. Nobody by dusk: box them and call."]]},
+ "Chipmunk":{law:"Chipmunks are game quadrupeds under ORC 1531.01 and Category I animals under the rehabilitation rule. A first-year permit holder may take them; a finder may not keep one.",q:["Small one out alone, eyes closed or barely open","A cat or dog had it","Out on its own, eyes open, quick, avoiding people","Burrow or nest dug up"],a:[
+  ["renest","Babies don't leave the burrow until their eyes are well open, so one outside with closed eyes is in trouble. Keep pets and people away and watch from indoors for an hour or two; mothers do come back for them. If nobody comes, or it is cold, box it (warm, dark, no food or milk) and call a permit holder."],
+  ["bring","Any cat contact means a permitted rehabilitator today, even with no mark on it. Bacteria in a cat's mouth kill small animals within a day or two without antibiotics. Box, warm, dark, nothing to eat or drink."],
+  ["leave","That is a weaned juvenile doing what chipmunks do. Leave it and keep the cat in."],
+  ["renest","Put the babies in a shallow box with some of the original bedding at the burrow entrance, cover loosely, and leave the area for a couple of hours in daylight. Still there at dusk: box them and call."]]},
+ "Mouse or vole":{law:"Native mice (deer mouse, white-footed mouse) and voles count as wild animals under ORC 1531.01 and are not excluded from Category I, so a permit holder may take them. House mice and Norway rats are non-native; most rehabilitators decline them, and this page could not confirm ODNR's position, so ask before bringing one.",q:["A cat brought it in","Nest of babies uncovered (mower, woodpile, shed)","Uninjured, loose in the house or garage","Injured or very weak"],a:[
+  ["bring","Don't try to reunite it. Even with no visible wound, a cat-caught mouse or vole needs a rehabilitator the same day for antibiotics. Gloves, a small box with a tissue, warm, dark, no food or water."],
+  ["renest","Rebuild the nest with the original material exactly where it was, cover it, keep pets away, and give the mother an hour or two. Mice move disturbed litters. If the babies are cold, or still there at dusk, box them and call."],
+  ["leave","Gloves, a cup and a card. Put it outside under cover (woodpile, hedge, tall grass) near where it got in, then seal the gap. A healthy mouse doesn't need a rehabilitator."],
+  ["bring","Box it, warm and dark, and call a permit holder. Wear gloves and wash up afterwards; wild mice can carry disease."]]},
+ "Shrew or mole":{law:"Shrews and moles are insect-eaters, not rodents, and are native wildlife under ORC 1531.01, not excluded from Category I. The northern short-tailed shrew, Ohio's most common shrew, has venomous saliva: its bite is painful though not dangerous to people. Gloves either way.",q:["A cat brought it in","Mole above ground, uninjured","Shrew in the house or garage","Injured, or won't move away from you"],a:[
+  ["bring","Same rule as any cat-caught animal: a rehabilitator today, no exceptions for 'it looks fine'. Shrews must eat every few hours, so don't wait. Heavy gloves; shrews bite, and the short-tailed shrew's bite hurts."],
+  ["leave","Moles come up to forage, especially at night and after rain. Set it down under cover near where you found it and keep pets in. Don't move it somewhere else: moles are territorial, and a relocated one is usually killed or starves."],
+  ["leave","Gloves, a container and a card. Release it outside under cover right away; a shrew starves within hours without food. It came in hunting insects and doesn't want to stay."],
+  ["bring","Box it with a tissue, warm, dark, and call a permit holder. Gloves."]]},
  "Opossum":{law:"Opossums are Category I animals. A nuisance-trapped opossum must be released on site or euthanized, never relocated (OAC 1501:31-15-03).",q:["A baby under 7 inches (nose to rump), alone","Mother hit by a car, babies in the pouch","An adult that seems dead or 'playing possum'","Injured adult"],a:[
   ["bring","That one needs help. Opossums under about 7 inches can't survive alone. Box, warm, dark, call a permit holder."],
   ["bring","Check the pouch but do not pull the babies off. Bring the whole mother in a box if you safely can; the joeys can survive on her for a while."],
@@ -612,10 +633,13 @@ owl:`<ellipse cx="24" cy="29" rx="14" ry="15"/><path d="M12 18L9 6l11 8z"/><path
 raccoon:`<path d="M11 17L12 5l10 8z"/><path d="M37 17L36 5l-10 8z"/><circle cx="24" cy="27" r="14"/><path class="cut" d="M10 26c4-5 9-7 14-7s10 2 14 7c-3 5-8 8-14 8s-11-3-14-8z"/><circle cx="18" cy="27" r="2.4"/><circle cx="30" cy="27" r="2.4"/><circle class="cut" cx="24" cy="35" r="1.6"/>`,
 bat:`<path d="M20 22C13 9 2 13 2 23c4-2 7 0 8 4 3-3 6-3 10-1z"/><path d="M28 22c7-13 18-9 18 1-4-2-7 0-8 4-3-3-6-3-10-1z"/><ellipse cx="24" cy="27" rx="5.5" ry="9"/><path d="M19 20l1-7 4 6z"/><path d="M29 20l-1-7-4 6z"/><circle class="cut" cx="22" cy="24" r="1.2"/><circle class="cut" cx="26" cy="24" r="1.2"/>`,
 fawn:`<ellipse cx="11" cy="17" rx="8" ry="4.5" transform="rotate(-28 11 17)"/><ellipse cx="37" cy="17" rx="8" ry="4.5" transform="rotate(28 37 17)"/><ellipse cx="24" cy="27" rx="9.5" ry="13"/><circle class="cut" cx="20" cy="24" r="1.7"/><circle class="cut" cx="28" cy="24" r="1.7"/><ellipse class="cut" cx="24" cy="35.5" rx="3" ry="2"/>`,
+chipmunk:`<path d="M12 35c-7-3-9-14-2-20-1 7 2 13 7 16z"/><ellipse cx="25" cy="31" rx="12" ry="9"/><circle cx="34" cy="22" r="6.5"/><circle cx="37.5" cy="16" r="2.2"/><path class="cuts" d="M15 27c7-5 13-5 19-3"/><path class="cuts" d="M16 31c6-3 11-3 16-2"/><circle class="cut" cx="36" cy="21" r="1.2"/>`,
+mouse:`<ellipse cx="21" cy="31" rx="13" ry="9.5"/><circle cx="32" cy="25" r="7.5"/><circle cx="30" cy="15.5" r="5"/><path d="M38 25l7 2-7 2z"/><path class="tail" d="M9 32c-7 0-9 7-4 11"/><circle class="cut" cx="35" cy="24" r="1.3"/>`,
+shrew:`<ellipse cx="21" cy="30" rx="13" ry="9"/><path d="M30 24c6-1 11 1 16 5-5 2-10 3-16 3z"/><circle cx="28" cy="20.5" r="2.4"/><path class="tail" d="M9 31c-4 1-6 4-4 7"/><circle class="cut" cx="36" cy="27" r="1"/>`,
 turtle:`<path d="M7 31a17 13 0 0 1 34 0z"/><circle cx="41" cy="31" r="5"/><ellipse cx="14" cy="35" rx="4" ry="3"/><ellipse cx="33" cy="35" rx="4" ry="3"/><path d="M8 31l-6-3 5 7z"/><circle class="cut" cx="42.5" cy="30" r="1.2"/>`
 };
-const ANIMAL_ICON={"Baby rabbit":"rabbit","Baby squirrel or chipmunk":"squirrel","Opossum":"opossum","Groundhog":"groundhog","Baby bird (songbird)":"songbird","Duck or goose":"duck","Hawk, owl or vulture":"owl","Raccoon, skunk, fox or coyote":"raccoon","Bat":"bat","Deer fawn":"fawn","Turtle":"turtle"};
-const ANIMAL_LABEL={"Baby rabbit":"Rabbit","Baby squirrel or chipmunk":"Squirrel","Opossum":"Opossum","Groundhog":"Groundhog","Baby bird (songbird)":"Songbird","Duck or goose":"Duck or goose","Hawk, owl or vulture":"Hawk or owl","Raccoon, skunk, fox or coyote":"Raccoon, skunk, fox","Bat":"Bat","Deer fawn":"Fawn","Turtle":"Turtle"};
+const ANIMAL_ICON={"Baby rabbit":"rabbit","Baby squirrel":"squirrel","Chipmunk":"chipmunk","Mouse or vole":"mouse","Shrew or mole":"shrew","Opossum":"opossum","Groundhog":"groundhog","Baby bird (songbird)":"songbird","Duck or goose":"duck","Hawk, owl or vulture":"owl","Raccoon, skunk, fox or coyote":"raccoon","Bat":"bat","Deer fawn":"fawn","Turtle":"turtle"};
+const ANIMAL_LABEL={"Baby rabbit":"Rabbit","Baby squirrel":"Squirrel","Chipmunk":"Chipmunk","Mouse or vole":"Mouse or vole","Shrew or mole":"Shrew or mole","Opossum":"Opossum","Groundhog":"Groundhog","Baby bird (songbird)":"Songbird","Duck or goose":"Duck or goose","Hawk, owl or vulture":"Hawk or owl","Raccoon, skunk, fox or coyote":"Raccoon, skunk, fox","Bat":"Bat","Deer fawn":"Fawn","Turtle":"Turtle"};
 
 /* ---------- state ---------- */
 const DEFAULT_SETTINGS={name:"[Working name] Wildlife",county:"Medina",cat:0,fed:0,rvs:0,tax:"sole"};
