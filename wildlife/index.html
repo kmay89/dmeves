@@ -10,7 +10,8 @@
 <meta name="description" content="Demo build of a one-person wildlife rehabilitation page for Medina County, Ohio: what finders should do with each kind of animal under Ohio law, plus the intake, case, ledger and permit tools a single permit holder would run on. Not live.">
 <style>
 /* DEMO BUILD. Nothing on this page is live: no hotline, no payment processor, no permit yet.
-   Fonts are self-hosted from /fonts like the rest of dmeves.com; the page makes no third-party requests. */
+   Fonts are self-hosted from /fonts like the rest of dmeves.com; the page makes no third-party requests.
+   Design: one calm column, few boxes, one action at a time. */
 @font-face{font-family:'Space Grotesk';src:url(/fonts/space-grotesk.woff2) format('woff2');font-weight:300 700;font-display:swap}
 @font-face{font-family:'Nunito';src:url(/fonts/nunito.woff2) format('woff2');font-weight:200 900;font-display:swap}
 @font-face{font-family:'Plex Mono';src:url(/fonts/plex-mono-400.woff2) format('woff2');font-weight:400;font-display:swap}
@@ -18,314 +19,266 @@
 @font-face{font-family:'Plex Mono';src:url(/fonts/plex-mono-600.woff2) format('woff2');font-weight:600;font-display:swap}
 
 :root{
-  --bg:#f5f6f2; --surface:#ffffff; --surface2:#eceee7; --line:#d6dad0; --fg:#1b2420; --muted:#5b6560; --faint:#8a938d;
-  --accent:#2f6b4f; --accent-ink:#ffffff; --accent-soft:#dfece4;
-  --amber:#b8650f; --amber-soft:#f6e6d2;
-  --good:#2e7d4f; --warn:#b8650f; --crit:#b23a3a; --crit-soft:#f7dede; --good-soft:#dcefe3;
+  --bg:#f6f5f0; --surface:#ffffff; --surface2:#eeede6; --line:#e3e1d8; --fg:#23302a; --muted:#66706b; --faint:#9aa39e;
+  --accent:#2f6b4f; --accent-ink:#ffffff; --accent-soft:#e3eee7;
+  --amber:#9a5a12; --amber-soft:#f5ead9;
+  --good:#2e7d4f; --warn:#9a5a12; --crit:#a63d3d; --crit-soft:#f6e3e3; --good-soft:#e3eee7;
   --s1:#2e8a5e; --s2:#d9741a;
   --display:"Space Grotesk","Avenir Next","Helvetica Neue",Arial,sans-serif;
   --body:"Nunito","Segoe UI",Helvetica,Arial,sans-serif;
   --mono:"Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  --radius:10px; --shadow:0 1px 2px rgba(20,30,25,.06),0 6px 20px rgba(20,30,25,.06);
+  --radius:16px; --shadow:0 1px 2px rgba(20,30,25,.04),0 8px 24px rgba(20,30,25,.05);
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#121816; --surface:#1a2320; --surface2:#222d28; --line:#30403a; --fg:#e7ece8; --muted:#a4b0a9; --faint:#73807a;
-  --accent:#5fb48c; --accent-ink:#0e1a14; --accent-soft:#1f3a2e;
-  --amber:#e8a254; --amber-soft:#3b2a16;
-  --good:#5fb48c; --warn:#e8a254; --crit:#e07a7a; --crit-soft:#3d2222; --good-soft:#1f3a2e;
-  --s1:#3fa06f; --s2:#d9741a; --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark } }
+  --bg:#151a18; --surface:#1d2420; --surface2:#262e2a; --line:#333d38; --fg:#e8ece9; --muted:#a7b1ab; --faint:#75807a;
+  --accent:#6dbb95; --accent-ink:#0e1a14; --accent-soft:#223a2e;
+  --amber:#e0a35c; --amber-soft:#3a2c18;
+  --good:#6dbb95; --warn:#e0a35c; --crit:#e08383; --crit-soft:#3d2424; --good-soft:#223a2e;
+  --s1:#3fa06f; --s2:#d9741a; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark } }
 :root[data-theme="dark"]{
-  --bg:#121816; --surface:#1a2320; --surface2:#222d28; --line:#30403a; --fg:#e7ece8; --muted:#a4b0a9; --faint:#73807a;
-  --accent:#5fb48c; --accent-ink:#0e1a14; --accent-soft:#1f3a2e;
-  --amber:#e8a254; --amber-soft:#3b2a16;
-  --good:#5fb48c; --warn:#e8a254; --crit:#e07a7a; --crit-soft:#3d2222; --good-soft:#1f3a2e;
-  --s1:#3fa06f; --s2:#d9741a; --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark }
+  --bg:#151a18; --surface:#1d2420; --surface2:#262e2a; --line:#333d38; --fg:#e8ece9; --muted:#a7b1ab; --faint:#75807a;
+  --accent:#6dbb95; --accent-ink:#0e1a14; --accent-soft:#223a2e;
+  --amber:#e0a35c; --amber-soft:#3a2c18;
+  --good:#6dbb95; --warn:#e0a35c; --crit:#e08383; --crit-soft:#3d2424; --good-soft:#223a2e;
+  --s1:#3fa06f; --s2:#d9741a; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark }
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;font-weight:500}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.6;font-weight:500}
 h1,h2,h3,h4{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance;font-weight:600}
-h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700}
-h2{font-size:1.4rem}
-h3{font-size:1.08rem}
+h1{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:700}
+h2{font-size:1.3rem}
+h3{font-size:1.05rem}
 p{margin:0}
 a{color:var(--accent)}
 button,input,select,textarea{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 .mono{font-family:var(--mono);font-size:.85em}
-.eyebrow{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.muted{color:var(--muted)} .small{font-size:.9rem}
+.eyebrow{font-size:.85rem;color:var(--muted);font-weight:700}
+.muted{color:var(--muted)} .small{font-size:.92rem}
 .ph{background:var(--amber-soft);color:var(--amber);border-radius:4px;padding:0 4px;font-weight:700}
 
-/* demo banner */
-.demobar{background:var(--amber);color:#fff;font-weight:700;font-size:.9rem;text-align:center;padding:8px max(16px,env(safe-area-inset-left,0px));position:sticky;top:0;z-index:11}
-.demobar b{text-transform:uppercase;letter-spacing:.08em;margin-right:8px}
-.demobar a{color:#fff}
+/* demo note */
+.demobar{background:var(--amber-soft);color:var(--amber);font-weight:600;font-size:.88rem;text-align:center;padding:7px max(16px,env(safe-area-inset-left,0px))}
 
-/* header */
-header.top{position:sticky;top:36px;z-index:9;background:var(--surface);border-bottom:1px solid var(--line)}
-.top .inner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1200px;margin:0 auto}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:1.1rem;margin-right:auto}
-.brand .mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:.9rem}
-.demo{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--amber);background:var(--amber-soft);padding:2px 7px;border-radius:999px;font-weight:700}
-nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
-nav.tabs button{background:none;border:1px solid transparent;padding:6px 11px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:700;font-size:.92rem}
-nav.tabs button:hover{background:var(--surface2);color:var(--fg)}
-nav.tabs button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);border-color:transparent}
-nav.tabs .sep{width:1px;background:var(--line);margin:4px 4px}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* header: brand + a two-way switch; the ops tabs only appear in ops mode */
+header.top{position:sticky;top:0;z-index:9;background:var(--bg)}
+.top .inner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));max-width:980px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:1.05rem;margin-right:auto;min-width:0}
+.brand .mark{width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:.85rem;flex:none}
+.seg{display:inline-flex;background:var(--surface2);border-radius:999px;padding:3px}
+.seg button{background:none;border:0;border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:700;color:var(--muted);font-size:.92rem}
+.seg button[aria-current="page"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+nav.ops{max-width:980px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));display:flex;gap:2px;flex-wrap:wrap}
+nav.ops button{background:none;border:0;padding:5px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:700;font-size:.9rem}
+nav.ops button:hover{background:var(--surface2);color:var(--fg)}
+nav.ops button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-main{max-width:1200px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-section.view{display:grid;gap:22px}
+main{max-width:980px;margin:0 auto;padding-block:20px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+section.view{display:grid;gap:28px}
 section.view>*,.grid>*{min-width:0}
+.narrow{max-width:640px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .grid{display:grid;gap:16px}
 .g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
 .g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
 .g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;min-width:0}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
-.tile .v{font-family:var(--display);font-size:1.7rem;font-weight:700;line-height:1.1}
-.tile .l{font-size:.8rem;color:var(--muted);margin-top:2px}
-.tile .src{font-size:.72rem;color:var(--faint);margin-top:6px}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:700;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.card{background:var(--surface);border-radius:var(--radius);padding:22px;min-width:0;box-shadow:var(--shadow)}
+.card.soft{background:var(--surface2);box-shadow:none}
+.tile{background:var(--surface);border-radius:12px;padding:14px 16px;min-width:0;box-shadow:var(--shadow)}
+.tile .v{font-family:var(--display);font-size:1.6rem;font-weight:700;line-height:1.1}
+.tile .l{font-size:.85rem;color:var(--muted);margin-top:2px}
+.tile .src{font-size:.75rem;color:var(--faint);margin-top:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:700;background:var(--surface2);color:var(--muted);white-space:nowrap}
 .pill.good{background:var(--good-soft);color:var(--good)}
 .pill.warn{background:var(--amber-soft);color:var(--warn)}
 .pill.crit{background:var(--crit-soft);color:var(--crit)}
 .pill.accent{background:var(--accent-soft);color:var(--accent)}
-.notice{border-left:3px solid var(--warn);background:var(--amber-soft);padding:10px 14px;border-radius:6px;font-size:.93rem}
-.notice.crit{border-color:var(--crit);background:var(--crit-soft)}
-.notice.good{border-color:var(--good);background:var(--good-soft)}
-.notice.plain{border-color:var(--line);background:var(--surface2)}
-.btn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap}
+.notice{background:var(--amber-soft);padding:12px 16px;border-radius:12px;font-size:.95rem}
+.notice.crit{background:var(--crit-soft)}
+.notice.good{background:var(--good-soft)}
+.notice.plain{background:var(--surface2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);border-radius:12px;padding:12px 20px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center;font-size:1rem;max-width:100%}
 .btn:hover{filter:brightness(1.08)}
 .btn.secondary{background:var(--surface);color:var(--fg);border-color:var(--line)}
 .btn.secondary:hover{background:var(--surface2)}
-.btn.sm{padding:5px 10px;font-size:.86rem}
+.btn.sm{padding:6px 12px;font-size:.88rem;border-radius:9px;white-space:nowrap}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
-label.f{display:grid;gap:4px;font-size:.86rem;color:var(--muted);font-weight:700;min-width:0}
-label.f>input,label.f>select,label.f>textarea{font-size:.98rem;font-weight:500;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-width:0;width:100%}
+label.f{display:grid;gap:4px;font-size:.88rem;color:var(--muted);font-weight:700;min-width:0}
+label.f>input,label.f>select,label.f>textarea{font-size:1rem;font-weight:500;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 11px;min-width:0;width:100%}
 label.f>textarea{min-height:70px;resize:vertical}
 .form{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
 .form .wide{grid-column:1/-1}
-.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
-table{border-collapse:collapse;width:100%;font-size:.92rem}
-th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;background:var(--surface2);white-space:nowrap}
+.tablewrap{overflow-x:auto;border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.8rem;color:var(--muted);font-weight:700;background:var(--surface2);white-space:nowrap}
 td.r,th.r{text-align:right}
 tr:last-child td{border-bottom:0}
 tbody tr.click{cursor:pointer} tbody tr.click:hover{background:var(--surface2)}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90vw}
 .toast.show{opacity:1}
-.modal{position:fixed;inset:0;background:rgba(10,15,12,.55);display:none;align-items:center;justify-content:center;z-index:15;padding:16px}
+.modal{position:fixed;inset:0;background:rgba(10,15,12,.5);display:none;align-items:center;justify-content:center;z-index:15;padding:16px}
 .modal.open{display:flex}
-.modal .box{background:var(--surface);border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:22px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.modal .box{background:var(--surface);border-radius:18px;max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:24px;box-shadow:var(--shadow)}
 .subtabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 .subtabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 10px;cursor:pointer;font-weight:700;color:var(--muted);margin-bottom:-1px}
 .subtabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
-.kv{display:grid;grid-template-columns:minmax(0,max-content) 1fr;gap:4px 14px;font-size:.93rem}
+.kv{display:grid;grid-template-columns:minmax(0,max-content) 1fr;gap:6px 16px;font-size:.95rem}
 .kv dt{color:var(--muted);min-width:0} .kv dd{margin:0;min-width:0}
-@media (max-width:600px){#contacts .kv{grid-template-columns:1fr} #contacts .kv dt{margin-top:6px}}
-.check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+.check{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
 .check:last-child{border-bottom:0}
-.check input{margin-top:5px;width:16px;height:16px;accent-color:var(--accent);flex:none}
-.check .t{font-weight:700} .check .d{font-size:.88rem;color:var(--muted)}
+.check input{margin-top:6px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+.check .t{font-weight:700} .check .d{font-size:.9rem;color:var(--muted)}
 .check.done .t{text-decoration:line-through;color:var(--muted)}
-pre.letter{white-space:pre-wrap;font-family:var(--body);background:var(--surface2);padding:14px;border-radius:8px;font-size:.92rem;line-height:1.5;margin:0}
+pre.letter{white-space:pre-wrap;font-family:var(--body);background:var(--surface2);padding:16px;border-radius:12px;font-size:.93rem;line-height:1.55;margin:0}
 .chart svg{width:100%;height:auto;display:block}
 .legend{display:flex;gap:16px;font-size:.85rem;color:var(--muted);flex-wrap:wrap}
 .legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
-.hero{display:grid;gap:18px;grid-template-columns:1.2fr .8fr;align-items:start}
-@media (max-width:760px){.hero{grid-template-columns:1fr}}
-.hero .big{font-size:clamp(1.9rem,5vw,3.2rem);font-weight:700;letter-spacing:-.01em;font-family:var(--display);line-height:1.1}
-.wizard .opt{display:flex;flex-wrap:wrap;gap:8px}
-.wizard .opt button{background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:700}
-.wizard .opt button:hover{border-color:var(--accent)}
-.wizard .opt button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.amounts{display:flex;gap:8px;flex-wrap:wrap}
-.amounts button{flex:1 1 70px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px;font-weight:700;cursor:pointer;font-family:var(--display)}
-.amounts button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .range{display:grid;gap:4px}
 .range input{width:100%;accent-color:var(--accent)}
-.range .rv{display:flex;justify-content:space-between;font-size:.86rem;color:var(--muted)}
+.range .rv{display:flex;justify-content:space-between;font-size:.88rem;color:var(--muted)}
 .range .rv b{color:var(--fg)}
 .timeline{display:grid;gap:0}
-.timeline .ev{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem}
+.timeline .ev{display:grid;grid-template-columns:100px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.95rem}
 .timeline .ev:last-child{border-bottom:0}
-.timeline .ev .when{font-family:var(--mono);font-size:.8rem;color:var(--muted);padding-top:3px}
-.species-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr))}
-.species-grid .sp{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.9rem;background:var(--surface)}
-.species-grid .sp.no{opacity:.55}
+.timeline .ev .when{font-family:var(--mono);font-size:.8rem;color:var(--muted);padding-top:4px}
+.species-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr))}
+.species-grid .sp{border-radius:10px;padding:9px 12px;font-size:.9rem;background:var(--surface2)}
+.species-grid .sp.no{opacity:.5}
 .species-grid .sp b{display:block}
-.species-grid .sp i{font-style:normal;font-size:.78rem;color:var(--muted)}
+.species-grid .sp i{font-style:normal;font-size:.8rem;color:var(--muted)}
 .loglist{display:grid;gap:6px}
-.loglist .li{display:grid;grid-template-columns:90px 1fr auto;gap:10px;font-size:.9rem;padding:6px 0;border-bottom:1px solid var(--line)}
+.loglist .li{display:grid;grid-template-columns:90px 1fr auto;gap:10px;font-size:.92rem;padding:6px 0;border-bottom:1px solid var(--line)}
 .loglist .li:last-child{border-bottom:0}
-.lawbox{display:grid;gap:8px;font-size:.92rem}
-.lawbox .lh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-.cite{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
 ul.tight{margin:0;padding-left:18px;display:grid;gap:4px}
 ol.tight{margin:0;padding-left:20px;display:grid;gap:6px}
-footer.site{max-width:1200px;margin:0 auto;padding:0 16px 32px;font-size:.82rem;color:var(--faint)}
+ul.plain{margin:0;padding-left:20px;display:grid;gap:8px}
+
+/* finder side */
+.intro{display:grid;gap:12px;padding-top:16px}
+.intro .kicker{color:var(--muted);font-weight:700;font-size:.92rem}
+.intro .big{font-family:var(--display);font-size:clamp(2.1rem,6vw,3.4rem);font-weight:700;line-height:1.05;letter-spacing:-.01em}
+.intro .lede{font-size:1.15rem;max-width:36em;color:var(--muted)}
+.wizard{display:grid;gap:18px}
+.wizard .step{font-family:var(--display);font-weight:600;font-size:1.15rem}
+.wizard .opt{display:flex;flex-wrap:wrap;gap:10px}
+.wizard .opt button{background:var(--surface2);border:2px solid transparent;border-radius:999px;padding:10px 18px;cursor:pointer;font-weight:700;font-size:1rem;color:var(--fg)}
+.wizard .opt button:hover{border-color:var(--accent)}
+.wizard .opt button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.answer{display:grid;gap:14px;background:var(--surface2);border-radius:14px;padding:20px}
+.answer.kind-leave{background:var(--good-soft)}
+.answer.kind-health{background:var(--amber-soft)}
+.answer .verdict{font-family:var(--display);font-weight:700;font-size:1.35rem;line-height:1.2}
+.answer details{font-size:.93rem;color:var(--muted)}
+.answer details summary{cursor:pointer;font-weight:700;color:var(--accent)}
+.answer details p{margin-top:8px}
+.calls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.call{display:grid;gap:4px;background:var(--surface);border-radius:14px;padding:18px 20px;text-decoration:none;color:var(--fg);box-shadow:var(--shadow)}
+.call:hover{box-shadow:0 2px 4px rgba(20,30,25,.06),0 12px 28px rgba(20,30,25,.08)}
+.call b{font-family:var(--display);font-size:1.02rem}
+.call span{font-size:.92rem;color:var(--muted)}
+.call em{font-style:normal;font-family:var(--mono);font-size:1.15rem;color:var(--accent);margin-top:6px}
+.links{display:flex;gap:20px;flex-wrap:wrap;font-weight:700}
+.back{font-weight:700;text-decoration:none}
+.lawrules{display:grid;gap:14px}
+.lawrules .r b{display:block;font-family:var(--display);font-size:1.02rem;margin-bottom:2px}
+.lawrules .r{font-size:.97rem}
+.cite{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+footer.site{max-width:980px;margin:0 auto;padding:0 16px 40px;font-size:.85rem;color:var(--faint)}
 footer.site a{color:var(--muted)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 
-<div class="demobar" role="note"><b>Demo</b> Not live. No permit, no hotline, no payments. Not legal advice. Anything in <span class="ph">[brackets]</span> is a placeholder to fill in before launch.</div>
+<div class="demobar" role="note">Demo build. Nothing here is live, and none of it is legal advice. <span class="ph">[Bracketed]</span> items are placeholders.</div>
 
 <header class="top">
 <div class="inner">
-  <div class="brand"><span class="mark" aria-hidden="true">W</span><span id="brandName">[Working name] Wildlife</span><span class="demo">Demo</span></div>
-  <nav class="tabs" id="nav" aria-label="Sections">
-    <button data-view="site">Finder guide</button>
-    <button data-view="law">Species &amp; the law</button>
-    <span class="sep" aria-hidden="true"></span>
-    <button data-view="intake">Intake</button>
-    <button data-view="cases">Cases</button>
-    <button data-view="money">Money</button>
-    <button data-view="reports">Year-end</button>
-    <button data-view="compliance">Permits &amp; setup</button>
-    <button data-view="grow">Capacity</button>
-    <button data-view="sources">Sources</button>
-    <button data-view="settings" title="Settings" aria-label="Settings">⚙</button>
-  </nav>
+  <div class="brand"><span class="mark" aria-hidden="true">W</span><span id="brandName">[Working name] Wildlife</span></div>
+  <div class="seg" id="modeSeg" role="tablist" aria-label="Mode">
+    <button data-view="site" aria-current="page">For finders</button>
+    <button data-view="intake">Ops desk</button>
+  </div>
 </div>
+<nav class="ops" id="nav" aria-label="Ops desk sections" hidden>
+  <button data-view="intake">Intake</button>
+  <button data-view="cases">Cases</button>
+  <button data-view="money">Money</button>
+  <button data-view="reports">Year-end</button>
+  <button data-view="compliance">Permits &amp; setup</button>
+  <button data-view="grow">Capacity</button>
+  <button data-view="sources">Sources</button>
+  <button data-view="settings">Settings</button>
+</nav>
 </header>
 
 <main>
 
 <!-- ============ FINDER GUIDE (the public-facing part) ============ -->
 <section class="view" id="view-site" hidden>
-  <div class="hero">
-    <div style="display:grid;gap:14px">
-      <span class="eyebrow">Wildlife rehabilitation (demo) · <span id="siteCounty">Medina County</span>, Ohio</span>
-      <div class="big">Found a wild animal in Medina County?</div>
-      <p style="font-size:1.1rem;max-width:60ch">Most "orphans" people find are fine and a parent is nearby. Pick the animal below and answer one question. The guide tells you whether to leave it, put it back, or get it to a permitted rehabilitator, and what Ohio law says about each.</p>
-      <div class="row">
-        <a class="btn" href="#site" onclick="document.getElementById('wizard').scrollIntoView({behavior:'smooth'});return false;">Start with the animal</a>
-        <a class="btn secondary" href="#site" onclick="document.getElementById('contacts').scrollIntoView({behavior:'smooth'});return false;">Who to call</a>
-      </div>
-      <div class="notice">While you decide: put the animal in a cardboard box with a towel and air holes, lid closed, somewhere warm, dark and quiet. <b>No food, no water, no handling.</b> Feeding the wrong thing is one of the most common reasons rescued babies die.</div>
-    </div>
-    <div class="card" style="display:grid;gap:10px">
-      <span class="eyebrow">This season so far (sample data)</span>
-      <div class="grid g2" id="siteStats"></div>
-      <p class="small muted">Counts come from the demo case records. On a live site they would be the real ones.</p>
-    </div>
+  <div class="intro">
+    <p class="kicker"><span id="siteCounty">Medina County</span>, Ohio</p>
+    <h1 class="big">Found a wild animal?</h1>
+    <p class="lede">Most "orphans" are fine and a parent is close by. Pick what you found and you'll get a straight answer: leave it, put it back, or who to call.</p>
   </div>
 
-  <div class="card wizard" id="wizard" style="display:grid;gap:14px">
-    <h2>What did you find?</h2>
-    <div style="display:grid;gap:6px"><span class="eyebrow">1 · The animal</span><div class="opt" id="wzAnimal"></div></div>
-    <div style="display:grid;gap:6px" id="wzQ2wrap" hidden><span class="eyebrow">2 · What's going on with it?</span><div class="opt" id="wzSit"></div></div>
+  <div class="card wizard" id="wizard">
+    <p class="step">What did you find?</p>
+    <div class="opt" id="wzAnimal"></div>
+    <div id="wzQ2wrap" hidden style="display:grid;gap:12px"><p class="step">What's going on with it?</p><div class="opt" id="wzSit"></div></div>
     <div id="wzAnswer" hidden></div>
   </div>
 
-  <div class="grid g2">
-    <div class="card" style="display:grid;gap:10px">
-      <h2>What this operation could take</h2>
-      <p class="small muted">Permits decide this, not good intentions. Driven by the Settings tab, which is currently set to: <span id="sitePermits"></span>. Anything marked "referred" goes to another permitted rehabilitator or to ODNR.</p>
-      <div class="species-grid" id="siteSpecies"></div>
-    </div>
-    <div class="card" style="display:grid;gap:10px">
-      <h2>How a hand-off would work</h2>
-      <ol class="tight">
-        <li><b>Contact first.</b> <span class="ph">[Hotline: not set up]</span>. Send a photo and where you are. You get a yes or a referral, and the drop-off address only if it's a yes.</li>
-        <li><b>Box it, don't hold it.</b> Cardboard box, towel, air holes, lid on. Dark and quiet. No food or water.</li>
-        <li><b>Gloves for anything with teeth.</b> Don't touch raccoons, skunks, foxes, coyotes or bats at all. If one bit or scratched you, wash the wound and call your doctor the same day. Ohio requires animal bites to be reported to the local health department within 24 hours.</li>
-        <li><b>Warm it.</b> A bottle of warm tap water in a sock on one side of the box, not touching the animal.</li>
-        <li><b>The hand-off takes five minutes.</b> Ohio requires the rehabilitator to record where the animal was found, when it arrived and why it needed care, so you'll be asked those three things. You'd get a case number to follow up on.</li>
-      </ol>
-      <div class="notice plain">Nobody can be charged for bringing in an animal. Rehabilitators in Ohio run on donations; the state charges no fee for the permit and pays nothing for the care.</div>
-    </div>
+  <div class="card soft narrow" style="display:grid;gap:10px">
+    <h2>Meanwhile</h2>
+    <ul class="plain">
+      <li>Cardboard box, a towel, lid on. Somewhere warm, dark and quiet.</li>
+      <li>No food. No water. Feeding the wrong thing is how rescued babies die.</li>
+      <li>Don't handle it. Never touch a raccoon, skunk, fox, coyote or bat.</li>
+    </ul>
   </div>
 
-  <div class="card" id="contacts" style="display:grid;gap:12px">
-    <h2>Who to call in Medina County</h2>
-    <p class="small muted">Numbers were checked against public sources in October 2026. Confirm each one before this goes live.</p>
-    <div class="grid g2">
-      <div class="kv">
-        <dt>Any wild animal, any county</dt><dd><b>ODNR Division of Wildlife</b>, 1-800-WILDLIFE (1-800-945-3543). They keep the current list of permitted rehabilitators by county and species. <span class="mono">wildohio.gov</span></dd>
-        <dt>Local wildlife office</dt><dd><b>ODNR Wildlife District Three</b> (northeast Ohio, includes Medina County), 912 Portage Lakes Dr, Akron 44319, (330) 644-2293, weekdays.</dd>
-        <dt>Bites, scratches, bats indoors</dt><dd><b>Medina County Health Department</b>, 4800 Ledgewood Dr, Medina 44256, (330) 723-9688. Rabies exposure assessment and bite reports.</dd>
-      </div>
-      <div class="kv">
-        <dt>Injured or orphaned birds</dt><dd><b>Medina Raptor Center</b>, Spencer (Medina County), state and federally permitted for birds including raptors and songbirds. Injured-bird line reported as (330) 591-7300. Birds only.</dd>
-        <dt>Deer</dt><dd>ODNR, 1-800-WILDLIFE. Deer are not rehabilitated in Ohio without ODNR approval.</dd>
-        <dt>Sick adult raccoon, skunk, fox or coyote</dt><dd>Your city or township police non-emergency line, and the health department if anyone was exposed. Keep people and pets away. Do not box it.</dd>
-        <dt>This operation</dt><dd><span class="ph">[hotline]</span> · <span class="ph">[email]</span> · drop-off by appointment only, address given at confirmation.</dd>
-      </div>
+  <div id="contacts" style="display:grid;gap:14px">
+    <h2>Who to call</h2>
+    <div class="calls">
+      <a class="call" href="tel:18009453543"><b>ODNR Division of Wildlife</b><span>Any animal. They keep the current list of permitted rehabilitators.</span><em>1-800-WILDLIFE</em></a>
+      <a class="call" href="tel:13307239688"><b>Medina County Health Department</b><span>Bites, scratches, or a bat found indoors.</span><em>(330) 723-9688</em></a>
+      <a class="call" href="tel:13305917300"><b>Medina Raptor Center</b><span>Injured or orphaned birds. Spencer, Ohio.</span><em>(330) 591-7300</em></a>
     </div>
+    <p class="small muted">Numbers checked October 2026; confirm each before launch. This operation's own line: <span class="ph">[not set up]</span>.</p>
   </div>
 
-  <div class="card" id="donate" style="display:grid;gap:14px">
-    <div class="row" style="justify-content:space-between"><h2>Give (demo)</h2><span class="pill accent" id="donateTaxPill"></span></div>
-    <div class="grid g2">
-      <div style="display:grid;gap:12px">
-        <div class="notice">No payment processor is connected. Nothing here charges a card. This mock exists so the receipt wording and the ledger entry can be built and checked before anything real is wired up.</div>
-        <div class="amounts" id="amounts"></div>
-        <div class="form">
-          <label class="f">Custom amount <input id="dAmt" type="number" min="1" step="1" placeholder="25"></label>
-          <label class="f">Frequency <select id="dFreq"><option value="one-time">One time</option><option value="monthly">Monthly</option></select></label>
-          <label class="f">Name <input id="dName" placeholder="Sample donor"></label>
-          <label class="f">Email for the receipt <input id="dEmail" type="email" placeholder="(not sent in the demo)"></label>
-          <label class="f wide">Dedicate to a current patient (optional) <select id="dCase"><option value="">No</option></select></label>
-        </div>
-        <div class="row"><button class="btn" id="dPay">Preview a $25 gift</button><span class="small muted">Card processors typically take a percentage plus a fixed amount per gift; the exact fee is whatever the chosen processor publishes.</span></div>
-      </div>
-      <div style="display:grid;gap:10px;align-content:start">
-        <h3>What gifts pay for</h3>
-        <p class="small muted">Rough per-item costs for a home-based, small-mammal operation. Real figures come from the ledger once there is one.</p>
-        <div class="kv">
-          <dt>≈ $15</dt><dd>Species formula for one cottontail litter for a week</dd>
-          <dt>≈ $40</dt><dd>Fresh greens, fruit and rodent block for a month</dd>
-          <dt>≈ $85 to $200</dt><dd>One vet exam, with or without X-rays, at a discounted wildlife rate</dd>
-          <dt>≈ $150 to $250</dt><dd>Hardware cloth and lumber for one small-mammal pre-release pen</dd>
-        </div>
-        <h3 style="margin-top:8px">Other ways to help</h3>
-        <ul class="tight small">
-          <li>Supplies: paper towels, unscented laundry soap, heating pads without auto-off, hardware cloth</li>
-          <li>Driving: a transport volunteer for the far corners of the county</li>
-          <li>Employer matching, once 501(c)(3) status exists</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid g3">
-    <div class="card"><h3>Who runs it</h3><p class="small" style="margin-top:6px"><span class="ph">[One permit holder. Background, training and permit category go here once they exist. Do not state a permit category that has not been issued.]</span></p></div>
-    <div class="card"><h3>Where the money goes</h3><div id="siteMoney" class="small" style="margin-top:6px"></div></div>
-    <div class="card"><h3>Records and oversight</h3><p class="small" style="margin-top:6px">Ohio rehabilitation permit holders must keep a record of every animal for two years after its release or final disposition and make it available to the Division of Wildlife, whose officers may inspect the animals and facilities. The Cases tab is that record.</p></div>
+  <div class="links">
+    <a href="#law" onclick="go('law');return false;">The law behind these answers →</a>
+    <a href="#site" onclick="givePreview();return false;">Support this work (demo) →</a>
   </div>
 </section>
 
 <!-- ============ SPECIES & THE LAW ============ -->
 <section class="view" id="view-law" hidden>
-  <div><h1>Species &amp; the law</h1><p class="muted">What Ohio and federal law say about each kind of animal a Medina County finder is likely to call about: who may legally care for it, and what the finder may and may not do. Plain-language summary, not legal advice. Citations are on the Sources tab.</p></div>
+  <div style="display:grid;gap:12px">
+    <a class="back" href="#site" onclick="go('site');return false;">← Back</a>
+    <h1>The law, in plain words</h1>
+    <p class="lede muted narrow">What Ohio and federal rules say about each animal a Medina County finder is likely to call about. A summary, not legal advice. Citations are under Ops desk → Sources.</p>
+  </div>
 
-  <div class="grid g2">
-    <div class="card lawbox">
-      <h3>The three rules that cover almost everything</h3>
-      <div><div class="lh"><b>Wildlife belongs to the state.</b><span class="cite">ORC 1531.02</span></div><p class="small">No one may take, possess or transport a wild animal in Ohio except as the Revised Code or Division of Wildlife rules allow. There is no general "finder's" exception for keeping an injured or orphaned animal. The lawful move is to get it to a permit holder or to ODNR promptly.</p></div>
-      <div><div class="lh"><b>Rehabilitation needs a state permit.</b><span class="cite">OAC 1501:31-25-03 (eff. 3/1/2024) · ORC 1533.08</span></div><p class="small">It is unlawful to rehabilitate any wild animal without a Category I or Category II permit. <b>Category I</b> covers orphans except deer, raccoons, weasels, skunks, mink, badgers, beaver, raptors, canids, bats, mute swans and endangered species. <b>Category II</b> covers all species except deer, coyote, mute swans and endangered species, and ODNR says it also treats rabies-vector species and bobcat as needing the Chief's approval. ODNR requires three years as a Category I holder, or equivalent, before Category II. The permit is free. Records must be kept two years.</p></div>
-      <div><div class="lh"><b>Birds are also federal.</b><span class="cite">Migratory Bird Treaty Act · 50 CFR 21.76 · USFWS form 3-200-10b</span></div><p class="small">Nearly every native bird, from robins to hawks to ducks, is federally protected. Rehabilitating one needs a federal migratory bird rehabilitation permit on top of the Ohio permit. Only European starlings, house (English) sparrows and common pigeons are unprotected, and Ohio law says so too (ORC 1533.07).</p></div>
-    </div>
-    <div class="card lawbox">
-      <h3>The rules finders trip over</h3>
-      <div><div class="lh"><b>Nuisance animals have their own rule.</b><span class="cite">OAC 1501:31-15-03</span></div><p class="small">Anyone may live-trap a nuisance wild animal on their own property, but an unlicensed person may hold it no more than 24 hours. A trapped nuisance raccoon, skunk, beaver, coyote, red fox or opossum must be released on site or euthanized; it may not be relocated. Other species must be released outside city or village limits, or on land with the owner's permission. Injured nuisance animals must be euthanized. ODNR's own guidance adds that adult raccoons trapped as nuisances may not be handed to a rehabilitator.</p></div>
-      <div><div class="lh"><b>Bites get reported.</b><span class="cite">OAC 3701-3-28</span></div><p class="small">Any bite from a non-human mammal is reported to the local health department within 24 hours. For Medina County that is the Medina County Health Department. A bat in a room where someone was sleeping counts as a possible exposure even with no visible bite: contain the bat, don't release it, and call the health department so it can be tested.</p></div>
-      <div><div class="lh"><b>Rabies-vector species are different.</b><span class="cite">ODNR rehabilitator list; ODNR Pub 5475</span></div><p class="small">Ohio treats raccoons, skunks, foxes, coyotes and bats as rabies-vector species. They need Category II plus approval, a rabies-vector workshop, and separate housing. Raccoon-variant rabies is established in northeast Ohio counties east of here, and many rehabilitators in the region decline raccoons for that reason. Medina County was not on the 2025 oral-vaccine baiting list, but the barrier moves: <span class="ph">[check the current ODH map before writing anything county-specific]</span>.</p></div>
-    </div>
+  <div class="card lawrules narrow">
+    <div class="r"><b>Wildlife belongs to the state.</b> No one may keep, move or care for a wild animal except as the law allows. There is no "finder's" exception, so get it to a permit holder or ODNR the same day. <span class="cite">ORC 1531.02</span></div>
+    <div class="r"><b>Rehabilitation needs a state permit.</b> Category I covers orphans of common species; raccoons, skunks, foxes, bats, raptors and deer are excluded. Category II, after three years, covers most of the rest, with rabies-vector species still needing the Chief's approval. The permit is free; records are kept two years. <span class="cite">OAC 1501:31-25-03 · ORC 1533.08</span></div>
+    <div class="r"><b>Birds are federal too.</b> Nearly every native bird needs a federal migratory bird permit on top of the Ohio one. Only starlings, house sparrows and pigeons are unprotected. <span class="cite">MBTA · USFWS 3-200-10b · ORC 1533.07</span></div>
+    <div class="r"><b>Nuisance animals have their own rule.</b> You may live-trap one on your property and hold it up to 24 hours. A trapped raccoon, skunk, beaver, coyote, red fox or opossum must be released on site or euthanized, never relocated. <span class="cite">OAC 1501:31-15-03</span></div>
+    <div class="r"><b>Bites get reported.</b> Any mammal bite goes to the Medina County Health Department within 24 hours. A bat in a room where someone slept counts as an exposure: contain it, don't release it, call. <span class="cite">OAC 3701-3-28</span></div>
   </div>
 
   <div class="tablewrap"><table>
     <thead><tr><th>Animal</th><th>Protected by</th><th>Who may rehabilitate it</th><th>What a finder may do</th><th>Medina County notes</th></tr></thead>
     <tbody id="lawTable"></tbody>
   </table></div>
-  <p class="small muted">"Category I" and "Category II" are the ODNR permit tiers in OAC 1501:31-25-03. "Chief approval" means the species is excluded from the permit unless the Chief of the Division of Wildlife or a designee approves it in writing. This page summarizes; the rule text governs.</p>
+  <p class="small muted narrow">"Chief approval" means the species is excluded from the permit unless the Chief of the Division of Wildlife or a designee approves it. Raccoon-variant rabies is established in counties east of Medina; Medina was not on the 2025 oral-vaccine baiting list, but <span class="ph">[check the current ODH map]</span>.</p>
 </section>
 
 <!-- ============ INTAKE ============ -->
@@ -522,11 +475,16 @@ footer.site a{color:var(--muted)}
     <label class="f">Tax status <select id="sTax"><option value="sole">Individual (no organization yet)</option><option value="applied">501(c)(3) applied, pending</option><option value="approved">501(c)(3) approved</option></select></label>
     <div class="wide row"><button class="btn" id="sSave">Save</button><button class="btn secondary" id="sReset">Reset demo data</button></div>
   </div>
+  <div class="card" style="display:grid;gap:10px">
+    <h3>What these permits would allow</h3>
+    <p class="small muted">Currently: <span id="sitePermits"></span>. "Referred" means the animal goes to another permit holder or to ODNR.</p>
+    <div class="species-grid" id="siteSpecies"></div>
+  </div>
 </section>
 
 </main>
 
-<footer class="site">Demo build inside <a href="/">dmeves.com</a>. Not linked from the classroom. Nothing on this page is stored anywhere but this browser. · <a href="/privacy/">Privacy</a></footer>
+<footer class="site">Demo build inside <a href="/">dmeves.com</a>. Not linked from the classroom. Nothing here is stored anywhere but this browser. · <a href="/privacy/">Privacy</a></footer>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="box" id="modalBox"></div></div>
 <div class="toast" id="toast" role="status"></div>
@@ -592,16 +550,16 @@ const WZ={
  "Baby bird (songbird)":{law:"Nearly all native birds are federally protected under the Migratory Bird Treaty Act. Rehabilitating one needs a federal permit plus the Ohio permit. This operation does not hold the federal permit, so birds are logged and transferred the same day.",q:["Fully feathered, hopping, parents nearby","Naked or fuzzy, eyes closed","Injured, or a cat or dog had it","I can see the nest but can't reach it"],a:[
   ["leave","It's a fledgling. This is normal: they spend days on the ground while the parents feed them. Keep pets in, move it under a shrub if it's on pavement, and leave."],
   ["renest","Put it back in the nest if you can reach it. Birds have a poor sense of smell and will not reject it. If the nest is gone, hang a small basket with drainage holes as close as you can and watch from a distance for an hour."],
-  ["refer","Box it, warm and quiet, do not feed it, and call a bird rehabilitator today. In Medina County that is the Medina Raptor Center in Spencer, or ODNR at 1-800-WILDLIFE for the current list."],
+  ["refer","Box it, warm and quiet, do not feed it, and call a bird rehabilitator today. In Medina County that is the Medina Raptor Center in Spencer; ODNR has the full list.","raptor"],
   ["renest","Hang a berry basket lined with dry grass as high as you can on the same tree. The parents will find it."]]},
  "Duck or goose":{law:"Waterfowl are federally protected and also need the Ohio permit. Same-day transfer to a federal permit holder.",q:["Ducklings or goslings following a parent near a road","A duckling alone, peeping, no adults anywhere","Injured adult (wing dragging, fishing line)"],a:[
   ["leave","Stop traffic if you safely can and let the family cross. Don't separate them."],
-  ["refer","Watch from a distance for an hour; broods regroup. If truly alone, box it, warm and quiet, and call a bird rehabilitator or ODNR."],
-  ["refer","Towel over the head, into a box, call a bird rehabilitator. Geese are strong; protect your face."]]},
+  ["refer","Watch from a distance for an hour; broods regroup. If truly alone, box it, warm and quiet, and call a bird rehabilitator.","raptor"],
+  ["refer","Towel over the head, into a box, call a bird rehabilitator. Geese are strong; protect your face.","raptor"]]},
  "Hawk, owl or vulture":{law:"Raptors are excluded from Ohio's Category I permit and need a federal permit as well. Not something this operation can take.",q:["On the ground, can't fly, alert","Fluffy young one on the ground under a nest","Hit by a car, on the roadside"],a:[
-  ["refer","Heavy gloves, towel over the head, talons first. Box it and call the Medina Raptor Center or ODNR. Do not offer food or water."],
+  ["refer","Heavy gloves, towel over the head, talons first. Box it and call the Medina Raptor Center. Do not offer food or water.","raptor"],
   ["leave","Many young raptors spend time on the ground before they fly, with the parents watching. Keep pets in, watch from inside for a few hours. Only if it's clearly injured or in a road: box it and call a raptor rehabilitator."],
-  ["refer","Box it if you can do so safely from the road. Call the Medina Raptor Center or ODNR."]]},
+  ["refer","Box it if you can do so safely from the road. Call the Medina Raptor Center.","raptor"]]},
  "Raccoon, skunk, fox or coyote":{law:"Ohio treats these as rabies-vector species. They need a Category II permit plus the Chief's approval and a rabies-vector workshop; this operation has none of that and will not have it for years. Nuisance-trapped ones must be released on site or euthanized, never relocated, and may not be given to a rehabilitator.",q:["A baby alone for hours, crying","An adult acting strange, out in daytime","It bit or scratched someone, or I touched it","It's in my attic or garage"],a:[
   ["refer","Do not touch it. Give the mother several hours, ideally overnight, to come back. If it's still alone, put a laundry basket over it with a weight on top and call ODNR (1-800-WILDLIFE) for a rehabilitator approved for rabies-vector species."],
   ["health","Keep away. Call your city or township police non-emergency line, and the Medina County Health Department if anyone or any pet was exposed. Nobody should handle it."],
@@ -738,53 +696,45 @@ const MILE_RATE=0.14; // IRS charitable mileage rate, fixed by statute
 
 /* ---------- navigation ---------- */
 const VIEWS=["site","law","intake","cases","money","reports","compliance","grow","sources","settings"];
-function go(v){if(!VIEWS.includes(v))v="site";VIEWS.forEach(x=>{$("#view-"+x).hidden=x!==v});document.querySelectorAll("#nav button").forEach(b=>b.removeAttribute("aria-current"));const b=document.querySelector(`#nav button[data-view="${v}"]`);if(b)b.setAttribute("aria-current","page");render(v);window.scrollTo({top:0});try{history.replaceState(null,"","#"+v)}catch(e){}}
+const FINDER=["site","law"];
+function go(v){if(!VIEWS.includes(v))v="site";VIEWS.forEach(x=>{$("#view-"+x).hidden=x!==v});
+  const ops=!FINDER.includes(v);$("#nav").hidden=!ops;
+  document.querySelectorAll("#modeSeg button").forEach(b=>{if((b.dataset.view==="site")!==ops)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  document.querySelectorAll("#nav button").forEach(b=>{if(b.dataset.view===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  render(v);window.scrollTo({top:0});try{history.replaceState(null,"","#"+v)}catch(e){}}
 $("#nav").addEventListener("click",e=>{const b=e.target.closest("button[data-view]");if(b)go(b.dataset.view)});
+$("#modeSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-view]");if(b)go(b.dataset.view)});
 function render(v){({site:renderSite,law:renderLaw,intake:renderIntake,cases:renderCases,money:renderMoney,reports:renderReports,compliance:renderCompliance,grow:renderGrow,sources:()=>{},settings:renderSettings})[v]()}
 
 /* ---------- finder guide ---------- */
 let wz={animal:null,sit:null};
+const CALLS={odnr:["Call ODNR, 1-800-WILDLIFE","tel:18009453543"],health:["Call the Medina County Health Department","tel:13307239688"],raptor:["Call the Medina Raptor Center","tel:13305917300"]};
 function permitSummary(){const p=[];p.push(S.cat?`ODNR Category ${catName(S.cat)}`:"no ODNR permit yet");p.push(S.fed?"federal bird permit":"no federal bird permit");p.push(S.rvs?"rabies-vector approval":"no rabies-vector approval");return p.join(", ")}
 function renderSite(){
   $("#siteCounty").textContent=S.county+" County";$("#brandName").textContent=S.name;
-  const yr=DB.cases.length,released=DB.cases.filter(c=>c.status==="Released").length,inCare=DB.cases.filter(isActive).length;
-  const closedWithOutcome=DB.cases.filter(c=>c.disposition&&c.disposition.type!=="Transferred").length;
-  const rel=closedWithOutcome?Math.round(100*released/closedWithOutcome):0;
-  $("#siteStats").innerHTML=[["Cases opened",yr],["In care now",inCare],["Released",released],["Release rate",rel+"%"]].map(([l,v])=>`<div class="tile"><div class="v num">${v}</div><div class="l">${l}</div></div>`).join("");
-  const spent=spending();
-  const cats={};DB.expenses.forEach(e=>cats[e.cat]=(cats[e.cat]||0)+e.amount);
-  $("#siteMoney").innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${k}</span><b class="num">${spent?Math.round(100*v/spent):0}%</b></div>`).join("")+`<div class="muted" style="margin-top:6px">Sample spending this year: <b class="num" style="color:var(--fg)">${fmt(spent)}</b>. No salaries.</div>`;
-  $("#sitePermits").textContent=permitSummary();
-  $("#siteSpecies").innerHTML=SPECIES.filter(s=>!s.no).map(s=>{const ok=speciesFlags(s.n).every(f=>f.k!=="crit");return `<div class="sp ${ok?"":"no"}"><b>${s.n}</b><i>${ok?"Could take":"Referred"}</i></div>`}).join("");
-  $("#donateTaxPill").textContent=S.tax==="approved"?"Tax-deductible · 501(c)(3)":S.tax==="applied"?"501(c)(3) pending: not deductible yet":"Not tax-deductible";
-  $("#dCase").innerHTML='<option value="">No</option>'+DB.cases.filter(isActive).map(c=>`<option value="${c.caseNo}">${c.caseNo} · ${c.species}</option>`).join("");
   $("#wzAnimal").innerHTML=Object.keys(WZ).map(k=>`<button type="button" aria-pressed="${wz.animal===k}">${k}</button>`).join("");
-  $("#amounts").innerHTML=[15,25,50,100].map(a=>`<button type="button" aria-pressed="${dAmt===a}">$${a}</button>`).join("");
   wzRender();
 }
-let dAmt=25;
-$("#amounts").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;dAmt=+b.textContent.slice(1);$("#dAmt").value="";renderSite();$("#dPay").textContent="Preview a "+fmt(dAmt)+" gift"});
-$("#dAmt").addEventListener("input",e=>{const v=+e.target.value;if(v>0){dAmt=v;document.querySelectorAll("#amounts button").forEach(b=>b.setAttribute("aria-pressed","false"));$("#dPay").textContent="Preview a "+fmt(dAmt)+" gift"}});
 $("#wzAnimal").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;wz={animal:b.textContent,sit:null};renderSite();$("#wzQ2wrap").scrollIntoView({behavior:"smooth",block:"nearest"})});
-$("#wzSit").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;wz.sit=+b.dataset.i;wzRender()});
+$("#wzSit").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;wz.sit=+b.dataset.i;wzRender();$("#wzAnswer").scrollIntoView({behavior:"smooth",block:"nearest"})});
 function wzRender(){
   const w=WZ[wz.animal];$("#wzQ2wrap").hidden=!w;$("#wzAnswer").hidden=!(w&&wz.sit!=null);
   if(!w)return;
   $("#wzSit").innerHTML=w.q.map((q,i)=>`<button type="button" data-i="${i}" aria-pressed="${wz.sit===i}">${q}</button>`).join("");
-  if(wz.sit!=null){const [k,t]=w.a[wz.sit];const cls={leave:"good",renest:"plain",bring:"plain",refer:"crit",health:"crit"}[k];const head={leave:"Leave it. It's fine.",renest:"Try to reunite it first.",bring:"Yes, it needs a permitted rehabilitator.",refer:"Not this operation, but here is who.",health:"This is a health department call."}[k];
-    $("#wzAnswer").innerHTML=`<div class="notice ${cls}" style="display:grid;gap:8px"><b>${head}</b><span>${t}</span>${k==="bring"?`<span class="small muted">In the demo, contact is <span class="ph">[hotline: not set up]</span>. Until then, ODNR at 1-800-WILDLIFE has the current list of permit holders.</span>`:""}<span class="small" style="border-top:1px solid var(--line);padding-top:8px"><b>What the law says:</b> ${w.law}</span></div>`}
+  if(wz.sit!=null){const [k,t,callKey]=w.a[wz.sit];
+    const head={leave:"Leave it. It's fine.",renest:"Try to reunite it first.",bring:"It needs a permitted rehabilitator.",refer:"Here's who can help.",health:"Call the health department."}[k];
+    const ck=callKey||{bring:"odnr",refer:"odnr",health:"health"}[k];const call=ck?CALLS[ck]:null;
+    $("#wzAnswer").innerHTML=`<div class="answer kind-${k}"><p class="verdict">${head}</p><p>${t}</p>${call?`<div><a class="btn" href="${call[1]}">${call[0]}</a></div>`:""}${k==="bring"?`<p class="small muted">This operation's own line is <span class="ph">[not set up]</span>; ODNR keeps the current list of permit holders.</p>`:""}<details><summary>Why: the law</summary><p>${w.law}</p></details></div>`}
 }
-$("#dPay").addEventListener("click",()=>{
-  const name=$("#dName").value.trim()||"Anonymous",email=$("#dEmail").value.trim(),freq=$("#dFreq").value;
-  const rec={id:Math.random().toString(36).slice(2),date:today(),donor:name,email,amount:dAmt,method:"Card (demo)",kind:freq,note:"Demo preview; nothing charged",caseNo:$("#dCase").value,ack:dAmt<250};
-  DB.donations.push(rec);save();
-  openModal(`<span class="eyebrow">Receipt preview · demo, nothing charged</span><h2 style="margin-top:4px">Thank you, ${esc(name)}.</h2>
-   <div class="kv" style="margin-top:12px"><dt>Gift</dt><dd class="num">${fmt2(dAmt)} ${freq==="monthly"?"every month":"once"}</dd><dt>Processor fee</dt><dd>Whatever the processor publishes; deducted before payout</dd><dt>Payout</dt><dd>To the organization's own checking account, never a personal one</dd>${rec.caseNo?`<dt>Dedicated to</dt><dd>${rec.caseNo}</dd>`:""}</div>
-   <h3 style="margin-top:16px">Receipt wording (follows the tax status in Settings)</h3>
-   <pre class="letter" style="margin-top:8px">${esc(ackLetter(rec))}</pre>
-   <p class="small muted" style="margin-top:8px">Logged to the sample ledger so the Money tab can be checked. Reset demo data in Settings to clear it.</p>`);
-  $("#dName").value="";$("#dEmail").value="";
-});
+function givePreview(){
+  openModal(`<h2>Support this work</h2><p class="muted" style="margin-top:6px">Demo only. No payment processor is connected and nothing is charged. This exists so the receipt wording can be checked.</p>
+   <div class="form" style="margin-top:16px"><label class="f">Amount ($) <input id="gvAmt" type="number" min="1" value="25"></label><label class="f">Frequency <select id="gvFreq"><option value="one-time">One time</option><option value="monthly">Monthly</option></select></label><label class="f wide">Name <input id="gvName" placeholder="Sample donor"></label></div>
+   <div class="row" style="margin-top:14px"><button class="btn" id="gvGo">Preview the receipt</button><span class="pill accent">${S.tax==="approved"?"Tax-deductible · 501(c)(3)":S.tax==="applied"?"501(c)(3) pending: not deductible yet":"Not tax-deductible"}</span></div>`);
+  $("#gvGo").onclick=()=>{const amt=+$("#gvAmt").value||25,name=$("#gvName").value.trim()||"Anonymous",freq=$("#gvFreq").value;
+    const rec={id:Math.random().toString(36).slice(2),date:today(),donor:name,email:"",amount:amt,method:"Card (demo)",kind:freq,note:"Demo preview; nothing charged",caseNo:"",ack:amt<250};
+    DB.donations.push(rec);save();
+    openModal(`<p class="eyebrow">Receipt preview · demo, nothing charged</p><h2 style="margin-top:4px">Thank you, ${esc(name)}.</h2><pre class="letter" style="margin-top:14px">${esc(ackLetter(rec))}</pre><p class="small muted" style="margin-top:10px">Logged to the sample ledger so the Money tab can be checked. Reset demo data in Settings to clear it.</p>`)};
+}
 function ackLetter(d){
   const ded=S.tax==="approved";
   return `${S.name}\n[EIN once issued]\n\n${d.date}\n\nDear ${d.donor},\n\nThank you for your ${d.kind==="monthly"?"monthly ":""}gift of ${fmt2(d.amount)} received on ${d.date}${d.caseNo?`, dedicated to patient ${d.caseNo}`:""}.\n\n${ded?`${S.name} is recognized by the IRS as a 501(c)(3) tax-exempt organization. No goods or services were provided in exchange for this contribution. Please keep this letter for your tax records.`:`${S.name} is not a registered 501(c)(3) organization, so this gift is not tax-deductible. If that changes, you will be told.`}\n\nThis year your support has helped care for ${DB.cases.length} animals, ${DB.cases.filter(c=>c.status==="Released").length} of which are already back in the wild.\n\nWith thanks,\n${S.name}`;
@@ -1030,8 +980,10 @@ Contact: [email]`;
 $("#copyPitch").addEventListener("click",()=>copy($("#pitch").textContent,"Summary"));
 
 /* ---------- settings ---------- */
-function renderSettings(){$("#sName").value=S.name;fillCounties($("#sCounty"),S.county);$("#sCat").value=S.cat;$("#sFed").value=S.fed;$("#sRVS").value=S.rvs;$("#sTax").value=S.tax}
-$("#sSave").addEventListener("click",()=>{S={name:$("#sName").value||DEFAULT_SETTINGS.name,county:$("#sCounty").value,cat:+$("#sCat").value,fed:+$("#sFed").value,rvs:+$("#sRVS").value,tax:$("#sTax").value};save();$("#brandName").textContent=S.name;toast("Saved. Intake warnings and the species grid now follow these settings.")});
+function renderSettings(){$("#sName").value=S.name;fillCounties($("#sCounty"),S.county);$("#sCat").value=S.cat;$("#sFed").value=S.fed;$("#sRVS").value=S.rvs;$("#sTax").value=S.tax;
+  $("#sitePermits").textContent=permitSummary();
+  $("#siteSpecies").innerHTML=SPECIES.filter(s=>!s.no).map(s=>{const ok=speciesFlags(s.n).every(f=>f.k!=="crit");return `<div class="sp ${ok?"":"no"}"><b>${s.n}</b><i>${ok?"Could take":"Referred"}</i></div>`}).join("")}
+$("#sSave").addEventListener("click",()=>{S={name:$("#sName").value||DEFAULT_SETTINGS.name,county:$("#sCounty").value,cat:+$("#sCat").value,fed:+$("#sFed").value,rvs:+$("#sRVS").value,tax:$("#sTax").value};save();$("#brandName").textContent=S.name;renderSettings();toast("Saved. Intake warnings and the species grid now follow these settings.")});
 $("#sReset").addEventListener("click",()=>{DB=seed();S={...DEFAULT_SETTINGS};save();$("#iSpecies").innerHTML="";toast("Demo data reset");renderSettings();go("site")});
 
 /* ---------- boot ---------- */
